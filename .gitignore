@@ -16,9 +16,10 @@ db.sqlite3
 media/
 staticfiles/
 
-# IDE
+# IDE / Cursor
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 
@@ -28,3 +29,4 @@ Thumbs.db
 
 # Mypy
 .mypy_cache/
+
