@@ -1,0 +1,138 @@
+{% load static %}
+<div class="topbar topbar--three">
+    <div class="container">
+        <div class="topbar__inner">
+            <div class="topbar__left">
+                <ul class="list-unstyled topbar__info">
+                    {% if site_settings.email %}
+                    <li>
+                        <i class="icon-paper-plane"></i>
+                        <a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
+                    </li>
+                    {% endif %}
+                    {% if site_settings.address %}
+                    <li>
+                        <i class="icon-maps-and-flags"></i>
+                        <span>{{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% endif %}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="topbar__right">
+                <ul class="list-unstyled topbar__info">
+                    {% if site_settings.business_hours %}
+                    <li>
+                        <i class="icon-time"></i>
+                        <span>{{ site_settings.business_hours }}</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<header class="main-header main-header--three sticky-header sticky-header--normal">
+    <div class="main-header__bg" style="background-image: url({% static 'assets/images/backgrounds/main-header-3-bg.jpg' %});"></div>
+    <div class="main-header__container container">
+        <div class="main-header__top">
+            <div class="main-header__social">
+                {% if site_settings.facebook_url %}<a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="sr-only">Facebook</span></a>{% endif %}
+                {% if site_settings.instagram_url %}<a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener"><i class="fab fa-instagram" aria-hidden="true"></i><span class="sr-only">Instagram</span></a>{% endif %}
+                {% if site_settings.twitter_url %}<a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"><i class="fab fa-twitter" aria-hidden="true"></i><span class="sr-only">Twitter</span></a>{% endif %}
+                {% if site_settings.youtube_url %}<a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener"><i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span></a>{% endif %}
+            </div>
+            <div class="main-header__top__right">
+                <div class="main-header__logo">
+                    <a href="{% url 'home' %}">
+                        {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" width="171">{% else %}<img src="{% static 'logo-768x317.png' %}" alt="{{ site_settings.site_name|default:'Logo' }}" width="171">{% endif %}
+                    </a>
+                </div>
+                <div class="main-header__top__icon-group">
+                    <a href="#" class="search-toggler main-header__search">
+                        <i class="icon-search" aria-hidden="true"></i>
+                        <span class="sr-only">Search</span>
+                    </a>
+                    <a href="{% url 'cart:detail' %}" class="main-header__cart">
+                        <i class="icon-cart" aria-hidden="true"></i>
+                        <span class="sr-only">Cart</span>
+                        {% if cart_count %}<span class="cart-count">{{ cart_count }}</span>{% endif %}
+                    </a>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'orders:list' %}" class="main-header__user" title="Mi cuenta">
+                        <i class="icon-user" aria-hidden="true"></i>
+                        <span class="sr-only">Mi cuenta</span>
+                    </a>
+                    {% if user.can_access_dashboard %}
+                    <a href="{% url 'dashboard' %}" class="main-header__user" title="Panel admin">
+                        <i class="fas fa-chart-line" aria-hidden="true"></i>
+                        <span class="sr-only">Dashboard</span>
+                    </a>
+                    {% endif %}
+                    {% if user.is_wholesale %}
+                    <a href="{% url 'wholesale:panel' %}" class="main-header__user" title="Panel mayoristas">
+                        <i class="fas fa-store" aria-hidden="true"></i>
+                        <span class="sr-only">Mayoristas</span>
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'account_login' %}" class="main-header__user" role="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                        <i class="icon-user" aria-hidden="true"></i>
+                        <span class="sr-only">Login</span>
+                    </a>
+                    {% endif %}
+                </div>
+                {% if site_settings.phone %}
+                <div class="main-header__call">
+                    <span class="main-header__call__icon icon-phone-call"></span>
+                    <div class="main-header__call__inner">
+                        <span class="main-header__call__tagline">Llámanos</span>
+                        <a href="tel:{{ site_settings.phone|cut:' ' }}" class="main-header__call__number">{{ site_settings.phone }}</a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="main-header__inner">
+            <div class="main-header__sidebar-btn sidebar-btn__toggler">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <nav class="main-header__nav main-menu">
+                <ul class="main-menu__list">
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'products:list' %}">Shop</a></li>
+                    <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
+                    <li><a href="{% url 'orders:checkout' %}">Checkout</a></li>
+                    <li><a href="{% url 'contact' %}">Contacto</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
+                    {% if user.can_access_dashboard %}
+                    <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                    {% endif %}
+                    {% if user.is_wholesale %}
+                    <li><a href="{% url 'wholesale:panel' %}">Mayoristas</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'account_logout' %}">Salir</a></li>
+                    {% else %}
+                    <li><a href="{% url 'account_login' %}" role="button" data-bs-toggle="modal" data-bs-target="#loginModal">Ingresar</a></li>
+                    <li><a href="{% url 'account_signup' %}">Registro</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <div class="main-header__inner__right">
+                <div class="mobile-nav__btn mobile-nav__toggler">
+                    <span></span><span></span><span></span>
+                </div>
+                <a href="{% url 'orders:checkout' %}" class="main-header__contac-btn boskery-btn">
+                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                    <span class="boskery-btn__text">Ordenar</span>
+                    <i class="icon-paper-plane"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</header>

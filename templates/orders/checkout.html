@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static humanize crispy_forms_tags %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Checkout</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
+            <li><span>Checkout</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="checkout-page section-space">
+    <div class="container">
+        <form method="post" class="row gutter-y-40">
+            {% csrf_token %}
+            <div class="col-lg-8">
+                <h4>Información de facturación</h4>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Nombre *</label>
+                        <input type="text" name="billing_first_name" required value="{{ user.first_name|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Apellido *</label>
+                        <input type="text" name="billing_last_name" required value="{{ user.last_name|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label>Email *</label>
+                        <input type="email" name="billing_email" required value="{{ user.email|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label>Teléfono</label>
+                        <input type="text" name="billing_phone" value="{{ user.phone|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label>Dirección *</label>
+                        <input type="text" name="billing_address" required value="{{ user.address|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Ciudad *</label>
+                        <input type="text" name="billing_city" required value="{{ user.city|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>País *</label>
+                        <input type="text" name="billing_country" required value="{{ user.country|default:'Colombia' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Código postal</label>
+                        <input type="text" name="billing_postal_code" value="{{ user.postal_code|default:'' }}" class="form-control">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label>Cupón de descuento</label>
+                        <input type="text" name="coupon_code" placeholder="Código de cupón" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="cart-page__cart-checkout">
+                    <h4>Resumen del pedido</h4>
+                    <ul class="cart-page__cart-total list-unstyled">
+                        <li>
+                            <span>Subtotal</span>
+                            <span>${{ cart_total|floatformat:2 }}</span>
+                        </li>
+                        <li>
+                            <span>Total</span>
+                            <span class="cart-page__cart-total__amount">${{ cart_total|floatformat:2 }}</span>
+                        </li>
+                    </ul>
+                    <button type="submit" class="boskery-btn w-100">Confirmar pedido</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

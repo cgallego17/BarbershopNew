@@ -1,0 +1,169 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ object|yesno:"Editar,Nuevo" }} producto{% endblock %}
+{% block topbar_title %}{{ object|yesno:"Editar,Nuevo" }} producto{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Código</label>
+                    {{ form.codigo }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">SKU interno</label>
+                    {{ form.sku }}
+                    <small class="text-muted">Identificador único (obligatorio)</small>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descripción breve</label>
+                    {{ form.short_description }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descripción</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tipo</label>
+                    {{ form.product_type }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Fuente</label>
+                    {{ form.source }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Slug</label>
+                    {{ form.slug }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">ID API</label>
+                    {{ form.external_id }}
+                    <small class="text-muted">ID del producto en la API externa</small>
+                </div>
+                <div id="product-simple-fields" class="col-12 row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Precio regular</label>
+                        {{ form.regular_price }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Precio oferta</label>
+                        {{ form.sale_price }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Precio mayorista</label>
+                        {{ form.wholesale_price }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Inicio oferta</label>
+                        {{ form.sale_price_start }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Fin oferta</label>
+                        {{ form.sale_price_end }}
+                    </div>
+                </div>
+                <div id="product-variable-fields" class="col-12" style="display:none">
+                    <label class="form-label">Atributos de variación</label>
+                    {{ form.used_attributes }}
+                    <small class="text-muted d-block mb-3">Selecciona los atributos (ej: Talla, Color). Créalos en <a href="{% url 'admin_panel:attribute_list' %}">Atributos</a> si no existen.</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Marca</label>
+                    {{ form.brand }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Categorías</label>
+                    {{ form.categories }}
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-3">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Activo</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-3">
+                        {{ form.is_featured }}
+                        <label class="form-check-label">Destacado</label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mt-3">
+                        {{ form.manage_stock }}
+                        <label class="form-check-label">Gestionar stock</label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cantidad en stock</label>
+                    {{ form.stock_quantity }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Umbral stock bajo</label>
+                    {{ form.low_stock_threshold }}
+                </div>
+            </div>
+
+            {% if variant_formset %}
+            <div class="mt-5 pt-4 border-top">
+                <h5 class="mb-4">Variantes</h5>
+                {{ variant_formset.management_form }}
+                <div class="variant-forms">
+                    {% for vform in variant_formset %}
+                    <div class="admin-card mb-3 variant-form-row">
+                        <div class="admin-card__body">
+                            <div class="row g-3 align-items-end flex-wrap">
+                                {% for field in vform.visible_fields %}
+                                    {% if field.name != "id" and field.name != "DELETE" %}
+                                    <div class="col-md-2 col-lg-2"><label class="form-label small">{{ field.label }}</label>{{ field }}{% if field.errors %}<div class="text-danger small">{{ field.errors.0 }}</div>{% endif %}</div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if vform.instance.pk %}
+                                <div class="col-md-2"><label class="form-label small">Eliminar</label><div class="pt-2">{{ vform.DELETE }}</div></div>
+                                {% endif %}
+                                {{ vform.id }}
+                            </div>
+                            {% if vform.non_field_errors %}<div class="text-danger small mt-2">{{ vform.non_field_errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-muted small mt-2">Guarda el producto después de asignar atributos para poder agregar variantes.</p>
+            </div>
+            {% endif %}
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:product_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    var typeSelect = document.querySelector('[name="product_type"]');
+    var simpleDiv = document.getElementById('product-simple-fields');
+    var variableDiv = document.getElementById('product-variable-fields');
+    function toggle() {
+        var isVariable = typeSelect && typeSelect.value === 'variable';
+        if (simpleDiv) simpleDiv.style.display = isVariable ? 'none' : '';
+        if (variableDiv) variableDiv.style.display = isVariable ? 'block' : 'none';
+    }
+    if (typeSelect) {
+        typeSelect.addEventListener('change', toggle);
+        toggle();
+    }
+})();
+</script>
+{% endblock %}

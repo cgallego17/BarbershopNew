@@ -1,0 +1,61 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ object|yesno:"Editar,Nuevo" }} atributo{% endblock %}
+{% block topbar_title %}{{ object|yesno:"Editar,Nuevo" }} atributo{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Nombre</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Slug</label>
+                    {{ form.slug }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Orden</label>
+                    {{ form.order }}
+                </div>
+            </div>
+            {% if value_formset %}
+            <div class="mt-4">
+                <h6 class="mb-3">Valores del atributo</h6>
+                {{ value_formset.management_form }}
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Valor</th>
+                                <th style="width:100px">Orden</th>
+                                <th style="width:80px">Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in value_formset %}
+                            <tr class="variant-row">
+                                <td>{{ f.id }}{{ f.value }}</td>
+                                <td>{{ f.order }}</td>
+                                <td>{% if f.instance.pk %}{{ f.DELETE }}{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:attribute_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

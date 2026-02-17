@@ -1,0 +1,90 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Pedido {{ order.order_number }}{% endblock %}
+{% block topbar_title %}Pedido {{ order.order_number }}{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="admin-card mb-4">
+            <div class="admin-card__header">
+                <h3 class="admin-card__title">Detalle del pedido</h3>
+                <span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span>
+            </div>
+            <div class="admin-card__body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Cliente</h6>
+                        <p class="mb-0">{{ order.billing_first_name }} {{ order.billing_last_name }}</p>
+                        <p class="mb-0"><a href="mailto:{{ order.billing_email }}">{{ order.billing_email }}</a></p>
+                        <p class="mb-0">{{ order.billing_phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-2">Envío</h6>
+                        <p class="mb-0">{{ order.billing_address }}</p>
+                        <p class="mb-0">{{ order.billing_city }}, {{ order.billing_country }} {{ order.billing_postal_code }}</p>
+                    </div>
+                </div>
+                <div class="admin-table-wrapper">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items.all %}
+                            <tr>
+                                <td>{{ item.product_name }}</td>
+                                <td class="text-center">{{ item.quantity }}</td>
+                                <td class="text-end">${{ item.price|floatformat:2 }}</td>
+                                <td class="text-end">${{ item.total|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-end mt-3">
+                    <p class="mb-1">Subtotal: ${{ order.subtotal|floatformat:2|intcomma }}</p>
+                    {% if order.discount_total %}<p class="mb-1">Descuento: -${{ order.discount_total|floatformat:2|intcomma }}</p>{% endif %}
+                    <p class="mb-0 fs-5 fw-bold">Total: ${{ order.total|floatformat:2|intcomma }}</p>
+                    {% if order.coupon_code %}<p class="text-muted small">Cupón: {{ order.coupon_code }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="admin-card">
+            <div class="admin-card__header">
+                <h3 class="admin-card__title">Actualizar estado</h3>
+            </div>
+            <div class="admin-card__body">
+                <form method="post" class="admin-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Estado del pedido</label>
+                        {{ form.status }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Estado de pago</label>
+                        {{ form.payment_status }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notas internas</label>
+                        {{ form.notes }}
+                    </div>
+                    <button type="submit" class="admin-btn admin-btn--primary w-100">Guardar cambios</button>
+                </form>
+            </div>
+        </div>
+        <div class="mt-3">
+            <a href="{% url 'admin_panel:order_list' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-arrow-left"></i> Volver a pedidos</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

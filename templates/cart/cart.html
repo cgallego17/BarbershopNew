@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Carrito{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Carrito</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><span>Carrito</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="cart-page section-space">
+    <div class="container">
+        {% if cart %}
+        <form method="post" action="{% url 'cart:update' %}">
+            {% csrf_token %}
+            <div class="row gutter-y-50">
+                <div class="col-xl-8">
+                    <div class="table-responsive">
+                        <table class="table cart-page__table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Precio</th>
+                                    <th>Cantidad</th>
+                                    <th>Subtotal</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in cart %}
+                                <tr>
+                                    <td>
+                                        <div class="cart-page__table__meta">
+                                            <div class="cart-page__table__meta__img">
+                                                {% if item.product.images.first %}
+                                                <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
+                                                {% else %}
+                                                <img src="{% static 'assets/images/products/cart-1-1.png' %}" alt="{{ item.product.name }}">
+                                                {% endif %}
+                                            </div>
+                                            <h3 class="cart-page__table__meta__title">
+                                                <a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a>
+                                            </h3>
+                                        </div>
+                                    </td>
+                                    <td class="cart-page__table__price">${{ item.price|floatformat:2 }}</td>
+                                    <td>
+                                        <div class="quantity-box">
+                                            <button type="button" class="sub"><i class="fa fa-minus"></i></button>
+                                            <input type="number" name="quantity_{{ item.key }}" value="{{ item.quantity }}" min="1">
+                                            <button type="button" class="add"><i class="fa fa-plus"></i></button>
+                                        </div>
+                                    </td>
+                                    <td class="cart-page__table__total">${{ item.total_price|floatformat:2 }}</td>
+                                    <td>
+                                        <button type="submit" form="remove-form-{{ item.key }}" class="cart-page__table__remove btn btn-link p-0 text-danger"><i class="fas fa-times"></i> Eliminar</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="boskery-btn">Actualizar carrito</button>
+                </div>
+                <div class="col-xl-4">
+                    <div class="cart-page__cart-checkout">
+                        <ul class="cart-page__cart-total list-unstyled">
+                            <li>
+                                <span>Subtotal</span>
+                                <span class="cart-page__cart-total__amount">${{ cart_total|floatformat:2 }}</span>
+                            </li>
+                            <li>
+                                <a href="{% url 'orders:checkout' %}" class="boskery-btn w-100">Proceder al checkout</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </form>
+        {% for item in cart %}
+        <form id="remove-form-{{ item.key }}" method="post" action="{% url 'cart:remove' item.product.id %}" style="display:none;">
+            {% csrf_token %}
+            {% if item.variant %}<input type="hidden" name="variant_id" value="{{ item.variant.id }}">{% endif %}
+        </form>
+        {% endfor %}
+        {% else %}
+        <div class="text-center py-5">
+            <p>Tu carrito está vacío.</p>
+            <a href="{% url 'products:list' %}" class="boskery-btn">Ver productos</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

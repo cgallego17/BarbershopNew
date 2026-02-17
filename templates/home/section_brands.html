@@ -1,0 +1,15 @@
+{% load static %}
+<section class="client-carousel client-carousel--three">
+    <div class="client-carousel__bg boskery-jarallax" data-jarallax data-speed="0.3" style="background-image: url({% static 'assets/images/backgrounds/client-carousel-3-bg.jpg' %});"></div>
+    <div class="container">
+        <div class="client-carousel__one boskery-owl__carousel owl-carousel owl-theme" data-owl-options='{"items": 1, "loop": true, "autoplay": true, "responsive": {"0":{"items": 2}, "500":{"items": 3}, "768":{"items": 4}, "992":{"items": 5}}}'>
+            {% for brand in home_brands %}
+            <div class="client-carousel__one__item">
+                {% if brand.url %}<a href="{{ brand.url }}" target="_blank" rel="noopener">{% endif %}
+                <img src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                {% if brand.url %}</a>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

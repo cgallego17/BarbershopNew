@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Mis pedidos{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Mis pedidos</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><span>Mis pedidos</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="section-space">
+    <div class="container">
+        {% for order in orders %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5><a href="{% url 'orders:detail' order.order_number %}">{{ order.order_number }}</a></h5>
+                <p>Fecha: {{ order.created_at|date:"d/m/Y" }} | Total: ${{ order.total|floatformat:2 }} | Estado: {{ order.get_status_display }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No tienes pedidos.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

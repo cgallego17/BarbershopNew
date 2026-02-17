@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Contacto{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Contacto</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><span>Contacto</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="contact-page section-space">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <h4>Contáctanos</h4>
+                <p>Envíanos un mensaje y te responderemos pronto.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

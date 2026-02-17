@@ -1,0 +1,33 @@
+{% load static %}
+<section class="testimonials-three section-space-two" id="testimonials">
+    <div class="container">
+        <div class="sec-title sec-title--center">
+            <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="" class="sec-title__img">
+            <h6 class="sec-title__tagline">testimonios</h6>
+            <h2 class="sec-title__title">Lo que dicen nuestros clientes</h2>
+        </div>
+        <div class="testimonials-three__carousel boskery-owl__carousel owl-carousel owl-theme" data-owl-options='{"items": 1, "loop": true, "autoplay": true}'>
+            {% for t in home_testimonials %}
+            <div class="testimonials-three__card">
+                <div class="testimonials-three__card__bg" style="background-image: url({% static 'assets/images/shapes/testimonial-card-bg-3-1.png' %});"></div>
+                <div class="testimonials-three__card__inner">
+                    <div class="testimonials-three__card__content">
+                        <div class="testimonials-three__card__top"></div>
+                        <div class="testimonials-three__card__text">{{ t.text|safe }}</div>
+                        <div class="testimonials-three__card__identity">
+                            <div class="testimonials-three__card__identity__bg" style="background-image: url({% static 'assets/images/shapes/testimonial-card-bg-3-2.png' %});"></div>
+                            <div class="testimonials-three__card__identity__inner">
+                                {% if t.image %}<div class="testimonials-three__card__image"><img src="{{ t.image.url }}" alt="{{ t.name }}"></div>{% endif %}
+                                <div class="testimonials-three__card__info">
+                                    <h4 class="testimonials-three__card__name">{{ t.name }}</h4>
+                                    {% if t.designation %}<span class="testimonials-three__card__designation">{{ t.designation }}</span>{% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

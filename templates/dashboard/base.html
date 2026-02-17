@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Dashboard{% endblock %} | Admin</title>
+    <link rel="icon" type="image/png" href="{% static 'assets/images/favicons/favicon-32x32.png' %}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap/css/bootstrap.min.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/fontawesome/css/all.min.css' %}" />
+    <style>
+        :root {
+            --admin-sidebar: #0f0f0f;
+            --admin-sidebar-hover: #1a1a1a;
+            --admin-sidebar-active: #252525;
+            --admin-bg: #f8fafc;
+            --admin-card: #fff;
+            --admin-border: #e2e8f0;
+            --admin-text: #0f172a;
+            --admin-text-muted: #64748b;
+            --admin-accent: #C56533;
+            --admin-accent-hover: #b5582d;
+        }
+        * { font-family: 'Inter', -apple-system, sans-serif; }
+        body { margin: 0; background: var(--admin-bg); color: var(--admin-text); min-height: 100vh; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .admin-sidebar {
+            width: 260px;
+            background: var(--admin-sidebar);
+            color: #fff;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-sidebar__brand {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-sidebar__brand img { height: 32px; width: auto; max-width: 120px; object-fit: contain; }
+        .admin-sidebar__brand-role { font-size: .75rem; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .05em; }
+        .admin-sidebar__nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .admin-sidebar__item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: rgba(255,255,255,.75);
+            text-decoration: none;
+            font-size: .9rem;
+            margin-bottom: 2px;
+            transition: background .15s, color .15s;
+        }
+        .admin-sidebar__item:hover { background: var(--admin-sidebar-hover); color: #fff; }
+        .admin-sidebar__item.active { background: var(--admin-sidebar-active); color: #fff; }
+        .admin-sidebar__item i { width: 20px; text-align: center; opacity: .9; }
+        .admin-sidebar__section { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.4); padding: 16px 14px 8px; }
+        .admin-sidebar__footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,.06);
+        }
+        .admin-sidebar__footer a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: rgba(255,255,255,.6);
+            text-decoration: none;
+            font-size: .9rem;
+        }
+        .admin-sidebar__footer a:hover { background: var(--admin-sidebar-hover); color: #fff; }
+        .admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .admin-topbar {
+            background: var(--admin-card);
+            border-bottom: 1px solid var(--admin-border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .admin-topbar__title { font-size: 1.25rem; font-weight: 600; margin: 0; }
+        .admin-topbar__user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .admin-topbar__user span { color: var(--admin-text-muted); font-size: .9rem; }
+        .admin-topbar__user a {
+            color: var(--admin-text-muted);
+            text-decoration: none;
+            font-size: .9rem;
+        }
+        .admin-topbar__user a:hover { color: var(--admin-accent); }
+        .admin-content { flex: 1; padding: 24px; }
+        @media (max-width: 991px) {
+            .admin-sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 1030; transform: translateX(-100%); transition: transform .25s; }
+            .admin-sidebar.open { transform: translateX(0); }
+            .admin-sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1029; }
+            .admin-sidebar-overlay.open { display: block; }
+            .admin-sidebar-toggle { display: flex !important; }
+        }
+        .admin-sidebar-toggle {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            background: var(--admin-card);
+            color: var(--admin-text);
+            cursor: pointer;
+        }
+        .admin-sidebar-toggle:hover { background: var(--admin-bg); }
+    </style>
+    {% block extra_css %}{% endblock %}
+    {% block form_media %}{% endblock %}
+</head>
+<body>
+    <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
+    <div class="admin-layout">
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="admin-sidebar__brand">
+                {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" alt="{{ site_settings.site_name }}" />{% else %}<img src="{% static 'logo-768x317.png' %}" alt="{{ site_settings.site_name|default:'Logo' }}" />{% endif %}
+                <span class="admin-sidebar__brand-role">{{ user.get_role_display|default:'Admin' }}</span>
+            </div>
+            <nav class="admin-sidebar__nav">
+                <div class="admin-sidebar__section">Principal</div>
+                <a href="{% url 'dashboard' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{% url 'home' %}" class="admin-sidebar__item">
+                    <i class="fas fa-home"></i>
+                    <span>Ir al Home</span>
+                </a>
+                {% if user.can_access_django_admin %}
+                <a href="{% url 'admin:index' %}" class="admin-sidebar__item">
+                    <i class="fas fa-cog"></i>
+                    <span>Django Admin</span>
+                </a>
+                {% endif %}
+                <div class="admin-sidebar__section">Catálogo</div>
+                <a href="{% url 'admin_panel:product_list' %}" class="admin-sidebar__item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-box"></i>
+                    <span>Productos</span>
+                </a>
+                <a href="{% url 'admin_panel:attribute_list' %}" class="admin-sidebar__item {% if 'attribute' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-palette"></i>
+                    <span>Atributos</span>
+                </a>
+                <a href="{% url 'admin_panel:category_list' %}" class="admin-sidebar__item {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-tags"></i>
+                    <span>Categorías</span>
+                </a>
+                <a href="{% url 'admin_panel:brand_list' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'brand_list' or request.resolver_match.url_name == 'brand_create' or request.resolver_match.url_name == 'brand_edit' or request.resolver_match.url_name == 'brand_delete' %}active{% endif %}">
+                    <i class="fas fa-copyright"></i>
+                    <span>Marcas</span>
+                </a>
+                <div class="admin-sidebar__section">Ventas</div>
+                <a href="{% url 'admin_panel:customer_list' %}" class="admin-sidebar__item {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i>
+                    <span>Clientes</span>
+                </a>
+                <a href="{% url 'admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pedidos</span>
+                </a>
+                <a href="{% url 'admin_panel:coupon_list' %}" class="admin-sidebar__item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span>Cupones</span>
+                </a>
+                <div class="admin-sidebar__section">Sistema</div>
+                <a href="{% url 'admin_panel:home_sections' %}" class="admin-sidebar__item {% if 'home_' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-home"></i>
+                    <span>Secciones Home</span>
+                </a>
+                <a href="{% url 'admin_panel:config' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'config' %}active{% endif %}">
+                    <i class="fas fa-cogs"></i>
+                    <span>Configuración</span>
+                </a>
+                <div class="admin-sidebar__footer">
+                    <a href="{% url 'home' %}">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Ver tienda</span>
+                    </a>
+                    <a href="{% url 'account_logout' %}">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Cerrar sesión</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="admin-sidebar-toggle" id="sidebarToggle" aria-label="Menú"><i class="fas fa-bars"></i></button>
+                    <h1 class="admin-topbar__title mb-0">{% block topbar_title %}Dashboard{% endblock %}</h1>
+                </div>
+                <div class="admin-topbar__user">
+                    <span>{{ user.get_full_name|default:user.username }}</span>
+                    <a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Salir</a>
+                </div>
+            </header>
+            <div class="admin-content">
+                {% if messages %}
+                <div class="mb-4">
+                    {% for m in messages %}
+                    <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags|default:'info' }}{% endif %} alert-dismissible fade show" role="alert">{{ m }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    <script src="{% static 'assets/vendors/jquery/jquery-3.7.0.min.js' %}"></script>
+    <script src="{% static 'assets/vendors/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        (function() {
+            var sidebar = document.getElementById('adminSidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            var toggle = document.getElementById('sidebarToggle');
+            if (toggle && sidebar && overlay) {
+                toggle.addEventListener('click', function() { sidebar.classList.add('open'); overlay.classList.add('open'); });
+                overlay.addEventListener('click', function() { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
+            }
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,268 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+
+{% block title %}Panel de administración{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-dashboard">
+    <div class="admin-stats mb-5">
+        <div class="row g-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="admin-stat-card admin-stat-card--primary">
+                    <div class="admin-stat-card__icon">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="admin-stat-card__content">
+                        <span class="admin-stat-card__value">{{ total_orders }}</span>
+                        <span class="admin-stat-card__label">Total pedidos</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="admin-stat-card admin-stat-card--success">
+                    <div class="admin-stat-card__icon">
+                        <i class="fas fa-box"></i>
+                    </div>
+                    <div class="admin-stat-card__content">
+                        <span class="admin-stat-card__value">{{ total_products }}</span>
+                        <span class="admin-stat-card__label">Productos activos</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="admin-stat-card admin-stat-card--accent">
+                    <div class="admin-stat-card__icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="admin-stat-card__content">
+                        <span class="admin-stat-card__value">${{ total_revenue|floatformat:0|intcomma }}</span>
+                        <span class="admin-stat-card__label">Ingresos</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="admin-stat-card admin-stat-card--warning">
+                    <div class="admin-stat-card__icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="admin-stat-card__content">
+                        <span class="admin-stat-card__value">{{ pending_orders }}</span>
+                        <span class="admin-stat-card__label">Pendientes</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h3 class="admin-card__title">Últimos pedidos</h3>
+                    <a href="{% url 'admin_panel:order_list' %}" class="admin-card__action">Ver todos</a>
+                </div>
+                <div class="admin-card__body p-0">
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Fecha</th>
+                                    <th>Total</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_orders %}
+                                <tr>
+                                    <td><strong>{{ order.order_number }}</strong></td>
+                                    <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                                    <td>${{ order.total|floatformat:2|intcomma }}</td>
+                                    <td><span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
+                                    <td class="text-end"><a href="{% url 'admin_panel:order_detail' order.pk %}" class="admin-link">Editar</a></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="admin-table__empty">No hay pedidos registrados</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="admin-card mb-4">
+                <div class="admin-card__header">
+                    <h3 class="admin-card__title">Stock bajo</h3>
+                    <a href="{% url 'admin_panel:product_list' %}" class="admin-card__action">Ver productos</a>
+                </div>
+                <div class="admin-card__body">
+                    {% if low_stock %}
+                    <ul class="admin-list">
+                        {% for p in low_stock %}
+                        <li class="admin-list__item">
+                            <a href="{% url 'admin_panel:product_edit' p.pk %}">{{ p.name }}</a>
+                            <span class="admin-list__badge admin-list__badge--danger">{{ p.stock_quantity }} uds</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="admin-empty">Ningún producto con stock bajo</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card__header">
+                    <h3 class="admin-card__title">Accesos rápidos</h3>
+                </div>
+                <div class="admin-card__body">
+                    <div class="admin-quick-links">
+                        <a href="{% url 'admin_panel:product_create' %}" class="admin-quick-link">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Nuevo producto</span>
+                        </a>
+                        <a href="{% url 'admin_panel:order_list' %}?status=pending" class="admin-quick-link">
+                            <i class="fas fa-clock"></i>
+                            <span>Pedidos pendientes</span>
+                        </a>
+                        <a href="{% url 'admin_panel:category_list' %}" class="admin-quick-link">
+                            <i class="fas fa-tags"></i>
+                            <span>Categorías</span>
+                        </a>
+                        <a href="{% url 'admin_panel:coupon_create' %}" class="admin-quick-link">
+                            <i class="fas fa-ticket-alt"></i>
+                            <span>Nuevo cupón</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-stat-card {
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: box-shadow .2s;
+}
+.admin-stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+.admin-stat-card__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #fff;
+}
+.admin-stat-card--primary .admin-stat-card__icon { background: #3b82f6; }
+.admin-stat-card--success .admin-stat-card__icon { background: #10b981; }
+.admin-stat-card--accent .admin-stat-card__icon { background: var(--admin-accent); }
+.admin-stat-card--warning .admin-stat-card__icon { background: #f59e0b; }
+.admin-stat-card__content { display: flex; flex-direction: column; gap: 4px; }
+.admin-stat-card__value { font-size: 1.5rem; font-weight: 700; color: var(--admin-text); }
+.admin-stat-card__label { font-size: .875rem; color: var(--admin-text-muted); }
+
+.admin-card {
+    background: var(--admin-card);
+    border: 1px solid var(--admin-border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+.admin-card__header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--admin-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.admin-card__title { margin: 0; font-size: 1rem; font-weight: 600; }
+.admin-card__action {
+    font-size: .875rem;
+    color: var(--admin-accent);
+    text-decoration: none;
+}
+.admin-card__action:hover { color: var(--admin-accent-hover); }
+.admin-card__body { padding: 24px; }
+
+.admin-table-wrapper { overflow-x: auto; }
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+.admin-table th,
+.admin-table td { padding: 14px 24px; text-align: left; border-bottom: 1px solid var(--admin-border); }
+.admin-table th {
+    font-weight: 600;
+    color: var(--admin-text-muted);
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table tbody tr:hover { background: rgba(0,0,0,.02); }
+.admin-table__empty { text-align: center; padding: 40px !important; color: var(--admin-text-muted); }
+
+.admin-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 500;
+}
+.admin-badge--pending { background: #fef3c7; color: #92400e; }
+.admin-badge--completed { background: #d1fae5; color: #065f46; }
+.admin-badge--processing { background: #dbeafe; color: #1e40af; }
+.admin-badge--on_hold { background: #e5e7eb; color: #374151; }
+.admin-badge--cancelled { background: #fee2e2; color: #991b1b; }
+.admin-badge--refunded { background: #f3e8ff; color: #6b21a8; }
+
+.admin-link { color: var(--admin-accent); text-decoration: none; font-size: .875rem; }
+.admin-link:hover { color: var(--admin-accent-hover); }
+
+.admin-list { list-style: none; padding: 0; margin: 0; }
+.admin-list__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--admin-border);
+}
+.admin-list__item:last-child { border-bottom: 0; }
+.admin-list__item a { color: var(--admin-text); text-decoration: none; }
+.admin-list__item a:hover { color: var(--admin-accent); }
+.admin-list__badge { font-size: .75rem; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.admin-list__badge--danger { background: #fee2e2; color: #991b1b; }
+
+.admin-empty { margin: 0; color: var(--admin-text-muted); font-size: .9rem; }
+
+.admin-quick-links { display: flex; flex-direction: column; gap: 8px; }
+.admin-quick-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    text-decoration: none;
+    font-size: .9rem;
+    transition: background .15s, color .15s;
+}
+.admin-quick-link:hover { background: #e2e8f0; color: var(--admin-accent); }
+.admin-quick-link i { width: 20px; color: var(--admin-text-muted); }
+</style>
+{% endblock %}

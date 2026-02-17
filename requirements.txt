@@ -1,0 +1,17 @@
+# Django E-commerce - Boskery
+# Django 5.2 LTS - Latest stable with security
+Django>=5.2,<6.0
+djangorestframework>=3.15
+django-allauth>=65.0
+django-crispy-forms>=2.3
+crispy-bootstrap5>=2024.2
+django-environ>=0.11
+Pillow>=10.0
+requests>=2.31
+django-htmx>=1.17
+django-ckeditor-5>=0.2.15
+django-debug-toolbar>=4.4
+django-extensions>=3.2
+whitenoise>=6.6
+gunicorn>=23.0
+psycopg[binary]>=3.1

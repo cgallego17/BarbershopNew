@@ -1,0 +1,75 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Clientes{% endblock %}
+{% block topbar_title %}Clientes{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <form method="get" class="d-flex gap-2 flex-wrap">
+        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" style="max-width:220px" placeholder="Buscar por nombre, email...">
+        <select name="role" class="form-select" style="max-width:160px">
+            <option value="">Todos</option>
+            <option value="client" {% if request.GET.role == 'client' %}selected{% endif %}>Clientes</option>
+            <option value="wholesale" {% if request.GET.role == 'wholesale' %}selected{% endif %}>Mayoristas</option>
+            <option value="staff" {% if request.GET.role == 'staff' %}selected{% endif %}>Staff</option>
+            <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Administradores</option>
+        </select>
+        <button type="submit" class="admin-btn admin-btn--secondary"><i class="fas fa-search"></i></button>
+    </form>
+    <a href="{% url 'admin_panel:customer_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo cliente</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Cliente</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Registro</th>
+                        <th>Pedidos</th>
+                        <th>Rol</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td>
+                            <strong>{{ c.get_full_name|default:c.email }}</strong>
+                            {% if not c.get_full_name and c.email %}<br><small class="text-muted">{{ c.email }}</small>{% endif %}
+                        </td>
+                        <td>{{ c.email|default:"—" }}</td>
+                        <td>{{ c.phone|default:"—" }}</td>
+                        <td>{{ c.date_joined|date:"d/m/Y" }}</td>
+                        <td>{{ c.orders.count }}</td>
+                        <td>
+                            {% if c.role == 'admin' %}<span class="admin-badge admin-badge--refunded">Admin</span>
+                            {% elif c.role == 'staff' %}<span class="admin-badge admin-badge--processing">Staff</span>
+                            {% elif c.role == 'wholesale' %}<span class="admin-badge admin-badge--on_hold">Mayorista</span>
+                            {% else %}<span class="admin-badge admin-badge--completed">Cliente</span>{% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_panel:customer_detail' c.pk %}" class="admin-link me-2">Ver</a>
+                            <a href="{% url 'admin_panel:customer_edit' c.pk %}" class="admin-link">Editar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="admin-table__empty">No hay clientes registrados</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

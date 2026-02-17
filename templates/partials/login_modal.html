@@ -1,0 +1,164 @@
+{% load static i18n %}
+
+<style>
+  /* Scoped modal styling for a more professional look */
+  #loginModal .modal-dialog { max-width: 460px; }
+  #loginModal .modal-content {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(16,15,15,.92);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+  }
+  #loginModal .modal-header {
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 18px 20px;
+    background: radial-gradient(100% 140% at 0% 0%, rgba(var(--boskery-base-rgb, 197, 101, 51), .22) 0%, rgba(16,15,15,0) 55%);
+  }
+  #loginModal .modal-title { margin: 0; }
+  #loginModal .login-modal__logo {
+    display: block;
+    max-height: 32px;
+    width: auto;
+  }
+  #loginModal .login-modal__subtitle { color: rgba(255,255,255,.7); }
+  #loginModal .modal-body { padding: 18px 20px 22px; }
+
+  #loginModal .login-page__form__input-box { position: relative; margin-top: 14px; }
+  #loginModal .login-page__form__input-box input {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    padding-left: 46px;
+    padding-right: 46px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  }
+  #loginModal .login-page__form__input-box input::placeholder { color: rgba(255,255,255,.55); }
+  #loginModal .login-page__form__input-box input:focus {
+    background: rgba(255,255,255,.06);
+    border-color: rgba(var(--boskery-base-rgb, 197, 101, 51), .6);
+    box-shadow: 0 0 0 4px rgba(var(--boskery-base-rgb, 197, 101, 51), .18);
+  }
+  #loginModal .login-page__form__input-box > span {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.65);
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  #loginModal .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.03);
+    color: rgba(255,255,255,.75);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #loginModal .toggle-password:hover { background: rgba(255,255,255,.06); }
+
+  #loginModal .login-modal__links a { color: rgba(255,255,255,.82); text-decoration: none; }
+  #loginModal .login-modal__links a:hover { color: var(--boskery-base, #C56533); }
+  #loginModal .btn-close { filter: invert(1) grayscale(1); opacity: .9; }
+</style>
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-3">
+          <img class="login-modal__logo" src="{% static 'logo-768x317.png' %}" alt="Logo" />
+          <div>
+            <h5 class="modal-title" id="loginModalLabel">{% trans "Iniciar sesión" %}</h5>
+            <div class="login-modal__subtitle small">{% trans "Accede para ver tus pedidos y finalizar más rápido." %}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Cerrar' %}"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'account_login' %}" class="login-page__form" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_login">{% trans "Email" %}</label>
+            <input id="modal_login" type="email" name="login" placeholder="{% trans 'Email' %}" autocomplete="email" required>
+            <span class="icon-email"></span>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_password">{% trans "Contraseña" %}</label>
+            <input id="modal_password" type="password" name="password" placeholder="{% trans 'Contraseña' %}" autocomplete="current-password" required>
+            <span class="icon-padlock"></span>
+            <button type="button" class="toggle-password" data-toggle-password="#modal_password" aria-label="{% trans 'Mostrar u ocultar contraseña' %}">
+              <i class="fa fa-fw fa-eye-slash" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="d-flex align-items-center justify-content-between gap-3 mt-3 login-modal__links">
+            <div class="login-page__form__checked-box m-0">
+              <input type="checkbox" name="remember" id="modal_remember">
+              <label for="modal_remember" class="mb-0"><span></span>{% trans "Recordarme" %}</label>
+            </div>
+            <a href="{% url 'account_reset_password' %}" class="login-page__form__forgot">
+              {% trans "Olvidé mi contraseña" %}
+            </a>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="boskery-btn login-page__form__btn w-100">
+              {% trans "Entrar" %}
+            </button>
+          </div>
+
+          <div class="text-center small mt-3 login-modal__links">
+            {% trans "¿No tienes cuenta?" %}
+            <a href="{% url 'account_signup' %}">{% trans "Crear cuenta" %}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Focus login field when modal opens
+    document.addEventListener("shown.bs.modal", function (event) {
+      if (!event || !event.target || event.target.id !== "loginModal") return;
+      const login = document.getElementById("modal_login");
+      if (login) login.focus();
+    });
+
+    // Toggle password visibility
+    document.addEventListener("click", function (e) {
+      const btn = e.target.closest(".toggle-password");
+      if (!btn) return;
+      const selector = btn.getAttribute("data-toggle-password");
+      const input = selector ? document.querySelector(selector) : null;
+      if (!input) return;
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-eye-slash", !isPassword);
+        icon.classList.toggle("fa-eye", isPassword);
+      }
+    });
+  })();
+</script>
+

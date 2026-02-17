@@ -1,0 +1,159 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Productos{% endblock %}
+{% block topbar_title %}Productos{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    <form method="post" action="{% url 'admin_panel:product_sync_tersa' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="admin-btn admin-btn--secondary" title="Importar productos BARBERSHOP y BARBER UP desde API Tersa">
+            <i class="fas fa-cloud-download-alt"></i> Importar Tersa
+        </button>
+    </form>
+    <a href="{% url 'admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
+        {% if request.GET.q or request.GET.status or request.GET.category or request.GET.brand or request.GET.type or request.GET.featured or request.GET.sort %}
+        <a href="{% url 'admin_panel:product_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre, código o descripción breve">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Categoría</label>
+                    <select name="category" class="form-select">
+                        <option value="">Todas</option>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}" {% if request.GET.category == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Marca</label>
+                    <select name="brand" class="form-select">
+                        <option value="">Todas</option>
+                        {% for b in brands %}
+                        <option value="{{ b.id }}" {% if request.GET.brand == b.id|stringformat:"s" %}selected{% endif %}>{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tipo</label>
+                    <select name="type" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="simple" {% if request.GET.type == 'simple' %}selected{% endif %}>Simple</option>
+                        <option value="variable" {% if request.GET.type == 'variable' %}selected{% endif %}>Variable</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Destacados</label>
+                    <select name="featured" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="1" {% if request.GET.featured == '1' %}selected{% endif %}>Sí</option>
+                        <option value="0" {% if request.GET.featured == '0' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="-created" {% if request.GET.sort == '-created' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                        <option value="created" {% if request.GET.sort == 'created' %}selected{% endif %}>Más antiguos</option>
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre A-Z</option>
+                        <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Nombre Z-A</option>
+                        <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Precio menor</option>
+                        <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Precio mayor</option>
+                        <option value="sku" {% if request.GET.sort == 'sku' %}selected{% endif %}>Código</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Imagen</th>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th>Marca</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td>
+                            {% with img=p.get_main_image %}
+                            {% if img %}
+                            <img src="{{ img.image.url }}" alt="{{ p.name|truncatewords:5 }}" class="rounded" style="width:48px;height:48px;object-fit:cover">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;font-size:1.2rem"><i class="fas fa-image"></i></div>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td><strong>{{ p.name }}</strong>{% if p.is_featured %} <span class="badge bg-warning text-dark" style="font-size:0.7rem">Destacado</span>{% endif %}</td>
+                        <td><code>{{ p.codigo|default:p.sku|default:"—" }}</code></td>
+                        <td>{{ p.brand.name|default:"—" }}</td>
+                        <td>${{ p.price|floatformat:2|intcomma }}</td>
+                        <td>{% if p.manage_stock %}{{ p.stock_quantity }}{% else %}—{% endif %}</td>
+                        <td>{% if p.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-link">Editar</a>
+                                <span class="admin-actions__sep">·</span>
+                                <form method="post" action="{% url 'admin_panel:product_toggle_active' p.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-link {% if p.is_active %}btn-link--warning{% else %}btn-link--success{% endif %}">
+                                        {% if p.is_active %}Inactivar{% else %}Activar{% endif %}
+                                    </button>
+                                </form>
+                                <span class="admin-actions__sep">·</span>
+                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-link btn-link--danger">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="admin-table__empty">No hay productos{% if request.GET.q or request.GET.status or request.GET.category or request.GET.brand %} con los filtros aplicados. <a href="{% url 'admin_panel:product_list' %}">Ver todos</a>{% else %}. <a href="{% url 'admin_panel:product_create' %}">Crear primer producto</a>{% endif %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

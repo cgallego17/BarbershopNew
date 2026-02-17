@@ -1,0 +1,49 @@
+{% load static humanize %}
+<section class="product-one section-space-two" id="shop">
+    <div class="container">
+        <div class="sec-title sec-title--center">
+            <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="" class="sec-title__img">
+            <h6 class="sec-title__tagline">productos destacados</h6>
+            <h2 class="sec-title__title">Productos populares</h2>
+        </div>
+        <div class="row gutter-y-30">
+            {% for product in featured_products %}
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="product__item wow fadeInUp">
+                    <div class="product__item__image">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="product__item__content">
+                        <div class="boskery-ratings">
+                            {% for i in "12345" %}<span class="icon-star"></span>{% endfor %}
+                        </div>
+                        <h4 class="product__item__title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h4>
+                        <div class="product__item__price">{{ site_settings.currency }}{{ product.price|floatformat:0|intcomma }}</div>
+                        {% if product.in_stock %}
+                        <form method="post" action="{% url 'cart:add' product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="boskery-btn product__item__link">
+                                <span class="boskery-btn__text">Añadir al carrito</span>
+                                <i class="icon-meat-3"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">Agotado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No hay productos destacados.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

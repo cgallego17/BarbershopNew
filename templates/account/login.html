@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Iniciar sesión" %}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">{% trans "Log In" %}</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+            <li><span>{% trans "Log In" %}</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="login-page">
+    <div class="container">
+        {% if messages %}
+        <div class="row">
+            <div class="col-lg-10 mx-auto">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} mt-3" role="alert">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="login-page__inner">
+                    <div class="login-page__image wow fadeInLeft" data-wow-duration="1500ms">
+                        <img src="{% static 'assets/images/resources/login-1-1.jpg' %}" alt="login">
+                    </div>
+                    <div class="login-page__wrap login-page__main-tab-box tabs-box wow fadeInRight" data-wow-duration="1500ms">
+                        <div class="login-page__wrap__bg" style="background-image: url('{% static 'assets/images/shapes/login-bg-1.png' %}');"></div>
+                        <div class="login-page__wrap__top">
+                            <div class="login-page__wrap__content">
+                                <h3 class="login-page__title">{% trans "Bienvenido" %}</h3>
+                                <p class="mt-2 mb-0 text-muted small">
+                                    {% trans "Inicia sesión con tu email." %}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="tabs-content">
+                            <div class="tab active-tab fadeInUp animated" data-wow-delay="200ms" id="login" style="display: block;">
+                                <span class="login-page__tab-title">{% trans "Inicia sesión" %}</span>
+
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger mt-3">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+
+                                <form class="login-page__form" method="post" action="{% url 'account_login' %}">
+                                    {% csrf_token %}
+                                    {% if redirect_field_value %}
+                                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+                                    {% endif %}
+
+                                    <div class="login-page__form__input-box">
+                                        <label class="sr-only" for="id_login">{% trans "Email" %}</label>
+                                        <input
+                                            id="id_login"
+                                            type="email"
+                                            name="login"
+                                            placeholder="{% trans 'Email' %}"
+                                            value="{{ form.login.value|default_if_none:'' }}"
+                                            autocomplete="username"
+                                            autofocus
+                                            required
+                                        >
+                                        <span class="icon-email"></span>
+                                        {% if form.login.errors %}<div class="text-danger small mt-1">{{ form.login.errors }}</div>{% endif %}
+                                    </div>
+
+                                    <div class="login-page__form__input-box">
+                                        <label class="sr-only" for="id_password">{% trans "Contraseña" %}</label>
+                                        <input
+                                            id="id_password"
+                                            type="password"
+                                            name="password"
+                                            placeholder="{% trans 'Contraseña' %}"
+                                            class="login-page__password"
+                                            autocomplete="current-password"
+                                            required
+                                        >
+                                        <span class="icon-padlock"></span>
+                                        <button type="button" class="toggle-password pass-field-icon" aria-label="{% trans 'Mostrar u ocultar contraseña' %}">
+                                            <i class="fa fa-fw fa-eye-slash" aria-hidden="true"></i>
+                                        </button>
+                                        {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
+                                    </div>
+
+                                    <div class="d-flex align-items-center justify-content-between gap-3 mt-2">
+                                        <div class="login-page__form__checked-box m-0">
+                                            <input type="checkbox" name="remember" id="remember-policy" {% if form.remember.value %}checked{% endif %}>
+                                            <label for="remember-policy" class="mb-0"><span></span>{% trans "Recordarme" %}</label>
+                                        </div>
+                                        <a href="{% url 'account_reset_password' %}" class="login-page__form__forgot">
+                                            {% trans "Olvidé mi contraseña" %}
+                                        </a>
+                                    </div>
+
+                                    <div class="login-page__form__input-box login-page__form__input-box--button mt-4">
+                                        <button type="submit" class="boskery-btn login-page__form__btn w-100">
+                                            {% trans "Entrar" %}
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <div class="login-page__signin">
+                                    <h4 class="login-page__signin__title">
+                                        {% trans "¿No tienes cuenta?" %}
+                                        <a href="{% url 'account_signup' %}">{% trans "Crear cuenta" %}</a>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const btn = document.querySelector(".toggle-password");
+    const input = document.getElementById("id_password");
+    if (!btn || !input) return;
+
+    btn.addEventListener("click", function () {
+      const isPassword = input.type === "password";
+      input.type = isPassword ? "text" : "password";
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.toggle("fa-eye-slash", !isPassword);
+        icon.classList.toggle("fa-eye", isPassword);
+      }
+    });
+  })();
+</script>
+{% endblock %}

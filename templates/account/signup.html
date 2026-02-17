@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Registro" %}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">{% trans "Register" %}</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">{% trans "Home" %}</a></li>
+            <li><span>{% trans "Register" %}</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="login-page">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="login-page__inner">
+                    <div class="login-page__image wow fadeInLeft" data-wow-duration="1500ms">
+                        <img src="{% static 'assets/images/resources/login-1-1.jpg' %}" alt="register">
+                    </div>
+                    <div class="login-page__wrap login-page__main-tab-box tabs-box wow fadeInRight" data-wow-duration="1500ms">
+                        <div class="login-page__wrap__bg" style="background-image: url('{% static 'assets/images/shapes/login-bg-1.png' %}');"></div>
+                        <div class="login-page__wrap__top">
+                            <div class="login-page__wrap__content">
+                                <h3 class="login-page__title">{% trans "welcome" %}</h3>
+                            </div>
+                            <ul class="tab-buttons">
+                                <li data-tab="#login" class="tab-btn boskery-btn">
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__text">{% trans "log in" %}</span>
+                                </li>
+                                <li data-tab="#register" class="tab-btn boskery-btn active-btn">
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__text">{% trans "register" %}</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="tabs-content">
+                            <div class="tab fadeInUp animated" data-wow-delay="200ms" id="login" style="display: none;">
+                                <span class="login-page__tab-title">{% trans "sign in your account" %}</span>
+                                <div class="mt-4">
+                                    <a class="boskery-btn login-page__form__btn" href="{% url 'account_login' %}">
+                                        {% trans "Ir a login" %}
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="tab active-tab fadeInUp animated" data-wow-delay="200ms" id="register" style="display: block;">
+                                <span class="login-page__tab-title">{% trans "sign up your account" %}</span>
+
+                                {% if form.non_field_errors %}
+                                <div class="alert alert-danger mt-3">
+                                    {{ form.non_field_errors }}
+                                </div>
+                                {% endif %}
+
+                                <form class="login-page__form" method="post" action="{% url 'account_signup' %}">
+                                    {% csrf_token %}
+                                    {% if redirect_field_value %}
+                                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+                                    {% endif %}
+
+                                    {% if form.email %}
+                                    <div class="login-page__form__input-box">
+                                        <input type="email" name="email" placeholder="{% trans 'Your Email' %}" value="{{ form.email.value|default_if_none:'' }}" autocomplete="email">
+                                        <span class="icon-email"></span>
+                                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors }}</div>{% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="login-page__form__input-box">
+                                        <input type="password" name="password1" placeholder="{% trans 'Password' %}" class="login-page__password" autocomplete="new-password">
+                                        <span class="icon-padlock"></span>
+                                        <i class="toggle-password pass-field-icon fa fa-fw fa-eye-slash"></i>
+                                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors }}</div>{% endif %}
+                                    </div>
+
+                                    {% if form.password2 %}
+                                    <div class="login-page__form__input-box">
+                                        <input type="password" name="password2" placeholder="{% trans 'Confirm Password' %}" class="login-page__password" autocomplete="new-password">
+                                        <span class="icon-padlock"></span>
+                                        <i class="toggle-password pass-field-icon fa fa-fw fa-eye-slash"></i>
+                                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors }}</div>{% endif %}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="login-page__form__input-box login-page__form__input-box--button">
+                                        <button type="submit" class="boskery-btn login-page__form__btn">{% trans "Register" %}</button>
+                                    </div>
+
+                                    <div class="login-page__form__input-box login-page__form__input-box--bottom">
+                                        <div class="login-page__form__checked-box">
+                                            <input type="checkbox" name="accept-policy" id="accept-policy">
+                                            <label for="accept-policy"><span></span>{% trans "I accept company privacy policy." %}</label>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div class="login-page__signin">
+                                    <h4 class="login-page__signin__title">
+                                        {% trans "Already have an account?" %}
+                                        <a href="{% url 'account_login' %}">{% trans "Sign In" %}</a>
+                                    </h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

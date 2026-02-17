@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Pedido {{ order.order_number }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Pedido {{ order.order_number }}</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
+            <li><span>{{ order.order_number }}</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="section-space">
+    <div class="container">
+        <p><strong>Estado:</strong> {{ order.get_status_display }}</p>
+        <p><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
+        <h5>Productos</h5>
+        <table class="table">
+            <thead>
+                <tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+                {% for item in order.items.all %}
+                <tr>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.price|floatformat:2 }}</td>
+                    <td>${{ item.total|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="text-end"><strong>Total: ${{ order.total|floatformat:2 }}</strong></p>
+    </div>
+</section>
+{% endblock %}

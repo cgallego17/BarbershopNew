@@ -1,0 +1,142 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Configuración del sitio{% endblock %}
+{% block topbar_title %}Configuración del sitio{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Información general</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre de la tienda</label>
+                        {{ form.site_name }}
+                        {% if form.site_name.errors %}<div class="text-danger small">{{ form.site_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Slogan / descripción breve</label>
+                        {{ form.tagline }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Logo</label>
+                        {{ form.logo }}
+                        {% if settings.logo %}<p class="mt-2 small text-muted">Actual: <img src="{{ settings.logo.url }}" alt="Logo" style="max-height: 40px;"></p>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Contacto</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">WhatsApp</label>
+                        {{ form.whatsapp }}
+                        <p class="small text-muted mb-0 mt-1">Ej: +57 300 123 4567</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Dirección</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Dirección</label>
+                        {{ form.address }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        {{ form.city }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">País</label>
+                        {{ form.country }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Código postal</label>
+                        {{ form.postal_code }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Horarios</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Horario de atención</label>
+                        {{ form.business_hours }}
+                        <p class="small text-muted mb-0 mt-1">Ej: Lun a Dom 9:00am a 6:00pm</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Redes sociales</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Facebook</label>
+                        {{ form.facebook_url }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Instagram</label>
+                        {{ form.instagram_url }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Twitter/X</label>
+                        {{ form.twitter_url }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">YouTube</label>
+                        {{ form.youtube_url }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="text-muted mb-3">Información adicional</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Sobre nosotros</label>
+                        {{ form.about_text }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Moneda</label>
+                        {{ form.currency }}
+                        <p class="small text-muted mb-0 mt-1">Ej: $, USD, COP</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">URL Términos y condiciones</label>
+                        {{ form.terms_url }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">URL Política de privacidad</label>
+                        {{ form.privacy_url }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Meta descripción (SEO)</label>
+                        {{ form.meta_description }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar configuración</button>
+                <a href="{% url 'dashboard' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

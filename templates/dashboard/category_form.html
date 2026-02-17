@@ -1,0 +1,52 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ object|yesno:"Editar,Nueva" }} categoría{% endblock %}
+{% block topbar_title %}{{ object|yesno:"Editar,Nueva" }} categoría{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Slug</label>
+                    {{ form.slug }}
+                    {% if form.slug.errors %}<div class="text-danger small">{{ form.slug.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Categoría padre</label>
+                    {{ form.parent }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Descripción</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Imagen</label>
+                    {{ form.image }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Orden</label>
+                    {{ form.order }}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label d-block">Activa</label>
+                    {{ form.is_active }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:category_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

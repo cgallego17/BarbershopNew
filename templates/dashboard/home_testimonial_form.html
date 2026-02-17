@@ -1,0 +1,47 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ testimonial|yesno:"Editar,Nuevo" }} testimonio{% endblock %}
+{% block topbar_title %}{{ testimonial|yesno:"Editar,Nuevo" }} testimonio{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'admin_panel:home_testimonial_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a testimonios</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cargo / rol</label>
+                    {{ form.designation }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Testimonio</label>
+                    {{ form.text }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Foto</label>
+                    {{ form.image }}
+                    {% if testimonial.image %}<p class="mt-2 small">Actual: <img src="{{ testimonial.image.url }}" style="max-height:60px"></p>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Orden</label>
+                    {{ form.order }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:home_testimonial_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

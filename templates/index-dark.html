@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ site_settings.site_name|default:"Home" }}{% endblock %}
+
+{% block content %}
+{% for section_key in active_sections %}
+    {% if section_key == 'hero' %}
+        {% include 'home/section_hero.html' %}
+    {% elif section_key == 'about' and about_block.content %}
+        {% include 'home/section_about.html' %}
+    {% elif section_key == 'brands' and home_brands %}
+        {% include 'home/section_brands.html' %}
+    {% elif section_key == 'products' %}
+        {% include 'home/section_products.html' %}
+    {% elif section_key == 'testimonials' and home_testimonials %}
+        {% include 'home/section_testimonials.html' %}
+    {% endif %}
+{% endfor %}
+{% endblock %}

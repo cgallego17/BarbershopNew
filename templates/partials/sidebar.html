@@ -1,0 +1,42 @@
+{% load static %}
+<aside class="sidebar-one">
+    <div class="sidebar-one__overlay sidebar-btn__toggler"></div>
+    <div class="sidebar-one__content">
+        <span class="sidebar-one__close sidebar-btn__toggler"><i class="fa fa-times"></i></span>
+
+        <div class="sidebar-one__logo sidebar-one__item">
+            <a href="{% url 'home' %}" aria-label="logo image">
+                <img src="{% static 'logo-768x317.png' %}" width="171" alt="Logo" />
+            </a>
+        </div>
+
+        <div class="sidebar-one__about sidebar-one__item">
+            <p class="sidebar-one__about__text">
+                Tienda online conectada a tu API, con administración local e integración con ERP.
+            </p>
+        </div>
+
+        <div class="sidebar-one__info sidebar-one__item">
+            <h4 class="sidebar-one__title">Contacto</h4>
+            <ul class="sidebar-one__info__list">
+                <li>
+                    <span class="icon-maps-and-flags"></span>
+                    <address>Dirección de tu tienda</address>
+                </li>
+                <li><span class="icon-paper-plane"></span> <a href="mailto:needhelp@company.com">needhelp@company.com</a></li>
+                <li><span class="icon-phone-call"></span> <a href="tel:+10000000000">+1 000 000 0000</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-one__social sidebar-one__item">
+            <a href="https://facebook.com">
+                <i class="fab fa-facebook-f" aria-hidden="true"></i>
+                <span class="sr-only">Facebook</span>
+            </a>
+            <a href="https://instagram.com">
+                <i class="fab fa-instagram" aria-hidden="true"></i>
+                <span class="sr-only">Instagram</span>
+            </a>
+        </div>
+    </div>
+</aside>

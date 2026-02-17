@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Productos</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><span>Productos</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="product-page section-space-bottom">
+    <div class="container">
+        <div class="product__info-top">
+            <p class="product__showing-text">Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ page_obj.paginator.count }} resultados</p>
+            <div class="product__showing-sort">
+                <form method="get" class="d-inline">
+                    <input type="hidden" name="q" value="{{ request.GET.q }}">
+                    <select name="sort" class="selectpicker" onchange="this.form.submit()">
+                        <option value="default" {% if request.GET.sort == 'default' %}selected{% endif %}>Orden por defecto</option>
+                        <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Precio: menor a mayor</option>
+                        <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Precio: mayor a menor</option>
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre</option>
+                        <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Más recientes</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+
+        <div class="row gutter-y-30">
+            {% for product in products %}
+            <div class="col-xl-3 col-lg-4 col-sm-6">
+                <div class="product__item wow fadeInUp">
+                    <div class="product__item__image">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        {% else %}
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+                    <div class="product__item__content">
+                        <div class="boskery-ratings">
+                            {% for i in "12345" %}<span class="icon-star"></span>{% endfor %}
+                        </div>
+                        <h4 class="product__item__title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h4>
+                        <div class="product__item__price">${{ product.price|floatformat:2 }}</div>
+                        {% if product.in_stock %}
+                        <form method="post" action="{% url 'cart:add' product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="boskery-btn product__item__link">
+                                <span class="boskery-btn__text">Añadir al carrito</span>
+                                <i class="icon-meat-3"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="text-muted">Agotado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <p>No se encontraron productos.</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <ul class="post-pagination">
+            {% if page_obj.has_previous %}
+            <li><a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"><span class="icon-arrow-left"></span></a></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="active"><a href="#">{{ num }}</a></li>
+            {% else %}
+            <li><a href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li><a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}"><span class="icon-arrow-right"></span></a></li>
+            {% endif %}
+        </ul>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

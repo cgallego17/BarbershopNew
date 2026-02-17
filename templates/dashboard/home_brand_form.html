@@ -1,0 +1,42 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ brand|yesno:"Editar,Nueva" }} marca{% endblock %}
+{% block topbar_title %}{{ brand|yesno:"Editar,Nueva" }} marca{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'admin_panel:home_brand_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a marcas</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Orden</label>
+                    {{ form.order }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Logo</label>
+                    {{ form.logo }}
+                    {% if brand.logo %}<p class="mt-2 small">Actual: <img src="{{ brand.logo.url }}" style="max-height:60px"></p>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">URL</label>
+                    {{ form.url }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:home_brand_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

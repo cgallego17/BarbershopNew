@@ -1,0 +1,77 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Secciones del Home{% endblock %}
+{% block topbar_title %}Secciones del Home{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ formset.media }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <p class="text-muted mb-0">Activa o desactiva secciones y ordena su aparición en el home. Configura el contenido de cada sección en los enlaces abajo.</p>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'admin_panel:home_hero_list' %}" class="admin-quick-link d-block text-decoration-none">
+            <i class="fas fa-images"></i>
+            <span>Slides Hero <small class="text-muted">({{ hero_slides_count }})</small></span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'admin_panel:home_about' %}" class="admin-quick-link d-block text-decoration-none">
+            <i class="fas fa-info-circle"></i>
+            <span>Sobre nosotros</span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'admin_panel:home_brand_list' %}" class="admin-quick-link d-block text-decoration-none">
+            <i class="fas fa-tags"></i>
+            <span>Marcas <small class="text-muted">({{ brands_count }})</small></span>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'admin_panel:home_testimonial_list' %}" class="admin-quick-link d-block text-decoration-none">
+            <i class="fas fa-quote-right"></i>
+            <span>Testimonios <small class="text-muted">({{ testimonials_count }})</small></span>
+        </a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__header">
+        <h2 class="admin-card__title mb-0">Visibilidad y orden</h2>
+    </div>
+    <div class="admin-card__body">
+        <form method="post" class="admin-form">
+            {% csrf_token %}
+            {{ formset.management_form }}
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sección</th>
+                            <th style="width:100px">Orden</th>
+                            <th style="width:100px">Activa</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            <td>
+                                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                {{ form.instance.get_section_key_display|default:form.instance.section_key }}
+                            </td>
+                            <td>{{ form.order }}</td>
+                            <td>{{ form.is_active }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar configuración</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

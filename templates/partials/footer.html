@@ -1,0 +1,114 @@
+{% load static %}
+<footer class="main-footer">
+    <div class="main-footer__bg" style="background-image: url({% static 'assets/images/backgrounds/footer-bg.png' %});"></div>
+    <div class="container">
+        <div class="main-footer__top">
+            <div class="row gutter-y-40 align-items-center">
+                <div class="col-md-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
+                    <a href="{% url 'home' %}" class="main-footer__logo">
+                        {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" width="119" alt="{{ site_settings.site_name }}">{% else %}<img src="{% static 'logo-768x317.png' %}" width="119" alt="{{ site_settings.site_name|default:'Logo' }}">{% endif %}
+                    </a>
+                </div>
+                <div class="col-md-9 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="300ms">
+                    <form action="#" data-url="" class="main-footer__newsletter mc-form">
+                        <input type="text" name="EMAIL" placeholder="Email Address">
+                        <button type="submit" class="icon-paper-plane">
+                            <span class="sr-only">submit</span>
+                        </button>
+                    </form>
+                    <div class="mc-form__response"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-footer__widget">
+            <div class="row gutter-y-50">
+                <div class="col-lg-5 col-xl-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
+                    <div class="footer-widget footer-widget--about">
+                        <h2 class="footer-widget__title">{% if site_settings.about_text %}{{ site_settings.about_text|safe }}{% else %}Tienda online conectada a tu API + administración local + integración con ERP.{% endif %}</h2>
+                        <a href="{% url 'contact' %}" class="boskery-btn">
+                            <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                            <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                            <span class="boskery-btn__text">Contactar</span>
+                            <i class="icon-meat-3"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-3 col-xl-2 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="200ms">
+                    <div class="footer-widget footer-widget--links">
+                        <h2 class="footer-widget__title">Explorar</h2>
+                        <ul class="list-unstyled footer-widget__links">
+                            <li><a href="{% url 'home' %}">Home</a></li>
+                            <li><a href="{% url 'products:list' %}">Productos</a></li>
+                            <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
+                            <li><a href="{% url 'orders:checkout' %}">Checkout</a></li>
+                            <li><a href="{% url 'contact' %}">Contacto</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-5 col-xl-4 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="400ms">
+                    <div class="footer-widget footer-widget--contact">
+                        <h2 class="footer-widget__title">Contacto</h2>
+                        <div class="footer-widget__contact">
+                            {% if site_settings.address %}<address class="footer-widget__address">{{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% if site_settings.country %}, {{ site_settings.country }}{% endif %}{% endif %}</address>{% endif %}
+                            <ul class="list-unstyled footer-widget__info">
+                                {% if site_settings.email %}<li><span class="icon-paper-plane"></span> <a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a></li>{% endif %}
+                                {% if site_settings.phone %}<li><span class="icon-phone-call"></span> <a href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a></li>{% endif %}
+                            </ul>
+                            <div class="footer-widget__social">
+                                {% if site_settings.facebook_url %}<a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener"><i class="fab fa-facebook-f" aria-hidden="true"></i><span class="sr-only">Facebook</span></a>{% endif %}
+                                {% if site_settings.instagram_url %}<a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener"><i class="fab fa-instagram" aria-hidden="true"></i><span class="sr-only">Instagram</span></a>{% endif %}
+                                {% if site_settings.twitter_url %}<a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"><i class="fab fa-twitter" aria-hidden="true"></i><span class="sr-only">Twitter</span></a>{% endif %}
+                                {% if site_settings.youtube_url %}<a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener"><i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span></a>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5 col-md-4 col-sm-8 col-xl-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="600ms">
+                    <div class="footer-widget footer-widget--gallery">
+                        <h2 class="footer-widget__title">Galería</h2>
+                        <div class="footer-widget__gallery">
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-1.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-2.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-3.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-4.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-5.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                            <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
+                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-6.jpg' %}" alt="gallery">
+                                <span class="footer-widget__gallery__icon icon-plus"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-footer__bottom">
+        <div class="container">
+            <div class="main-footer__bottom__inner">
+                <p class="main-footer__copyright">
+                    &copy; {% now "Y" %} {{ site_settings.site_name|default:'Boskery E-commerce Django' }}
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>

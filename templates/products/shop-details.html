@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Detalle del producto</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'products:list' %}">Productos</a></li>
+            <li><span>{{ product.name }}</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="product-details section-space">
+    <div class="container">
+        <div class="row gutter-y-50">
+            <div class="col-lg-6 col-xl-6">
+                <div class="product-details__img">
+                    <div class="swiper product-details__gallery-top">
+                        <div class="swiper-wrapper">
+                            {% for img in product.images.all %}
+                            <div class="swiper-slide">
+                                <div class="product-details__gallery-top__inner">
+                                    <img src="{{ img.image.url }}" alt="{{ product.name }}">
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="swiper-slide">
+                                <div class="product-details__gallery-top__inner">
+                                    <img src="{% static 'assets/images/products/product-d-1-1.png' %}" alt="{{ product.name }}">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 col-xl-6">
+                <div class="product-details__content">
+                    <div class="product-details__top">
+                        <div class="product-details__top__left">
+                            <h3 class="product-details__name">{{ product.name }}</h3>
+                            <h4 class="product-details__price">${{ product.price|floatformat:2 }}</h4>
+                            {% if product.sale_price and product.sale_price < product.regular_price %}
+                            <del class="text-muted">${{ product.regular_price|floatformat:2 }}</del>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="product-details__review">
+                        <div class="boskery-ratings">
+                            {% for i in "12345" %}<span class="icon-star"></span>{% endfor %}
+                        </div>
+                        <span>({{ product.reviews.count }} reseñas)</span>
+                    </div>
+                    {% if product.short_description %}
+                    <div class="product-details__excerpt">
+                        <p>{{ product.short_description }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="product-details__info">
+                        <div class="product-details__quantity">
+                            <h3 class="product-details__content__title">Cantidad</h3>
+                            <form method="post" action="{% url 'cart:add' product.id %}" class="d-flex align-items-center gap-3">
+                                {% csrf_token %}
+                                <div class="quantity-box">
+                                    <button type="button" class="sub"><i class="fa fa-minus"></i></button>
+                                    <input type="number" name="quantity" value="1" min="1" max="99" id="qty">
+                                    <button type="button" class="add"><i class="fa fa-plus"></i></button>
+                                </div>
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button type="submit" class="boskery-btn product-details__btn">
+                                    <span class="boskery-btn__text">Añadir al carrito</span>
+                                    <i class="icon-meat-3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if product.description %}
+        <div class="product-details__description-wrapper">
+            <div class="container">
+                <div class="product-details__description">
+                    <h3>Descripción</h3>
+                    <div class="product-description">{{ product.description|safe }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

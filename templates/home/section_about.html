@@ -1,0 +1,44 @@
+{% load static %}
+<section class="about-three section-space" id="about">
+    <div class="container">
+        <div class="row gutter-y-60">
+            <div class="col-lg-6 wow fadeInLeft" data-wow-duration="1500ms">
+                <div class="about-three__image">
+                    {% if about_block.image1 %}<img src="{{ about_block.image1.url }}" alt="{{ about_block.title }}" class="about-three__image__one">{% else %}<img src="{% static 'assets/images/about/about-3-1.jpg' %}" alt="{{ about_block.title }}" class="about-three__image__one">{% endif %}
+                    {% if about_block.image2 %}
+                    <div class="about-three__image__inner"><img src="{{ about_block.image2.url }}" alt="" class="about-three__image__two"></div>
+                    {% endif %}
+                    {% if about_block.experience_years %}
+                    <div class="about-three__experience">
+                        <div class="about-three__experience__bg" style="background-image: url({% static 'assets/images/shapes/about-shape-3-1.png' %});"></div>
+                        <div class="about-three__experience__content">
+                            <div class="about-three__experience__text"><h4 class="about-three__experience__title">Años de<br>experiencia</h4></div>
+                            <h4 class="about-three__experience__year">{{ about_block.experience_years }}</h4>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 wow fadeInRight" data-wow-duration="1500ms">
+                <div class="about-three__content">
+                    <div class="sec-title">
+                        <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="" class="sec-title__img">
+                        {% if about_block.subtitle %}<h6 class="sec-title__tagline">{{ about_block.subtitle }}</h6>{% endif %}
+                        <h2 class="sec-title__title">{{ about_block.title }}</h2>
+                    </div>
+                    <div class="about-three__text">{{ about_block.content|safe }}</div>
+                    {% if about_block.button_text %}
+                    <div class="about-three__bottom">
+                        <a href="{{ about_block.button_url|default:'#' }}" class="boskery-btn">
+                            <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                            <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                            <span class="boskery-btn__text">{{ about_block.button_text }}</span>
+                            <i class="icon-meat-3"></i>
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

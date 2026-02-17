@@ -1,0 +1,11 @@
+{% load static %}
+<div class="mobile-nav__wrapper">
+    <div class="mobile-nav__overlay mobile-nav__toggler"></div>
+    <div class="mobile-nav__content">
+        <span class="mobile-nav__close mobile-nav__toggler"><i class="fa fa-times"></i></span>
+        <div class="logo-box">
+            <a href="{% url 'home' %}"><img src="{% static 'logo-768x317.png' %}" width="100" alt="Logo" /></a>
+        </div>
+        <div class="mobile-nav__container"></div>
+    </div>
+</div>

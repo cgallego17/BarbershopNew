@@ -1,0 +1,57 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Marcas{% endblock %}
+{% block topbar_title %}Marcas{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <p class="text-muted mb-0">Marcas del catálogo de productos</p>
+    <a href="{% url 'admin_panel:brand_create' %}" class="admin-btn admin-btn--primary">
+        <i class="fas fa-plus"></i> Nueva marca
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Logo</th>
+                        <th>Nombre</th>
+                        <th>Slug</th>
+                        <th>Orden</th>
+                        <th>Productos</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for brand in brands %}
+                    <tr>
+                        <td>{% if brand.logo %}<img src="{{ brand.logo.url }}" alt="" style="max-height:36px">{% else %}—{% endif %}</td>
+                        <td><strong>{{ brand.name }}</strong></td>
+                        <td><code>{{ brand.slug }}</code></td>
+                        <td>{{ brand.order }}</td>
+                        <td>{{ brand.product_count }}</td>
+                        <td class="text-end">
+                            <a href="{% url 'admin_panel:brand_edit' brand.pk %}" class="admin-link me-2">Editar</a>
+                            <a href="{% url 'admin_panel:brand_delete' brand.pk %}" class="admin-link text-danger">Eliminar</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="admin-table__empty">No hay marcas. <a href="{% url 'admin_panel:brand_create' %}">Crear primera marca</a></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}
