@@ -34,6 +34,7 @@ class SiteSettings(models.Model):
     # Dirección
     address = models.CharField('Dirección', max_length=255, blank=True)
     city = models.CharField('Ciudad', max_length=100, blank=True)
+    state = models.CharField('Departamento / Estado', max_length=100, blank=True)
     country = models.CharField('País', max_length=100, blank=True)
     postal_code = models.CharField('Código postal', max_length=20, blank=True)
 
@@ -46,6 +47,13 @@ class SiteSettings(models.Model):
     instagram_url = models.URLField('Instagram', blank=True)
     twitter_url = models.URLField('Twitter/X', blank=True)
     youtube_url = models.URLField('YouTube', blank=True)
+
+    # Tienda
+    show_out_of_stock_products = models.BooleanField(
+        'Mostrar productos sin stock',
+        default=True,
+        help_text='Si está desactivado, los productos sin stock no se mostrarán en la tienda ni en el home.'
+    )
 
     # Información adicional
     about_text = models.TextField('Texto sobre nosotros', blank=True)
@@ -99,9 +107,12 @@ class HomeHeroSlide(models.Model):
     subtitle = models.CharField('Subtítulo', max_length=150, blank=True)
     text = models.TextField('Descripción', blank=True)
     image = models.ImageField('Imagen', upload_to='home/hero/', blank=True, null=True)
+    shape_image = models.ImageField('Imagen decorativa (shape)', upload_to='home/hero/shapes/', blank=True, null=True,
+        help_text='Forma decorativa sobre la imagen. Si está vacío se usa la imagen por defecto.')
     button_text = models.CharField('Texto del botón', max_length=50, blank=True)
     button_url = models.CharField('URL del botón', max_length=255, blank=True)
-    video_url = models.URLField('URL video (YouTube)', blank=True)
+    video_url = models.URLField('URL video (YouTube)', blank=True,
+        help_text='Ej: https://www.youtube.com/watch?v=xxxxx. Si lo completas, se mostrará el botón de play sobre la imagen del slide.')
     order = models.PositiveIntegerField('Orden', default=0)
 
     class Meta:
@@ -138,6 +149,27 @@ class HomeAboutBlock(models.Model):
         return obj
 
 
+class HomeMeatCategoryBlock(models.Model):
+    """Contenido editable de la sección Categorías (meat-category) del home."""
+    tagline = models.CharField('Subtítulo / Tagline', max_length=150, blank=True, default='primera opción')
+    title = models.CharField('Título', max_length=300, blank=True, default='Las mejores categorías en nuestra tienda')
+    top_image = models.ImageField('Imagen superior', upload_to='home/meat_category/', blank=True, null=True)
+    background_image = models.ImageField('Imagen de fondo', upload_to='home/meat_category/', blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Sección categorías (meat-category)'
+        verbose_name_plural = 'Sección categorías (meat-category)'
+
+    def __str__(self):
+        return self.title or 'Categorías'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1, defaults={'tagline': 'primera opción', 'title': 'Las mejores categorías en nuestra tienda'})
+        return obj
+
+
 class HomeBrand(models.Model):
     """Logo de marca/cliente para el carrusel."""
     name = models.CharField('Nombre', max_length=100, blank=True)
@@ -169,3 +201,83 @@ class HomeTestimonial(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# --- Países, estados/departamentos y ciudades ---
+
+class Country(models.Model):
+    """País para direcciones y envíos."""
+    name = models.CharField('Nombre', max_length=100)
+    iso2 = models.CharField('Código ISO 2', max_length=2, blank=True)
+    iso3 = models.CharField('Código ISO 3', max_length=3, blank=True)
+    phonecode = models.CharField('Código tel.', max_length=10, blank=True)
+
+    class Meta:
+        verbose_name = 'País'
+        verbose_name_plural = 'Países'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class State(models.Model):
+    """Estado, departamento o región de un país."""
+    country = models.ForeignKey(Country, on_delete=models.CASCADE, related_name='states')
+    name = models.CharField('Nombre', max_length=100)
+    iso2 = models.CharField('Código', max_length=10, blank=True)
+
+    class Meta:
+        verbose_name = 'Estado / Departamento'
+        verbose_name_plural = 'Estados / Departamentos'
+        ordering = ['name']
+        unique_together = [['country', 'name']]
+
+    def __str__(self):
+        return f"{self.name} ({self.country.name})"
+
+
+class City(models.Model):
+    """Ciudad de un estado/departamento."""
+    state = models.ForeignKey(State, on_delete=models.CASCADE, related_name='cities')
+    name = models.CharField('Nombre', max_length=100)
+
+    class Meta:
+        verbose_name = 'Ciudad'
+        verbose_name_plural = 'Ciudades'
+        ordering = ['name']
+        unique_together = [['state', 'name']]
+
+    def __str__(self):
+        return f"{self.name}, {self.state.name}"
+
+
+class ShippingPrice(models.Model):
+    """Precio de envío y días de entrega por ciudad."""
+    city = models.OneToOneField(
+        City, on_delete=models.CASCADE, related_name='shipping_price',
+        verbose_name='Ciudad', unique=True
+    )
+    price = models.DecimalField(
+        'Precio de envío', max_digits=12, decimal_places=2,
+        default=0
+    )
+    delivery_days_min = models.PositiveIntegerField(
+        'Días de entrega (mínimo)', default=1,
+        help_text='Mínimo de días hábiles para la entrega'
+    )
+    delivery_days_max = models.PositiveIntegerField(
+        'Días de entrega (máximo)', default=3,
+        help_text='Máximo de días hábiles para la entrega'
+    )
+    is_active = models.BooleanField('Activo', default=True)
+
+    class Meta:
+        verbose_name = 'Precio de envío por ciudad'
+        verbose_name_plural = 'Precios de envío por ciudad'
+        ordering = ['city__state__name', 'city__name']
+
+    def __str__(self):
+        if self.delivery_days_min == self.delivery_days_max:
+            return f"{self.city} — ${self.price} ({self.delivery_days_min} días)"
+        return f"{self.city} — ${self.price} ({self.delivery_days_min} a {self.delivery_days_max} días)"

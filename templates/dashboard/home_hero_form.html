@@ -34,6 +34,12 @@
                     {% if slide.image %}<p class="mt-2 small text-muted">Actual: <img src="{{ slide.image.url }}" alt="" style="max-height:60px"></p>{% endif %}
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label">Imagen decorativa (shape)</label>
+                    {{ form.shape_image }}
+                    {% if form.shape_image.help_text %}<p class="form-text small">{{ form.shape_image.help_text }}</p>{% endif %}
+                    {% if slide.shape_image %}<p class="mt-2 small text-muted">Actual: <img src="{{ slide.shape_image.url }}" alt="" style="max-height:50px"></p>{% endif %}
+                </div>
+                <div class="col-12 col-md-6">
                     <label class="form-label">Orden</label>
                     {{ form.order }}
                 </div>
@@ -48,6 +54,7 @@
                 <div class="col-md-4">
                     <label class="form-label">URL video (YouTube)</label>
                     {{ form.video_url }}
+                    {% if form.video_url.help_text %}<p class="form-text small text-muted">{{ form.video_url.help_text }}</p>{% endif %}
                 </div>
             </div>
             <div class="mt-4 d-flex gap-2">

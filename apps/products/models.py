@@ -5,6 +5,7 @@ Soporta: productos simples, variables, stock, API externa, ERP.
 from decimal import Decimal
 
 from django.db import models
+from django.db.models import Q, Exists, OuterRef
 from django.urls import reverse
 from django.utils.text import slugify
 from django.core.validators import MinValueValidator
@@ -126,6 +127,15 @@ class Product(models.Model):
         verbose_name_plural = 'Productos'
         ordering = ['-created_at']
 
+    @classmethod
+    def q_in_stock(cls):
+        """Q filter para productos con stock (para listados según configuración)."""
+        simple = Q(product_type='simple') & (Q(manage_stock=False) | Q(stock_quantity__gt=0))
+        variable = Q(product_type='variable') & Exists(
+            ProductVariant.objects.filter(product=OuterRef('pk'), is_active=True, stock_quantity__gt=0)
+        )
+        return simple | variable
+
     def __str__(self):
         return self.name
 
@@ -189,11 +199,31 @@ class Product(models.Model):
             return True
         return self.stock_quantity > 0
 
+    def _approved_reviews(self):
+        """Reseñas aprobadas (solo estas cuentan para valoración y SEO)."""
+        return self.reviews.filter(is_approved=True)
+
     @property
     def average_rating(self):
-        return self.reviews.aggregate(
-            avg=models.Avg('rating')
-        )['avg'] or 0
+        """Puntuación media (1-5) solo de reseñas aprobadas."""
+        result = self._approved_reviews().aggregate(avg=models.Avg('rating'))
+        return result['avg'] or 0
+
+    @property
+    def review_count(self):
+        """Número de reseñas aprobadas."""
+        return self._approved_reviews().count()
+
+    def get_rating_stats(self):
+        """Devuelve {average, count} de reseñas aprobadas para mostrar y SEO."""
+        agg = self._approved_reviews().aggregate(
+            avg=models.Avg('rating'),
+            count=models.Count('id')
+        )
+        return {
+            'average': round(float(agg['avg'] or 0), 1),
+            'count': agg['count'] or 0,
+        }
 
     def get_main_image(self):
         """Devuelve la imagen principal o la primera disponible."""

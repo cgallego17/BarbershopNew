@@ -179,6 +179,10 @@
                     <span>Cupones</span>
                 </a>
                 <div class="admin-sidebar__section">Sistema</div>
+                <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-sidebar__item {% if 'shipping_price' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-truck"></i>
+                    <span>Precios de envío</span>
+                </a>
                 <a href="{% url 'admin_panel:home_sections' %}" class="admin-sidebar__item {% if 'home_' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-home"></i>
                     <span>Secciones Home</span>

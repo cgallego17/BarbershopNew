@@ -7,7 +7,7 @@ from apps.products.models import Product, Category, Brand, ProductAttribute, Pro
 from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
-from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeBrand, HomeTestimonial
+from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrand, HomeTestimonial, Country, State, City, ShippingPrice
 
 
 def _add_form_control(form):
@@ -178,7 +178,7 @@ class CustomerForm(forms.ModelForm):
         model = User
         fields = [
             'email', 'first_name', 'last_name',
-            'role', 'phone', 'address', 'city', 'country', 'postal_code',
+            'role', 'phone', 'address', 'city', 'state', 'country', 'postal_code',
             'is_active'
         ]
 
@@ -186,6 +186,11 @@ class CustomerForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
         self.fields['role'].help_text = 'Cliente: compras normales. Mayorista: panel con precios especiales. Staff: dashboard. Admin: todo.'
+        self.fields['country'].widget = forms.Select(choices=[('', '---------')] + [(c.name, c.name) for c in Country.objects.all().order_by('name')])
+        self.fields['state'].widget = forms.Select(choices=[('', 'Seleccione departamento...')])
+        self.fields['state'].widget.attrs['data-geo'] = 'state'
+        self.fields['city'].widget = forms.Select(choices=[('', 'Seleccione ciudad...')])
+        self.fields['city'].widget.attrs['data-geo'] = 'city'
 
 
 class CustomerCreateForm(forms.ModelForm):
@@ -198,7 +203,7 @@ class CustomerCreateForm(forms.ModelForm):
         model = User
         fields = [
             'email', 'first_name', 'last_name',
-            'role', 'phone', 'address', 'city', 'country', 'postal_code',
+            'role', 'phone', 'address', 'city', 'state', 'country', 'postal_code',
             'is_active'
         ]
 
@@ -206,6 +211,11 @@ class CustomerCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
         self.fields['role'].help_text = 'Cliente: compras normales. Mayorista: panel con precios especiales. Staff: dashboard. Admin: todo.'
+        self.fields['country'].widget = forms.Select(choices=[('', '---------')] + [(c.name, c.name) for c in Country.objects.all().order_by('name')])
+        self.fields['state'].widget = forms.Select(choices=[('', 'Seleccione departamento...')])
+        self.fields['state'].widget.attrs['data-geo'] = 'state'
+        self.fields['city'].widget = forms.Select(choices=[('', 'Seleccione ciudad...')])
+        self.fields['city'].widget.attrs['data-geo'] = 'city'
 
     def clean_password2(self):
         p1 = self.cleaned_data.get('password1')
@@ -271,9 +281,10 @@ class SiteSettingsForm(forms.ModelForm):
         fields = [
             'site_name', 'tagline', 'logo',
             'email', 'phone', 'whatsapp',
-            'address', 'city', 'country', 'postal_code',
+            'address', 'city', 'state', 'country', 'postal_code',
             'business_hours',
             'facebook_url', 'instagram_url', 'twitter_url', 'youtube_url',
+            'show_out_of_stock_products',
             'about_text', 'currency',
             'terms_url', 'privacy_url',
             'meta_description',
@@ -281,11 +292,34 @@ class SiteSettingsForm(forms.ModelForm):
         widgets = {
             'about_text': CKEDITOR_WIDGET,
             'meta_description': forms.Textarea(attrs={'rows': 2}),
+            'show_out_of_stock_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+        # País: opciones desde la base de datos
+        select_attrs = {'class': 'form-control'}
+        countries = Country.objects.all().order_by('name')
+        self.fields['country'].widget = forms.Select(
+            choices=[('', '---------')] + [(c.name, c.name) for c in countries],
+            attrs=select_attrs
+        )
+        # Estado y ciudad: opciones desde la base según país/estado guardados
+        state_choices = [('', 'Seleccione departamento...')]
+        city_choices = [('', 'Seleccione ciudad...')]
+        if self.instance and self.instance.pk and self.instance.country:
+            country = Country.objects.filter(name=self.instance.country.strip()).first()
+            if country:
+                states = State.objects.filter(country=country).order_by('name')
+                state_choices += [(s.name, s.name) for s in states]
+                if self.instance.state:
+                    state_obj = State.objects.filter(country=country, name=self.instance.state.strip()).first()
+                    if state_obj:
+                        cities = City.objects.filter(state=state_obj).order_by('name')
+                        city_choices += [(c.name, c.name) for c in cities]
+        self.fields['state'].widget = forms.Select(choices=state_choices, attrs={**select_attrs, 'data-geo': 'state'})
+        self.fields['city'].widget = forms.Select(choices=city_choices, attrs={**select_attrs, 'data-geo': 'city'})
 
 
 # --- Formularios Secciones del Home ---
@@ -303,7 +337,7 @@ class HomeSectionForm(forms.ModelForm):
 class HomeHeroSlideForm(forms.ModelForm):
     class Meta:
         model = HomeHeroSlide
-        fields = ['title', 'subtitle', 'text', 'image', 'button_text', 'button_url', 'video_url', 'order']
+        fields = ['title', 'subtitle', 'text', 'image', 'shape_image', 'button_text', 'button_url', 'video_url', 'order']
         widgets = {'text': CKEDITOR_WIDGET}
 
     def __init__(self, *args, **kwargs):
@@ -320,6 +354,16 @@ class HomeAboutBlockForm(forms.ModelForm):
             'button_text', 'button_url',
         ]
         widgets = {'content': CKEDITOR_WIDGET}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)
+
+
+class HomeMeatCategoryBlockForm(forms.ModelForm):
+    class Meta:
+        model = HomeMeatCategoryBlock
+        fields = ['tagline', 'title', 'top_image', 'background_image']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -345,3 +389,60 @@ class HomeTestimonialForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+
+
+class ShippingPriceForm(forms.ModelForm):
+    """Formulario de precio de envío por ciudad. Departamento + ciudad en cascada con autocomplete."""
+
+    state = forms.ModelChoiceField(
+        label='Departamento / Estado',
+        queryset=State.objects.select_related('country').order_by('country__name', 'name'),
+        required=False,
+        empty_label='Seleccione departamento primero'
+    )
+
+    class Meta:
+        model = ShippingPrice
+        fields = ['city', 'price', 'delivery_days_min', 'delivery_days_max', 'is_active']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)
+        self.fields['state'].widget.attrs['id'] = 'id_shipping_state'
+        self.fields['city'].widget.attrs['id'] = 'id_shipping_city'
+        self.fields['city'].empty_label = 'Seleccione ciudad'
+        self.fields['city'].required = True
+        # Queryset de city se ajusta en la vista según state (POST o instance)
+        if self.data.get('state'):
+            self.fields['city'].queryset = City.objects.filter(
+                state_id=self.data.get('state')
+            ).order_by('name')
+            used = ShippingPrice.objects.values_list('city_id', flat=True)
+            if not self.instance.pk:
+                self.fields['city'].queryset = self.fields['city'].queryset.exclude(pk__in=used)
+        elif self.instance and self.instance.pk and self.instance.city_id:
+            self.fields['state'].initial = self.instance.city.state_id
+            self.fields['city'].queryset = City.objects.filter(
+                state_id=self.instance.city.state_id
+            ).order_by('name')
+        else:
+            self.fields['city'].queryset = City.objects.none()
+
+    def clean_city(self):
+        city = self.cleaned_data.get('city')
+        if not city:
+            return city
+        qs = ShippingPrice.objects.filter(city=city)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError('Esta ciudad ya tiene un precio de envío configurado.')
+        return city
+
+    def clean(self):
+        data = super().clean()
+        d_min = data.get('delivery_days_min')
+        d_max = data.get('delivery_days_max')
+        if d_min is not None and d_max is not None and d_min > d_max:
+            raise forms.ValidationError('El mínimo de días no puede ser mayor que el máximo.')
+        return data

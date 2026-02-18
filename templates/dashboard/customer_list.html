@@ -53,8 +53,10 @@
                             {% else %}<span class="admin-badge admin-badge--completed">Cliente</span>{% endif %}
                         </td>
                         <td class="text-end">
-                            <a href="{% url 'admin_panel:customer_detail' c.pk %}" class="admin-link me-2">Ver</a>
-                            <a href="{% url 'admin_panel:customer_edit' c.pk %}" class="admin-link">Editar</a>
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:customer_detail' c.pk %}" class="admin-action admin-action--primary">Ver</a>
+                                <a href="{% url 'admin_panel:customer_edit' c.pk %}" class="admin-action admin-action--primary">Editar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

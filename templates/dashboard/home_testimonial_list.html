@@ -31,8 +31,10 @@
                         <td>{{ t.designation|default:"—" }}</td>
                         <td>{{ t.text|truncatewords:15 }}</td>
                         <td class="text-end">
-                            <a href="{% url 'admin_panel:home_testimonial_edit' t.pk %}" class="admin-link me-2">Editar</a>
-                            <a href="{% url 'admin_panel:home_testimonial_delete' t.pk %}" class="admin-link text-danger">Eliminar</a>
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:home_testimonial_edit' t.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'admin_panel:home_testimonial_delete' t.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

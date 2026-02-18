@@ -1,0 +1,46 @@
+{% load static humanize %}
+<!-- ============================================================
+     CART SIDEBAR
+     ============================================================ -->
+<div class="cs-overlay" id="cs-overlay"></div>
+
+<aside class="cart-sidebar" id="cart-sidebar" role="dialog" aria-label="Carrito de compras" aria-modal="true">
+
+    <!-- Header -->
+    <div class="cs-head">
+        <div class="cs-head__title">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Mi carrito</span>
+            <span class="cs-head__count" id="cs-count">{{ cart_count|default:0 }}</span>
+        </div>
+        <button class="cs-close" id="cs-close" aria-label="Cerrar carrito">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <!-- Items (reemplazable via AJAX) -->
+    <div class="cs-body" id="cs-body">
+        {% include 'partials/cart_sidebar_items.html' %}
+    </div>
+
+    <!-- Footer (siempre visible) -->
+    <div class="cs-foot" id="cs-foot">
+        {% if cart_count %}
+        <div class="cs-total">
+            <span>Total</span>
+            <strong id="cs-total-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</strong>
+        </div>
+        <a href="{% url 'cart:detail' %}" class="cs-btn cs-btn--primary">
+            <i class="fas fa-shopping-cart"></i> Ver carrito completo
+        </a>
+        <a href="{% url 'orders:checkout' %}" class="cs-btn cs-btn--outline">
+            <i class="fas fa-lock"></i> Pagar ahora
+        </a>
+        {% else %}
+        <a href="{% url 'products:list' %}" class="cs-btn cs-btn--primary">
+            <i class="fas fa-store"></i> Ir a la tienda
+        </a>
+        {% endif %}
+    </div>
+
+</aside>

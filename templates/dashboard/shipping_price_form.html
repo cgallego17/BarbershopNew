@@ -1,0 +1,139 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}{{ object|yesno:"Editar,Nuevo" }} precio de envío{% endblock %}
+{% block topbar_title %}{{ object|yesno:"Editar,Nuevo" }} precio de envío{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a precios de envío</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" class="admin-form" id="shippingPriceForm">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departamento / Estado *</label>
+                    {{ form.state }}
+                    {% if form.state.errors %}<div class="text-danger small">{{ form.state.errors.0 }}</div>{% endif %}
+                    <p class="small text-muted mb-0 mt-1">Seleccione el departamento para cargar las ciudades</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Ciudad *</label>
+                    <div class="shipping-city-wrapper">
+                        <input type="text" id="shippingCitySearch" class="form-control" placeholder="Buscar ciudad..." autocomplete="off" style="margin-bottom: 6px;">
+                        <div id="shippingCitySelectWrap">
+                            {{ form.city }}
+                        </div>
+                    </div>
+                    <style>.shipping-city-wrapper select[multiple], .shipping-city-wrapper select[size] { max-height: 200px; }</style>
+                    {% if form.city.errors %}<div class="text-danger small">{{ form.city.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Precio de envío *</label>
+                    {{ form.price }}
+                    {% if form.price.errors %}<div class="text-danger small">{{ form.price.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Días de entrega (mín) *</label>
+                    {{ form.delivery_days_min }}
+                    {% if form.delivery_days_min.errors %}<div class="text-danger small">{{ form.delivery_days_min.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Días de entrega (máx) *</label>
+                    {{ form.delivery_days_max }}
+                    {% if form.delivery_days_max.errors %}<div class="text-danger small">{{ form.delivery_days_max.errors.0 }}</div>{% endif %}
+                    <p class="small text-muted mb-0 mt-1">Rango en días hábiles (ej. 1 a 3)</p>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Activo (aplica este precio en checkout)</label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    var stateSelect = document.getElementById('id_shipping_state');
+    var citySelect = document.getElementById('id_shipping_city');
+    var searchInput = document.getElementById('shippingCitySearch');
+    if (!stateSelect || !citySelect) return;
+
+    var citiesUrl = '{{ geo_cities_url|escapejs }}';
+    var initialStateId = '{{ initial_state_id|escapejs }}';
+    var initialCityId = '{{ initial_city_id|escapejs }}';
+
+    function clearCityOptions(keepFirst) {
+        while (citySelect.options.length > (keepFirst ? 1 : 0)) citySelect.remove(keepFirst ? 1 : 0);
+    }
+
+    function loadCities(stateId) {
+        if (!stateId) {
+            clearCityOptions(true);
+            citySelect.size = 1;
+            searchInput.value = '';
+            return;
+        }
+        fetch(citiesUrl + '?state_id=' + stateId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                clearCityOptions(true);
+                (data.cities || []).forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    opt.setAttribute('data-search', c.name.toLowerCase());
+                    citySelect.appendChild(opt);
+                });
+                citySelect.size = Math.min(10, Math.max(3, (data.cities || []).length + 1));
+                filterCityOptions();
+                if (initialCityId && stateId === initialStateId) {
+                    citySelect.value = initialCityId;
+                    if (citySelect.selectedIndex >= 0) searchInput.value = citySelect.options[citySelect.selectedIndex].textContent;
+                }
+            })
+            .catch(function() { clearCityOptions(true); });
+    }
+
+    function filterCityOptions() {
+        var q = (searchInput.value || '').toLowerCase().trim();
+        for (var i = 1; i < citySelect.options.length; i++) {
+            var opt = citySelect.options[i];
+            var search = opt.getAttribute('data-search') || opt.textContent.toLowerCase();
+            opt.hidden = q && search.indexOf(q) < 0;
+        }
+    }
+
+    stateSelect.addEventListener('change', function() {
+        var stateId = this.value;
+        loadCities(stateId);
+        searchInput.value = '';
+        citySelect.value = '';
+    });
+
+    searchInput.addEventListener('input', filterCityOptions);
+    searchInput.addEventListener('focus', function() {
+        if (citySelect.options.length > 1) citySelect.size = Math.min(10, citySelect.options.length);
+    });
+
+    citySelect.addEventListener('change', function() {
+        if (this.selectedIndex >= 0) searchInput.value = this.options[this.selectedIndex].textContent;
+    });
+
+    if (initialStateId) {
+        stateSelect.value = initialStateId;
+        loadCities(initialStateId);
+    }
+})();
+</script>
+{% endblock %}

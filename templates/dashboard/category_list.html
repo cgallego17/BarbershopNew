@@ -31,12 +31,20 @@
                     <tr>
                         <td><strong>{{ cat.name }}</strong></td>
                         <td><code>{{ cat.slug }}</code></td>
-                        <td>{{ cat.products.count }}</td>
+                        <td>{% if cat.product_count %}<a href="{% url 'admin_panel:category_products' cat.pk %}" class="admin-link" title="Ver productos">{{ cat.product_count }}</a>{% else %}0{% endif %}</td>
                         <td>{{ cat.order }}</td>
                         <td>{% if cat.is_active %}<span class="admin-badge admin-badge--completed">Activa</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactiva</span>{% endif %}</td>
                         <td class="text-end">
-                            <a href="{% url 'admin_panel:category_edit' cat.pk %}" class="admin-link me-2">Editar</a>
-                            <a href="{% url 'admin_panel:category_delete' cat.pk %}" class="admin-link text-danger">Eliminar</a>
+                            <div class="admin-actions">
+                                <form method="post" action="{% url 'admin_panel:category_toggle_active' cat.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-action {% if cat.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
+                                        {% if cat.is_active %}Inactivar{% else %}Activar{% endif %}
+                                    </button>
+                                </form>
+                                <a href="{% url 'admin_panel:category_edit' cat.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'admin_panel:category_delete' cat.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

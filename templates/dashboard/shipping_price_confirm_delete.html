@@ -1,0 +1,22 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Eliminar precio de envío{% endblock %}
+{% block topbar_title %}Eliminar precio de envío{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a precios de envío</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <p class="mb-3">¿Eliminar el precio de envío para <strong>{{ shipping_price.city.name }}, {{ shipping_price.city.state.name }}</strong> (${{ shipping_price.price }}{% if shipping_price.delivery_days_min == shipping_price.delivery_days_max %}, {{ shipping_price.delivery_days_min }} días{% else %}, {{ shipping_price.delivery_days_min }} a {{ shipping_price.delivery_days_max }} días{% endif %})?</p>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="admin-btn admin-btn--danger">Sí, eliminar</button>
+        </form>
+        <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+    </div>
+</div>
+{% endblock %}

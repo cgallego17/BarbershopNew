@@ -1,8 +1,10 @@
 """Vistas CRUD del panel de administración (sin Django Admin)."""
+import io
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
@@ -16,9 +18,10 @@ from .forms import (
     CategoryForm, BrandForm, ProductForm, OrderStatusForm, CouponForm,
     ProductAttributeForm, ProductAttributeValueFormSet,
     get_product_variant_formset, CustomerForm, CustomerCreateForm, SiteSettingsForm,
-    HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeBrandForm, HomeTestimonialForm,
+    HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeMeatCategoryBlockForm, HomeBrandForm, HomeTestimonialForm,
+    ShippingPriceForm,
 )
-from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeBrand, HomeTestimonial
+from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrand, HomeTestimonial, ShippingPrice, Country, City
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -48,6 +51,28 @@ class CategoryListView(StaffRequiredMixin, ListView):
     template_name = 'dashboard/category_list.html'
     context_object_name = 'categories'
     paginate_by = 20
+
+    def get_queryset(self):
+        return Category.objects.annotate(
+            product_count=Count('products')
+        ).order_by('order', 'name')
+
+
+class CategoryProductListView(StaffRequiredMixin, ListView):
+    """Lista los productos de una categoría (al hacer clic en el contador)."""
+    model = Product
+    template_name = 'dashboard/category_products.html'
+    context_object_name = 'products'
+    paginate_by = 20
+
+    def get_queryset(self):
+        self.category = get_object_or_404(Category, pk=self.kwargs['pk'])
+        return self.category.products.all().select_related('brand').order_by('name')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['category'] = self.category
+        return ctx
 
 
 class CategoryCreateView(StaffRequiredMixin, CreateView):
@@ -82,6 +107,19 @@ class CategoryDeleteView(StaffRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Categoría eliminada.')
         return super().delete(request, *args, **kwargs)
+
+
+@_dashboard_required
+def category_toggle_active_view(request, pk):
+    """Activa o inactiva una categoría."""
+    if request.method != 'POST':
+        return redirect('admin_panel:category_list')
+    category = get_object_or_404(Category, pk=pk)
+    category.is_active = not category.is_active
+    category.save()
+    action = 'activada' if category.is_active else 'inactivada'
+    messages.success(request, f'Categoría «{category.name}» {action} correctamente.')
+    return redirect('admin_panel:category_list')
 
 
 # --- Marcas (catálogo) ---
@@ -360,6 +398,17 @@ class CustomerCreateView(StaffRequiredMixin, CreateView):
     template_name = 'dashboard/customer_form.html'
     success_url = reverse_lazy('admin_panel:customer_list')
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from .models import Country
+        import json
+        ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
+        ctx['geo_states_url'] = reverse('geo_states')
+        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['initial_state'] = ''
+        ctx['initial_city'] = ''
+        return ctx
+
     def form_valid(self, form):
         messages.success(self.request, 'Cliente creado correctamente.')
         return super().form_valid(form)
@@ -387,6 +436,18 @@ class CustomerUpdateView(StaffRequiredMixin, UpdateView):
     template_name = 'dashboard/customer_form.html'
     context_object_name = 'customer'
     success_url = reverse_lazy('admin_panel:customer_list')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from .models import Country
+        import json
+        ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
+        ctx['geo_states_url'] = reverse('geo_states')
+        ctx['geo_cities_url'] = reverse('geo_cities')
+        customer = ctx.get('customer')
+        ctx['initial_state'] = getattr(customer, 'state', '') or ''
+        ctx['initial_city'] = getattr(customer, 'city', '') or ''
+        return ctx
 
     def form_valid(self, form):
         messages.success(self.request, 'Cliente actualizado correctamente.')
@@ -472,6 +533,144 @@ class CouponDeleteView(StaffRequiredMixin, DeleteView):
         return super().delete(request, *args, **kwargs)
 
 
+# --- Precios de envío por ciudad ---
+
+class ShippingPriceListView(StaffRequiredMixin, ListView):
+    model = ShippingPrice
+    template_name = 'dashboard/shipping_price_list.html'
+    context_object_name = 'shipping_prices'
+    paginate_by = 25
+
+    def get_queryset(self):
+        return ShippingPrice.objects.select_related('city', 'city__state', 'city__state__country').order_by('city__state__name', 'city__name')
+
+
+@_dashboard_required
+def shipping_price_export_excel_view(request):
+    """Exporta todos los precios de envío a Excel (.xlsx). Requiere openpyxl."""
+    from django.utils import timezone
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment
+    except ModuleNotFoundError:
+        messages.error(
+            request,
+            'Para exportar en Excel debe instalar openpyxl. '
+            'En la misma terminal donde ejecuta el servidor (runserver), ejecute: pip install openpyxl '
+            'y luego reinicie el servidor.'
+        )
+        return redirect('admin_panel:shipping_price_list')
+
+    qs = ShippingPrice.objects.select_related('city', 'city__state', 'city__state__country').order_by('city__state__name', 'city__name')
+    timestamp = timezone.now().strftime('%Y%m%d-%H%M')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Precios de envío'
+    headers = ['Ciudad', 'Departamento', 'País', 'Precio', 'Días mín', 'Días máx', 'Estado']
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+    for row, sp in enumerate(qs, 2):
+        ws.cell(row=row, column=1, value=sp.city.name)
+        ws.cell(row=row, column=2, value=sp.city.state.name)
+        ws.cell(row=row, column=3, value=sp.city.state.country.name)
+        ws.cell(row=row, column=4, value=float(sp.price))
+        ws.cell(row=row, column=5, value=sp.delivery_days_min)
+        ws.cell(row=row, column=6, value=sp.delivery_days_max)
+        ws.cell(row=row, column=7, value='Activo' if sp.is_active else 'Inactivo')
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f'precios-envio-{timestamp}.xlsx'
+    response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@_dashboard_required
+def shipping_price_load_all_colombia_view(request):
+    """Crea precio de envío (0, 0-0 días) para todas las ciudades de Colombia que aún no tengan uno."""
+    if request.method != 'POST':
+        return redirect('admin_panel:shipping_price_list')
+    try:
+        colombia = Country.objects.get(name='Colombia')
+    except Country.DoesNotExist:
+        messages.error(request, 'No existe el país Colombia. Ejecute: python manage.py load_colombia_geo')
+        return redirect('admin_panel:shipping_price_list')
+    cities = City.objects.filter(state__country=colombia).select_related('state')
+    created = 0
+    for city in cities:
+        _, created_flag = ShippingPrice.objects.get_or_create(
+            city=city,
+            defaults={
+                'price': 0,
+                'delivery_days_min': 0,
+                'delivery_days_max': 0,
+                'is_active': True,
+            }
+        )
+        if created_flag:
+            created += 1
+    messages.success(request, f'Se agregaron {created} ciudades de Colombia con precio 0 y días 0-0. ({cities.count() - created} ya existían.)')
+    return redirect('admin_panel:shipping_price_list')
+
+
+class ShippingPriceCreateView(StaffRequiredMixin, CreateView):
+    model = ShippingPrice
+    form_class = ShippingPriceForm
+    template_name = 'dashboard/shipping_price_form.html'
+    success_url = reverse_lazy('admin_panel:shipping_price_list')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['initial_state_id'] = ''
+        ctx['initial_city_id'] = ''
+        return ctx
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Precio de envío agregado correctamente.')
+        return super().form_valid(form)
+
+
+class ShippingPriceUpdateView(StaffRequiredMixin, UpdateView):
+    model = ShippingPrice
+    form_class = ShippingPriceForm
+    template_name = 'dashboard/shipping_price_form.html'
+    context_object_name = 'shipping_price'
+    success_url = reverse_lazy('admin_panel:shipping_price_list')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['geo_cities_url'] = reverse('geo_cities')
+        obj = ctx.get('shipping_price')
+        if obj and obj.city_id:
+            ctx['initial_state_id'] = obj.city.state_id
+            ctx['initial_city_id'] = obj.city_id
+        else:
+            ctx['initial_state_id'] = ''
+            ctx['initial_city_id'] = ''
+        return ctx
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Precio de envío actualizado.')
+        return super().form_valid(form)
+
+
+class ShippingPriceDeleteView(StaffRequiredMixin, DeleteView):
+    model = ShippingPrice
+    template_name = 'dashboard/shipping_price_confirm_delete.html'
+    context_object_name = 'shipping_price'
+    success_url = reverse_lazy('admin_panel:shipping_price_list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Precio de envío eliminado.')
+        return super().delete(request, *args, **kwargs)
+
+
 # --- Configuración del sitio ---
 
 class SiteSettingsUpdateView(StaffRequiredMixin, UpdateView):
@@ -483,6 +682,18 @@ class SiteSettingsUpdateView(StaffRequiredMixin, UpdateView):
 
     def get_object(self, queryset=None):
         return SiteSettings.get()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from .models import Country
+        import json
+        ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
+        ctx['geo_states_url'] = reverse('geo_states')
+        ctx['geo_cities_url'] = reverse('geo_cities')
+        obj = ctx.get('settings')
+        ctx['initial_state'] = getattr(obj, 'state', '') or ''
+        ctx['initial_city'] = getattr(obj, 'city', '') or ''
+        return ctx
 
     def form_valid(self, form):
         messages.success(self.request, 'Configuración guardada correctamente.')
@@ -507,7 +718,7 @@ class HomeSectionsConfigView(StaffRequiredMixin, ListView):
         FormSet = modelformset_factory(HomeSection, form=HomeSectionForm, extra=0)
         ctx['formset'] = kwargs.get('formset') or FormSet(queryset=self.get_queryset())
         ctx['hero_slides_count'] = HomeHeroSlide.objects.count()
-        ctx['brands_count'] = HomeBrand.objects.count()
+        ctx['brands_count'] = Brand.objects.count()
         ctx['testimonials_count'] = HomeTestimonial.objects.count()
         return ctx
 
@@ -579,10 +790,27 @@ class HomeAboutBlockUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+class HomeMeatCategoryBlockUpdateView(StaffRequiredMixin, UpdateView):
+    model = HomeMeatCategoryBlock
+    form_class = HomeMeatCategoryBlockForm
+    template_name = 'dashboard/home_meat_category_form.html'
+    context_object_name = 'block'
+    success_url = reverse_lazy('admin_panel:home_sections')
+
+    def get_object(self, queryset=None):
+        return HomeMeatCategoryBlock.get()
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Sección categorías actualizada.')
+        return super().form_valid(form)
+
+
 class HomeBrandListView(StaffRequiredMixin, ListView):
-    model = HomeBrand
+    """Lista las marcas del modelo de producto (Brand), no HomeBrand."""
+    model = Brand
     template_name = 'dashboard/home_brand_list.html'
     context_object_name = 'brands'
+    queryset = Brand.objects.all()
 
 
 class HomeBrandCreateView(StaffRequiredMixin, CreateView):

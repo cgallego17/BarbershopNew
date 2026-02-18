@@ -3,11 +3,200 @@
 
 {% block title %}Carrito{% endblock %}
 
+{% block extra_css %}
+<style>
+/* =====================================================================
+   CART PAGE
+   ===================================================================== */
+.cart-page-section { background: #f2f3f5; padding: 56px 0 72px; }
+
+/* ---- Card base ---- */
+.cp-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 2px 14px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+/* ---- Tabla de productos ---- */
+.cp-table { width: 100%; border-collapse: collapse; }
+.cp-table thead tr {
+    border-bottom: 2px solid #f0f0f4;
+}
+.cp-table thead th {
+    padding: 16px 20px;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #aaa;
+    text-align: left;
+    white-space: nowrap;
+}
+.cp-table thead th:last-child { text-align: right; }
+.cp-table tbody tr {
+    border-bottom: 1px solid #f5f5f8;
+    transition: background .15s;
+}
+.cp-table tbody tr:last-child { border-bottom: none; }
+.cp-table tbody tr:hover { background: #fafafa; }
+.cp-table td { padding: 18px 20px; vertical-align: middle; }
+
+/* Producto */
+.cp-product { display: flex; align-items: center; gap: 16px; }
+.cp-product__img {
+    flex-shrink: 0; width: 72px; height: 72px;
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid #f0f0f4;
+}
+.cp-product__img img { width: 100%; height: 100%; object-fit: cover; }
+.cp-product__info {}
+.cp-product__name {
+    font-size: .92rem; font-weight: 700; color: #1a1a1a;
+    text-decoration: none; display: block; margin-bottom: 3px;
+}
+.cp-product__name:hover { color: var(--boskery-base, #C56533); }
+.cp-product__variant { font-size: .75rem; color: #aaa; }
+
+/* Precio */
+.cp-price { font-size: .92rem; font-weight: 600; color: #555; white-space: nowrap; }
+
+/* Cantidad */
+.cp-qty {
+    display: inline-flex; align-items: center;
+    border: 1.5px solid #e4e4e8; border-radius: 10px;
+    overflow: hidden; background: #fafafa;
+}
+.cp-qty button {
+    background: transparent; border: none; width: 34px; height: 38px;
+    font-size: .9rem; color: #666; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+}
+.cp-qty button:hover { background: #f0f0f0; color: var(--boskery-base, #C56533); }
+.cp-qty input {
+    width: 46px; height: 38px; border: none; background: transparent;
+    text-align: center; font-size: .9rem; font-weight: 700; color: #222;
+    -moz-appearance: textfield; outline: none;
+}
+.cp-qty input::-webkit-outer-spin-button,
+.cp-qty input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+/* Subtotal */
+.cp-subtotal { font-size: .98rem; font-weight: 800; color: #1a1a1a; white-space: nowrap; text-align: right; }
+
+/* Eliminar */
+.cp-remove {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #f4f4f6; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #bbb; font-size: .75rem; float: right;
+    transition: background .18s, color .18s;
+}
+.cp-remove:hover { background: #fee2e2; color: #ef4444; }
+
+/* ---- Footer tabla ---- */
+.cp-table-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid #f0f0f4;
+}
+.cp-btn-update {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 10px;
+    border: 1.5px solid #e0e0e6; background: transparent;
+    color: #555; font-size: .85rem; font-weight: 700;
+    cursor: pointer; transition: border-color .18s, color .18s, background .18s;
+}
+.cp-btn-update:hover { border-color: var(--boskery-base, #C56533); color: var(--boskery-base, #C56533); }
+
+.cp-btn-continue {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 10px;
+    border: none; background: transparent;
+    color: #888; font-size: .85rem; font-weight: 600;
+    text-decoration: none; transition: color .18s;
+}
+.cp-btn-continue:hover { color: var(--boskery-base, #C56533); }
+
+/* ---- Panel de resumen ---- */
+.cp-summary { padding: 28px 26px; }
+.cp-summary__title {
+    font-size: .72rem; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--boskery-base, #C56533);
+    margin-bottom: 22px; display: flex; align-items: center; gap: 8px;
+}
+.cp-summary__title::after { content: ''; flex: 1; height: 1px; background: #f0f0f4; }
+
+.cp-summary-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid #f5f5f8;
+    font-size: .9rem; color: #666;
+}
+.cp-summary-row:last-of-type { border-bottom: none; }
+.cp-summary-row span:last-child { font-weight: 700; color: #1a1a1a; }
+.cp-summary-total {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 0 20px;
+    border-top: 2px solid #f0f0f4;
+    margin-top: 6px;
+}
+.cp-summary-total__label { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
+.cp-summary-total__value { font-size: 1.4rem; font-weight: 900; color: var(--boskery-base, #C56533); }
+
+.cp-btn-checkout {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 14px;
+    background: var(--boskery-base, #C56533); color: #fff;
+    border: none; border-radius: 12px; font-size: .95rem; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+    box-shadow: 0 6px 20px rgba(197,101,51,.3);
+    transition: background .2s, box-shadow .2s, transform .15s;
+    letter-spacing: .02em;
+}
+.cp-btn-checkout:hover { background: #a34120; box-shadow: 0 8px 28px rgba(197,101,51,.4); transform: translateY(-1px); color: #fff; }
+
+.cp-summary-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 14px; font-size: .75rem; color: #bbb;
+}
+
+/* ---- Empty state ---- */
+.cp-empty {
+    text-align: center; padding: 80px 24px;
+    background: #fff; border-radius: 18px;
+    border: 1px solid #e8e8ec;
+}
+.cp-empty__icon { font-size: 3.5rem; color: #ddd; margin-bottom: 18px; display: block; }
+.cp-empty__title { font-size: 1.2rem; font-weight: 800; color: #1a1a1a; margin-bottom: 8px; }
+.cp-empty__text { font-size: .9rem; color: #aaa; margin-bottom: 28px; }
+.cp-btn-shop {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 32px; background: var(--boskery-base, #C56533); color: #fff;
+    border-radius: 12px; font-size: .95rem; font-weight: 700;
+    text-decoration: none; box-shadow: 0 6px 20px rgba(197,101,51,.3);
+    transition: background .2s, transform .15s;
+}
+.cp-btn-shop:hover { background: #a34120; transform: translateY(-1px); color: #fff; }
+
+@media (max-width: 767px) {
+    .cp-table thead { display: none; }
+    .cp-table, .cp-table tbody, .cp-table tr, .cp-table td { display: block; width: 100%; }
+    .cp-table tr { padding: 16px 20px; border-bottom: 1px solid #f5f5f8; }
+    .cp-table td { padding: 4px 0; border: none; }
+    .cp-subtotal { text-align: left; }
+    .cp-remove { float: none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
     <div class="container">
-        <h2 class="page-header__title">Carrito</h2>
+        <h2 class="page-header__title">Mi Carrito</h2>
         <ul class="boskery-breadcrumb list-unstyled">
             <li><a href="{% url 'home' %}">Inicio</a></li>
             <li><span>Carrito</span></li>
@@ -15,87 +204,296 @@
     </div>
 </section>
 
-<section class="cart-page section-space">
+<section class="cart-page-section">
     <div class="container">
+
         {% if cart %}
-        <form method="post" action="{% url 'cart:update' %}">
+        <form method="post" action="{% url 'cart:update' %}" id="cart-update-form">
             {% csrf_token %}
-            <div class="row gutter-y-50">
-                <div class="col-xl-8">
-                    <div class="table-responsive">
-                        <table class="table cart-page__table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Precio</th>
-                                    <th>Cantidad</th>
-                                    <th>Subtotal</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in cart %}
-                                <tr>
-                                    <td>
-                                        <div class="cart-page__table__meta">
-                                            <div class="cart-page__table__meta__img">
-                                                {% if item.product.images.first %}
-                                                <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}">
-                                                {% else %}
-                                                <img src="{% static 'assets/images/products/cart-1-1.png' %}" alt="{{ item.product.name }}">
-                                                {% endif %}
+            <div class="row gutter-y-30">
+
+                <!-- ============ TABLA DE PRODUCTOS ============ -->
+                <div class="col-lg-8">
+                    <div class="cp-card">
+                        <div class="table-responsive">
+                            <table class="cp-table">
+                                <thead>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio</th>
+                                        <th>Cantidad</th>
+                                        <th style="text-align:right">Subtotal</th>
+                                        <th style="width:48px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in cart %}
+                                    <tr id="row-{{ item.key }}"
+                                        data-key="{{ item.key }}"
+                                        data-update-url="{% url 'cart:update_item' item.key %}"
+                                        data-remove-url="{% url 'cart:remove' item.product.id %}"
+                                        {% if item.variant %}data-variant-id="{{ item.variant.id }}"{% endif %}>
+                                        <td>
+                                            <div class="cp-product">
+                                                <a href="{{ item.product.get_absolute_url }}" class="cp-product__img">
+                                                    {% if item.product.images.first %}
+                                                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                                                    {% else %}
+                                                    <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ item.product.name }}" loading="lazy">
+                                                    {% endif %}
+                                                </a>
+                                                <div class="cp-product__info">
+                                                    <a href="{{ item.product.get_absolute_url }}" class="cp-product__name">{{ item.product.name }}</a>
+                                                    {% if item.variant %}<span class="cp-product__variant">{{ item.variant.attributes_display }}</span>{% endif %}
+                                                </div>
                                             </div>
-                                            <h3 class="cart-page__table__meta__title">
-                                                <a href="{{ item.product.get_absolute_url }}">{{ item.product.name }}</a>
-                                            </h3>
-                                        </div>
-                                    </td>
-                                    <td class="cart-page__table__price">${{ item.price|floatformat:2 }}</td>
-                                    <td>
-                                        <div class="quantity-box">
-                                            <button type="button" class="sub"><i class="fa fa-minus"></i></button>
-                                            <input type="number" name="quantity_{{ item.key }}" value="{{ item.quantity }}" min="1">
-                                            <button type="button" class="add"><i class="fa fa-plus"></i></button>
-                                        </div>
-                                    </td>
-                                    <td class="cart-page__table__total">${{ item.total_price|floatformat:2 }}</td>
-                                    <td>
-                                        <button type="submit" form="remove-form-{{ item.key }}" class="cart-page__table__remove btn btn-link p-0 text-danger"><i class="fas fa-times"></i> Eliminar</button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <button type="submit" class="boskery-btn">Actualizar carrito</button>
-                </div>
-                <div class="col-xl-4">
-                    <div class="cart-page__cart-checkout">
-                        <ul class="cart-page__cart-total list-unstyled">
-                            <li>
-                                <span>Subtotal</span>
-                                <span class="cart-page__cart-total__amount">${{ cart_total|floatformat:2 }}</span>
-                            </li>
-                            <li>
-                                <a href="{% url 'orders:checkout' %}" class="boskery-btn w-100">Proceder al checkout</a>
-                            </li>
-                        </ul>
+                                        </td>
+                                        <td>
+                                            <span class="cp-price">{{ site_settings.currency }}{{ item.price|floatformat:0|intcomma }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="cp-qty">
+                                                <button type="button" class="qty-sub"><i class="fa fa-minus"></i></button>
+                                                <input type="number" class="cp-qty-input" value="{{ item.quantity }}" min="1" max="99">
+                                                <button type="button" class="qty-add"><i class="fa fa-plus"></i></button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="cp-subtotal" id="subtotal-{{ item.key }}">{{ site_settings.currency }}{{ item.total_price|floatformat:0|intcomma }}</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="cp-remove cp-remove-btn" title="Eliminar producto" aria-label="Eliminar {{ item.product.name }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="cp-table-footer">
+                            <a href="{% url 'products:list' %}" class="cp-btn-continue">
+                                <i class="fas fa-arrow-left"></i> Seguir comprando
+                            </a>
+                            <span class="cp-updating-indicator" id="cp-updating" style="display:none;font-size:.8rem;color:#aaa;display:none;align-items:center;gap:6px;">
+                                <i class="fas fa-spinner fa-spin"></i> Actualizando…
+                            </span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- ============ RESUMEN ============ -->
+                <div class="col-lg-4">
+                    <div class="cp-card cp-summary">
+                        <p class="cp-summary__title"><i class="fas fa-receipt"></i> Resumen</p>
+
+                        <div class="cp-summary-row">
+                            <span>Subtotal</span>
+                            <span id="cp-summary-subtotal">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
+                        </div>
+                        <div class="cp-summary-row">
+                            <span>Envío</span>
+                            <span>Calculado al pagar</span>
+                        </div>
+
+                        <div class="cp-summary-total">
+                            <span class="cp-summary-total__label">Total</span>
+                            <span class="cp-summary-total__value" id="cp-summary-total">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
+                        </div>
+
+                        <a href="{% url 'orders:checkout' %}" class="cp-btn-checkout">
+                            <i class="fas fa-lock"></i> Proceder al pago
+                        </a>
+
+                        <p class="cp-summary-note">
+                            <i class="fas fa-shield-alt"></i> Pago seguro y cifrado
+                        </p>
+                    </div>
+                </div>
+
             </div>
         </form>
-        {% for item in cart %}
-        <form id="remove-form-{{ item.key }}" method="post" action="{% url 'cart:remove' item.product.id %}" style="display:none;">
-            {% csrf_token %}
-            {% if item.variant %}<input type="hidden" name="variant_id" value="{{ item.variant.id }}">{% endif %}
-        </form>
-        {% endfor %}
+
         {% else %}
-        <div class="text-center py-5">
-            <p>Tu carrito está vacío.</p>
-            <a href="{% url 'products:list' %}" class="boskery-btn">Ver productos</a>
+        <!-- Estado vacío -->
+        <div class="cp-empty">
+            <i class="fas fa-shopping-cart cp-empty__icon"></i>
+            <h2 class="cp-empty__title">Tu carrito está vacío</h2>
+            <p class="cp-empty__text">Agrega productos para comenzar tu pedido.</p>
+            <a href="{% url 'products:list' %}" class="cp-btn-shop">
+                <i class="fas fa-store"></i> Ver productos
+            </a>
         </div>
         {% endif %}
+
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var CSRF = document.querySelector('[name=csrfmiddlewaretoken]');
+    var csrfToken = CSRF ? CSRF.value : '';
+    var indicator = document.getElementById('cp-updating');
+
+    function getCSRF() {
+        /* Puede cambiar entre peticiones, lo leemos fresco */
+        var t = document.querySelector('[name=csrfmiddlewaretoken]');
+        return t ? t.value : csrfToken;
+    }
+
+    function showIndicator() { if (indicator) indicator.style.display = 'flex'; }
+    function hideIndicator() { if (indicator) indicator.style.display = 'none'; }
+
+    function updateSummary(total) {
+        var sub = document.getElementById('cp-summary-subtotal');
+        var tot = document.getElementById('cp-summary-total');
+        if (sub) sub.textContent = total;
+        if (tot) tot.textContent = total;
+        /* Actualizar badge del sidebar */
+        if (window.cartSidebarOpen) {
+            document.querySelectorAll('.cs-badge').forEach(function(b) {
+                /* se actualizará con la próxima apertura del sidebar */
+            });
+        }
+    }
+
+    function flashCell(el) {
+        el.style.transition = 'opacity .15s';
+        el.style.opacity = '0.4';
+        setTimeout(function() { el.style.opacity = '1'; }, 200);
+    }
+
+    function removeRow(row) {
+        row.style.transition = 'opacity .3s, transform .3s';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(20px)';
+        setTimeout(function() {
+            row.remove();
+            /* Si no quedan filas, recargar para mostrar estado vacío */
+            var remaining = document.querySelectorAll('#cart-table tbody tr').length;
+            if (remaining === 0) { window.location.reload(); }
+        }, 320);
+    }
+
+    /* Enviar actualización de cantidad a servidor */
+    function sendUpdate(row, qty) {
+        var key        = row.dataset.key;
+        var url        = row.dataset.updateUrl;
+        var variantId  = row.dataset.variantId || '';
+        var subtotalEl = document.getElementById('subtotal-' + key);
+
+        showIndicator();
+
+        var fd = new FormData();
+        fd.append('csrfmiddlewaretoken', getCSRF());
+        fd.append('quantity', qty);
+        if (variantId) fd.append('variant_id', variantId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            hideIndicator();
+            if (!data.ok) return;
+            if (data.removed) {
+                removeRow(row);
+            } else {
+                if (subtotalEl) {
+                    subtotalEl.textContent = data.item_total;
+                    flashCell(subtotalEl);
+                }
+            }
+            updateSummary(data.cart_total);
+            /* Actualizar badges del sidebar */
+            document.querySelectorAll('.cs-badge').forEach(function(b) { b.textContent = data.cart_count; });
+            document.querySelectorAll('.cs-head__count').forEach(function(b) { b.textContent = data.cart_count; });
+        })
+        .catch(function() { hideIndicator(); });
+    }
+
+    /* Enviar eliminación */
+    function sendRemove(row) {
+        var url       = row.dataset.removeUrl;
+        var variantId = row.dataset.variantId || '';
+
+        showIndicator();
+
+        var fd = new FormData();
+        fd.append('csrfmiddlewaretoken', getCSRF());
+        if (variantId) fd.append('variant_id', variantId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: fd
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            hideIndicator();
+            removeRow(row);
+            updateSummary(data.cart_total);
+            document.querySelectorAll('.cs-badge').forEach(function(b) { b.textContent = data.cart_count; });
+            document.querySelectorAll('.cs-head__count').forEach(function(b) { b.textContent = data.cart_count; });
+            if (window.showToast) window.showToast('Producto eliminado del carrito.', 'info');
+        })
+        .catch(function() { hideIndicator(); });
+    }
+
+    /* Debounce para input manual */
+    var debounceTimers = {};
+
+    document.querySelectorAll('tr[data-key]').forEach(function(row) {
+        var key   = row.dataset.key;
+        var wrap  = row.querySelector('.cp-qty');
+        var inp   = wrap ? wrap.querySelector('.cp-qty-input') : null;
+        if (!inp) return;
+
+        /* +/- botones: acción inmediata */
+        var subBtn = wrap.querySelector('.qty-sub');
+        var addBtn = wrap.querySelector('.qty-add');
+
+        subBtn.addEventListener('click', function() {
+            var v = parseInt(inp.value) || 1;
+            if (v <= 1) {
+                /* Eliminar al bajar de 1 */
+                sendRemove(row);
+                return;
+            }
+            inp.value = v - 1;
+            sendUpdate(row, v - 1);
+        });
+
+        addBtn.addEventListener('click', function() {
+            var v = parseInt(inp.value) || 1;
+            if (v >= 99) return;
+            inp.value = v + 1;
+            sendUpdate(row, v + 1);
+        });
+
+        /* Input manual: debounce 700ms */
+        inp.addEventListener('input', function() {
+            clearTimeout(debounceTimers[key]);
+            debounceTimers[key] = setTimeout(function() {
+                var v = parseInt(inp.value) || 1;
+                if (v < 1) v = 1;
+                inp.value = v;
+                sendUpdate(row, v);
+            }, 700);
+        });
+
+        /* Botón eliminar */
+        var removeBtn = row.querySelector('.cp-remove-btn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                sendRemove(row);
+            });
+        }
+    });
+})();
+</script>
 {% endblock %}

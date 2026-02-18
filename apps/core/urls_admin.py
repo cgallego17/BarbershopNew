@@ -9,6 +9,8 @@ urlpatterns = [
     # Categorías
     path('categorias/', views_admin.CategoryListView.as_view(), name='category_list'),
     path('categorias/nuevo/', views_admin.CategoryCreateView.as_view(), name='category_create'),
+    path('categorias/<int:pk>/productos/', views_admin.CategoryProductListView.as_view(), name='category_products'),
+    path('categorias/<int:pk>/activar/', views_admin.category_toggle_active_view, name='category_toggle_active'),
     path('categorias/<int:pk>/editar/', views_admin.CategoryUpdateView.as_view(), name='category_edit'),
     path('categorias/<int:pk>/eliminar/', views_admin.CategoryDeleteView.as_view(), name='category_delete'),
     # Marcas (catálogo)
@@ -41,6 +43,13 @@ urlpatterns = [
     path('cupones/nuevo/', views_admin.CouponCreateView.as_view(), name='coupon_create'),
     path('cupones/<int:pk>/editar/', views_admin.CouponUpdateView.as_view(), name='coupon_edit'),
     path('cupones/<int:pk>/eliminar/', views_admin.CouponDeleteView.as_view(), name='coupon_delete'),
+    # Precios de envío por ciudad
+    path('envios/', views_admin.ShippingPriceListView.as_view(), name='shipping_price_list'),
+    path('envios/cargar-todas-colombia/', views_admin.shipping_price_load_all_colombia_view, name='shipping_price_load_all_colombia'),
+    path('envios/exportar-excel/', views_admin.shipping_price_export_excel_view, name='shipping_price_export_excel'),
+    path('envios/nuevo/', views_admin.ShippingPriceCreateView.as_view(), name='shipping_price_create'),
+    path('envios/<int:pk>/editar/', views_admin.ShippingPriceUpdateView.as_view(), name='shipping_price_edit'),
+    path('envios/<int:pk>/eliminar/', views_admin.ShippingPriceDeleteView.as_view(), name='shipping_price_delete'),
     # Configuración
     path('configuracion/', views_admin.SiteSettingsUpdateView.as_view(), name='config'),
     # Secciones del Home
@@ -50,6 +59,7 @@ urlpatterns = [
     path('secciones/hero/<int:pk>/editar/', views_admin.HomeHeroSlideUpdateView.as_view(), name='home_hero_edit'),
     path('secciones/hero/<int:pk>/eliminar/', views_admin.HomeHeroSlideDeleteView.as_view(), name='home_hero_delete'),
     path('secciones/about/', views_admin.HomeAboutBlockUpdateView.as_view(), name='home_about'),
+    path('secciones/categorias/', views_admin.HomeMeatCategoryBlockUpdateView.as_view(), name='home_meat_category'),
     path('secciones/marcas/', views_admin.HomeBrandListView.as_view(), name='home_brand_list'),
     path('secciones/marcas/nuevo/', views_admin.HomeBrandCreateView.as_view(), name='home_brand_create'),
     path('secciones/marcas/<int:pk>/editar/', views_admin.HomeBrandUpdateView.as_view(), name='home_brand_edit'),

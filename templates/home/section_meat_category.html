@@ -1,0 +1,61 @@
+{% load static humanize %}
+<section class="meat-category">
+    <div class="meat-category__bg boskery-jarallax" data-jarallax data-speed="0.3" style="background-image: url({% if meat_category_block.background_image %}{{ meat_category_block.background_image.url }}{% else %}{% static 'assets/images/backgrounds/meat-category-bg-1.jpg' %}{% endif %});"></div>
+    <div class="container">
+        <div class="meat-category__top">
+            <div class="row gutter-x-40 gutter-y-50 align-items-center">
+                <div class="col-lg-6 wow fadeInLeft" data-wow-duration="1500ms">
+                    <div class="sec-title">
+                        <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="Decoración título" class="sec-title__img" loading="lazy">
+                        <h6 class="sec-title__tagline">{{ meat_category_block.tagline|default:"primera opción" }}</h6>
+                        <h2 class="sec-title__title">{{ meat_category_block.title|default:"Las mejores categorías en nuestra tienda"|linebreaksbr }}</h2>
+                    </div>
+                </div>
+                <div class="col-lg-6 wow fadeInRight" data-wow-duration="1500ms">
+                    <div class="meat-category__top__image">
+                        {% if meat_category_block.top_image %}<img src="{{ meat_category_block.top_image.url }}" alt="{{ meat_category_block.title }}" loading="lazy">{% else %}<img src="{% static 'assets/images/meat-category/meat-category-top-1-1.jpg' %}" alt="Categorías destacadas" loading="lazy">{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row gutter-y-35">
+            {% for product in meat_category_products %}
+            <div class="col-xl-3 col-lg-4 col-sm-6 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="{% cycle '00' '200' '400' '600' %}ms">
+                <div class="product__item">
+                    <div class="product__item__image">
+                        {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="product__item__content">
+                        <div class="boskery-ratings">
+                            {% for i in "12345" %}<span class="icon-star"></span>{% endfor %}
+                        </div>
+                        <h4 class="product__item__title"><a href="{{ product.get_absolute_url }}">{{ product.name }}</a></h4>
+                        <div class="product__item__price">{{ site_settings.currency }}{{ product.price|floatformat:0|intcomma }}</div>
+                        {% if product.in_stock %}
+                        <form method="post" action="{% url 'cart:add' product.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="quantity" value="1">
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <button type="submit" class="boskery-btn product__item__link">
+                                <span class="boskery-btn__text">Añadir al carrito</span>
+                                <i class="fas fa-cut" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <span class="product__item__out-of-stock">Agotado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-4">
+                <p class="text-muted">No hay productos en la categoría Kits.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>

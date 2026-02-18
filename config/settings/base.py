@@ -18,6 +18,12 @@ env = environ.Env(
     PRODUCTS_API_KEY=(str, ''),
     ERP_API_URL=(str, ''),
     ERP_API_KEY=(str, ''),
+    # Wompi
+    WOMPI_ENV=(str, 'sandbox'),
+    WOMPI_PUBLIC_KEY=(str, ''),
+    WOMPI_PRIVATE_KEY=(str, ''),
+    WOMPI_INTEGRITY_SECRET=(str, ''),
+    WOMPI_EVENTS_SECRET=(str, ''),
 )
 
 # Build paths
@@ -42,6 +48,7 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.humanize',
+    'django.contrib.sitemaps',
 ]
 
 THIRD_PARTY_APPS = [
@@ -62,6 +69,7 @@ LOCAL_APPS = [
     'apps.cart',
     'apps.orders',
     'apps.coupons',
+    'apps.payments',
     'apps.integrations',
 ]
 
@@ -102,6 +110,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'apps.cart.context_processors.cart',
                 'apps.core.context_processors.site_settings',
+                'apps.core.context_processors.django_messages_json',
             ],
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -184,6 +193,14 @@ PRODUCTS_API_URL = env('PRODUCTS_API_URL')
 PRODUCTS_API_KEY = env('PRODUCTS_API_KEY')
 ERP_API_URL = env('ERP_API_URL')
 ERP_API_KEY = env('ERP_API_KEY')
+
+# Wompi payment gateway (Colombia)
+# Obtén tus llaves en: https://comercios.wompi.co/
+WOMPI_ENV              = env('WOMPI_ENV')              # 'sandbox' | 'production'
+WOMPI_PUBLIC_KEY       = env('WOMPI_PUBLIC_KEY')       # pub_test_xxx  / pub_prod_xxx
+WOMPI_PRIVATE_KEY      = env('WOMPI_PRIVATE_KEY')      # prv_test_xxx  / prv_prod_xxx
+WOMPI_INTEGRITY_SECRET = env('WOMPI_INTEGRITY_SECRET') # Llave de integridad (firma del formulario)
+WOMPI_EVENTS_SECRET    = env('WOMPI_EVENTS_SECRET')    # Llave de eventos (firma del webhook)
 
 # Cart session key
 CART_SESSION_ID = 'cart'

@@ -48,13 +48,19 @@
                     <label class="form-label">Dirección</label>
                     {{ form.address }}
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">Ciudad</label>
-                    {{ form.city }}
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">País</label>
-                    {{ form.country }}
+                <div class="col-12 js-geo-cascade row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">País</label>
+                        {{ form.country }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Departamento / Estado</label>
+                        {{ form.state }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        {{ form.city }}
+                    </div>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Código postal</label>
@@ -77,4 +83,5 @@
         </form>
     </div>
 </div>
+{% include 'dashboard/_geo_cascade_script.html' %}
 {% endblock %}

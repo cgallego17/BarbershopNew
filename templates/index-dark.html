@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{ site_settings.site_name|default:"Home" }}{% endblock %}
+{% block title %}{{ site_settings.site_name|default:"Inicio" }}{% endblock %}
+
+{% block meta_description %}{{ site_settings.meta_description|default:site_settings.tagline|default:"Bienvenido a nuestra tienda de barbería online." }}{% endblock %}
+
+{% block og_title %}{{ site_settings.site_name }} — Tu Barbería de Confianza{% endblock %}
+{% block og_description %}{{ site_settings.tagline|default:"Los mejores productos para el cuidado personal." }}{% endblock %}
 
 {% block content %}
 {% for section_key in active_sections %}
@@ -12,6 +17,8 @@
         {% include 'home/section_brands.html' %}
     {% elif section_key == 'products' %}
         {% include 'home/section_products.html' %}
+    {% elif section_key == 'meat_category' %}
+        {% include 'home/section_meat_category.html' %}
     {% elif section_key == 'testimonials' and home_testimonials %}
         {% include 'home/section_testimonials.html' %}
     {% endif %}

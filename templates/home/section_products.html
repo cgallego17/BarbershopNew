@@ -2,8 +2,8 @@
 <section class="product-one section-space-two" id="shop">
     <div class="container">
         <div class="sec-title sec-title--center">
-            <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="" class="sec-title__img">
-            <h6 class="sec-title__tagline">productos destacados</h6>
+            <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="Decoración título" class="sec-title__img" loading="lazy">
+            <h6 class="sec-title__tagline">los más vendidos</h6>
             <h2 class="sec-title__title">Productos populares</h2>
         </div>
         <div class="row gutter-y-30">
@@ -12,9 +12,9 @@
                 <div class="product__item wow fadeInUp">
                     <div class="product__item__image">
                         {% if product.images.first %}
-                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
                         {% else %}
-                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}">
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy">
                         {% endif %}
                     </div>
                     <div class="product__item__content">
@@ -30,18 +30,18 @@
                             <input type="hidden" name="next" value="{{ request.get_full_path }}">
                             <button type="submit" class="boskery-btn product__item__link">
                                 <span class="boskery-btn__text">Añadir al carrito</span>
-                                <i class="icon-meat-3"></i>
+                                <i class="fas fa-cut" aria-hidden="true"></i>
                             </button>
                         </form>
                         {% else %}
-                        <span class="text-muted">Agotado</span>
+                        <span class="product__item__out-of-stock">Agotado</span>
                         {% endif %}
                     </div>
                 </div>
             </div>
             {% empty %}
             <div class="col-12 text-center py-4">
-                <p class="text-muted">No hay productos destacados.</p>
+                <p class="text-muted">No hay productos disponibles.</p>
             </div>
             {% endfor %}
         </div>

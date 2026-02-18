@@ -23,7 +23,11 @@ def wholesale_required(view):
 @wholesale_required
 def wholesale_panel(request):
     """Panel mayoristas: catálogo con precios mayoristas."""
-    products = list(Product.objects.filter(is_active=True).prefetch_related('variants', 'categories', 'images'))
+    from apps.core.models import SiteSettings
+    qs = Product.objects.filter(is_active=True).prefetch_related('variants', 'categories', 'images')
+    if not SiteSettings.get().show_out_of_stock_products:
+        qs = qs.filter(Product.q_in_stock())
+    products = list(qs)
     products_with_price = [(p, p.get_price(request.user)) for p in products]
     return render(request, 'wholesale/panel.html', {
         'products_with_price': products_with_price,

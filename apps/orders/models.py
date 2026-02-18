@@ -41,6 +41,7 @@ class Order(models.Model):
     billing_phone = models.CharField(max_length=20, blank=True)
     billing_address = models.TextField()
     billing_city = models.CharField(max_length=100)
+    billing_state = models.CharField('Departamento / Estado', max_length=100, blank=True)
     billing_country = models.CharField(max_length=100)
     billing_postal_code = models.CharField(max_length=20, blank=True)
     # Totals

@@ -1,0 +1,77 @@
+{% load static %}
+<script>
+(function() {
+    var container = document.querySelector('.js-geo-cascade');
+    if (!container) return;
+    var countryName = container.getAttribute('data-country-name') || 'country';
+    var stateName = container.getAttribute('data-state-name') || 'state';
+    var cityName = container.getAttribute('data-city-name') || 'city';
+    var countrySelect = container.querySelector('select[name="' + countryName + '"]');
+    var stateSelect = container.querySelector('select[name="' + stateName + '"]');
+    var citySelect = container.querySelector('select[name="' + cityName + '"]');
+    if (!countrySelect || !stateSelect || !citySelect) return;
+
+    var countries = {{ geo_countries_json|safe }};
+    var statesUrl = '{{ geo_states_url|escapejs }}';
+    var citiesUrl = '{{ geo_cities_url|escapejs }}';
+
+    function clearOptions(sel, keepFirst) {
+        while (sel.options.length > (keepFirst ? 1 : 0)) sel.remove(keepFirst ? 1 : 0);
+    }
+    function setStateOptions(states) {
+        clearOptions(stateSelect, true);
+        clearOptions(citySelect, true);
+        states.forEach(function(s) {
+            var opt = document.createElement('option');
+            opt.value = s.name;
+            opt.setAttribute('data-state-id', s.id);
+            opt.textContent = s.name;
+            stateSelect.appendChild(opt);
+        });
+    }
+    function setCityOptions(cities) {
+        clearOptions(citySelect, true);
+        cities.forEach(function(c) {
+            var opt = document.createElement('option');
+            opt.value = c.name;
+            opt.textContent = c.name;
+            citySelect.appendChild(opt);
+        });
+    }
+
+    countrySelect.addEventListener('change', function() {
+        var name = this.value;
+        var c = countries.find(function(x) { return x.name === name; });
+        if (!c) { setStateOptions([]); return; }
+        fetch(statesUrl + '?country_id=' + c.id)
+            .then(function(r) { return r.json(); })
+            .then(function(data) { setStateOptions(data.states || []); })
+            .catch(function() { setStateOptions([]); });
+    });
+
+    stateSelect.addEventListener('change', function() {
+        var opt = this.options[this.selectedIndex];
+        var stateId = opt && opt.getAttribute('data-state-id');
+        if (!stateId) { setCityOptions([]); return; }
+        fetch(citiesUrl + '?state_id=' + stateId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) { setCityOptions(data.cities || []); })
+            .catch(function() { setCityOptions([]); });
+    });
+
+    var initialCountry = countrySelect.value;
+    var initialState = '{{ initial_state|escapejs }}';
+    var initialCity = '{{ initial_city|escapejs }}';
+
+    if (initialCountry) {
+        countrySelect.dispatchEvent(new Event('change'));
+        setTimeout(function() {
+            if (initialState) stateSelect.value = initialState;
+            if (initialState) stateSelect.dispatchEvent(new Event('change'));
+            setTimeout(function() {
+                if (initialCity) citySelect.value = initialCity;
+            }, 100);
+        }, 100);
+    }
+})();
+</script>

@@ -1,0 +1,39 @@
+{% load static humanize %}
+{% if cart_count %}
+<ul class="cs-items" id="cs-items-list">
+    {% for item in cart %}
+    <li class="cs-item" data-key="{{ item.key }}">
+        <a href="{{ item.product.get_absolute_url }}" class="cs-item__img-wrap">
+            {% if item.product.images.first %}
+            <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+            {% else %}
+            <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ item.product.name }}">
+            {% endif %}
+        </a>
+        <div class="cs-item__info">
+            <a href="{{ item.product.get_absolute_url }}" class="cs-item__name">{{ item.product.name }}</a>
+            {% if item.variant %}
+            <p class="cs-item__variant">{{ item.variant.attributes_display }}</p>
+            {% endif %}
+            <div class="cs-item__meta">
+                <span class="cs-item__qty">{{ item.quantity }} ×</span>
+                <span class="cs-item__price">{{ site_settings.currency }}{{ item.price|floatformat:0|intcomma }}</span>
+            </div>
+        </div>
+        <form method="post" action="{% url 'cart:remove' item.product.id %}" class="cs-item__remove-form">
+            {% csrf_token %}
+            {% if item.variant %}<input type="hidden" name="variant_id" value="{{ item.variant.id }}">{% endif %}
+            <button type="submit" class="cs-item__remove" title="Eliminar" aria-label="Eliminar {{ item.product.name }}">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </form>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<div class="cs-empty">
+    <i class="fas fa-shopping-bag"></i>
+    <p>Tu carrito está vacío</p>
+    <span>Agrega productos para comenzar</span>
+</div>
+{% endif %}

@@ -1,0 +1,60 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Precios de envío por ciudad{% endblock %}
+{% block topbar_title %}Precios de envío por ciudad{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <p class="text-muted mb-0">Configura precio y días de entrega por ciudad</p>
+    <div class="d-flex gap-2">
+        <a href="{% url 'admin_panel:shipping_price_export_excel' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-file-excel"></i> Exportar a Excel</a>
+        <a href="{% url 'admin_panel:shipping_price_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Agregar precio por ciudad</a>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Ciudad</th>
+                        <th>Departamento / País</th>
+                        <th>Precio</th>
+                        <th>Días de entrega</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sp in shipping_prices %}
+                    <tr>
+                        <td><strong>{{ sp.city.name }}</strong></td>
+                        <td>{{ sp.city.state.name }} <span class="text-muted">({{ sp.city.state.country.name }})</span></td>
+                        <td>${{ sp.price|floatformat:2|intcomma }}</td>
+                        <td>{% if sp.delivery_days_min == sp.delivery_days_max %}{{ sp.delivery_days_min }} día{{ sp.delivery_days_min|pluralize }}{% else %}{{ sp.delivery_days_min }} a {{ sp.delivery_days_max }} días{% endif %}</td>
+                        <td>{% if sp.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:shipping_price_edit' sp.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'admin_panel:shipping_price_delete' sp.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="admin-table__empty">No hay precios de envío configurados. <a href="{% url 'admin_panel:shipping_price_create' %}">Agregar primera ciudad</a></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

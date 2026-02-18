@@ -128,16 +128,14 @@
                         <td>{% if p.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-link">Editar</a>
-                                <span class="admin-actions__sep">·</span>
+                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
                                 <form method="post" action="{% url 'admin_panel:product_toggle_active' p.pk %}" class="d-inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn-link {% if p.is_active %}btn-link--warning{% else %}btn-link--success{% endif %}">
+                                    <button type="submit" class="admin-action {% if p.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
                                         {% if p.is_active %}Inactivar{% else %}Activar{% endif %}
                                     </button>
                                 </form>
-                                <span class="admin-actions__sep">·</span>
-                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-link btn-link--danger">Eliminar</a>
+                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>

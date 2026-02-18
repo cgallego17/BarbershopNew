@@ -1,0 +1,75 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Productos – {{ category.name }}{% endblock %}
+{% block topbar_title %}Productos en «{{ category.name }}»{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{% url 'admin_panel:category_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a categorías</a>
+    <a href="{% url 'admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px">Imagen</th>
+                        <th>Producto</th>
+                        <th>Código</th>
+                        <th>Marca</th>
+                        <th>Precio</th>
+                        <th>Stock</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td>
+                            {% with img=p.get_main_image %}
+                            {% if img %}
+                            <img src="{{ img.image.url }}" alt="{{ p.name|truncatewords:5 }}" class="rounded" style="width:48px;height:48px;object-fit:cover">
+                            {% else %}
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center text-muted" style="width:48px;height:48px;font-size:1.2rem"><i class="fas fa-image"></i></div>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td><strong>{{ p.name }}</strong>{% if p.is_featured %} <span class="badge bg-warning text-dark" style="font-size:0.7rem">Destacado</span>{% endif %}</td>
+                        <td><code>{{ p.codigo|default:p.sku|default:"—" }}</code></td>
+                        <td>{{ p.brand.name|default:"—" }}</td>
+                        <td>${{ p.price|floatformat:2|intcomma }}</td>
+                        <td>{% if p.manage_stock %}{{ p.stock_quantity }}{% else %}—{% endif %}</td>
+                        <td>{% if p.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <form method="post" action="{% url 'admin_panel:product_toggle_active' p.pk %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-action {% if p.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
+                                        {% if p.is_active %}Inactivar{% else %}Activar{% endif %}
+                                    </button>
+                                </form>
+                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="8" class="admin-table__empty">No hay productos en esta categoría. <a href="{% url 'admin_panel:product_create' %}">Crear producto</a></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

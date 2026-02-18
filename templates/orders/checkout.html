@@ -1,83 +1,622 @@
 {% extends 'base.html' %}
-{% load static humanize crispy_forms_tags %}
+{% load static humanize %}
 
-{% block title %}Checkout{% endblock %}
+{% block title %}Pagar pedido{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================================================
+   CHECKOUT PAGE
+   ===================================================================== */
+.co-section { background: #f2f3f5; padding: 56px 0 80px; }
+
+/* ---- Card base ---- */
+.co-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 2px 14px rgba(0,0,0,.06);
+    padding: 32px 30px;
+    margin-bottom: 20px;
+}
+
+/* ---- Sección título ---- */
+.co-section-title {
+    font-size: .7rem; font-weight: 800;
+    letter-spacing: .13em; text-transform: uppercase;
+    color: var(--boskery-base, #C56533);
+    margin-bottom: 22px;
+    display: flex; align-items: center; gap: 8px;
+}
+.co-section-title::after { content: ''; flex: 1; height: 1px; background: #f0f0f4; }
+.co-section-title i { opacity: .8; }
+
+/* ---- Campos ---- */
+.co-field {
+    display: flex; flex-direction: column; gap: 5px;
+    margin-bottom: 16px;
+}
+.co-field label {
+    font-size: .72rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase; color: #888;
+}
+.co-field input,
+.co-field select,
+.co-field textarea {
+    width: 100%;
+    padding: 11px 15px;
+    border: 1.5px solid #e4e4e8;
+    border-radius: 10px;
+    font-size: .9rem; color: #222;
+    background: #fafafa; outline: none;
+    transition: border-color .18s, background .18s;
+    font-family: inherit;
+    appearance: none;
+}
+.co-field input:focus,
+.co-field select:focus { border-color: var(--boskery-base, #C56533); background: #fff; }
+.co-field input::placeholder { color: #bbb; }
+.co-field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* ---- Cupón integrado en resumen ---- */
+.co-coupon-section {
+    border-top: 1px dashed #e4e4e8;
+    margin: 6px 0 2px;
+    padding-top: 6px;
+}
+.co-coupon-toggle {
+    width: 100%; background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 2px; color: #666; font-size: .82rem; font-weight: 600;
+    font-family: inherit; text-align: left;
+    transition: color .18s;
+}
+.co-coupon-toggle:hover { color: var(--boskery-base, #C56533); }
+.co-coupon-toggle i:first-child { color: var(--boskery-base, #C56533); font-size: .85rem; }
+.co-coupon-toggle span { flex: 1; }
+.co-coupon-chevron {
+    font-size: .65rem; transition: transform .22s;
+}
+.co-coupon-chevron.open { transform: rotate(180deg); }
+.co-coupon-body { padding: 10px 0 4px; }
+
+/* ---- Cupón ---- */
+.co-coupon-row { display: flex; gap: 10px; }
+.co-coupon-input-wrap {
+    position: relative; flex: 1;
+}
+.co-coupon-icon {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: #ccc; font-size: .85rem; pointer-events: none;
+    transition: color .18s;
+}
+.co-coupon-input-wrap input {
+    width: 100%; padding: 11px 15px 11px 38px;
+    border: 1.5px solid #e4e4e8; border-radius: 10px;
+    font-size: .9rem; color: #222; background: #fafafa;
+    outline: none; font-family: inherit; letter-spacing: .06em; font-weight: 700;
+    transition: border-color .18s, background .18s;
+}
+.co-coupon-input-wrap input::placeholder { color: #c0c0c6; font-weight: 400; letter-spacing: .02em; }
+.co-coupon-input-wrap input:focus { border-color: var(--boskery-base,#C56533); background: #fff; }
+.co-coupon-input-wrap input:focus + .co-coupon-icon,
+.co-coupon-input-wrap:focus-within .co-coupon-icon { color: var(--boskery-base,#C56533); }
+.co-coupon-btn {
+    padding: 11px 20px; border-radius: 10px;
+    border: 1.5px solid var(--boskery-base, #C56533);
+    background: transparent; color: var(--boskery-base, #C56533);
+    font-size: .85rem; font-weight: 700; cursor: pointer;
+    white-space: nowrap;
+    transition: background .18s, color .18s, opacity .18s;
+    flex-shrink: 0;
+}
+.co-coupon-btn:hover { background: var(--boskery-base, #C56533); color: #fff; }
+.co-coupon-btn:disabled { opacity: .5; cursor: default; }
+
+/* Feedback cupón */
+.co-coupon-msg {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px; border-radius: 10px;
+    font-size: .84rem; font-weight: 600;
+}
+.co-coupon-msg--error {
+    background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+}
+.co-coupon-msg--success {
+    background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
+}
+.co-coupon-msg i { font-size: .9rem; flex-shrink: 0; }
+
+/* Tag cupón aplicado */
+.co-coupon-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 20px;
+    background: rgba(34,197,94,.08);
+    border: 1px solid rgba(34,197,94,.3);
+    color: #16a34a; font-size: .84rem; font-weight: 700;
+}
+.co-coupon-tag button {
+    background: none; border: none; cursor: pointer;
+    color: #16a34a; font-size: .7rem; padding: 0;
+    opacity: .7; transition: opacity .15s;
+    display: flex; align-items: center;
+}
+.co-coupon-tag button:hover { opacity: 1; }
+
+/* Spinner en botón */
+.co-coupon-btn .fa-spinner { display: none; }
+.co-coupon-btn.loading .fa-spinner { display: inline-block; }
+.co-coupon-btn.loading .btn-text { display: none; }
+
+/* ---- Pasos / progreso ---- */
+.co-steps {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 32px;
+}
+.co-step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .78rem; font-weight: 700; color: #bbb;
+}
+.co-step__num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: #ebebeb; color: #aaa;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .72rem; font-weight: 800; flex-shrink: 0;
+}
+.co-step.active .co-step__num { background: var(--boskery-base, #C56533); color: #fff; }
+.co-step.active { color: #1a1a1a; }
+.co-step.done .co-step__num { background: #22c55e; color: #fff; }
+.co-step-line { flex: 1; height: 1px; background: #e8e8ec; margin: 0 10px; }
+
+/* ---- Resumen del pedido ---- */
+.co-order-items { margin-bottom: 20px; }
+.co-order-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f5f5f8;
+}
+.co-order-item:last-child { border-bottom: none; }
+.co-order-item__img {
+    position: relative; flex-shrink: 0;
+    width: 56px; height: 56px; border-radius: 10px;
+    border: 1px solid #f0f0f4;
+}
+.co-order-item__img img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: 10px; display: block;
+}
+.co-order-item__qty-badge {
+    position: absolute; top: -6px; right: -6px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--boskery-base, #C56533); color: #fff;
+    font-size: .62rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid #fff;
+}
+.co-order-item__name {
+    flex: 1; font-size: .86rem; font-weight: 700; color: #1a1a1a;
+    text-decoration: none;
+}
+.co-order-item__name:hover { color: var(--boskery-base, #C56533); }
+.co-order-item__price { font-size: .88rem; font-weight: 700; color: #555; flex-shrink: 0; }
+
+/* ---- Filas de totales ---- */
+.co-total-rows { border-top: 1px solid #f0f0f4; padding-top: 16px; }
+.co-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: .88rem; color: #666;
+    border-bottom: 1px dashed #f5f5f8;
+}
+.co-total-row:last-of-type { border-bottom: none; }
+.co-total-row span:last-child { font-weight: 700; color: #1a1a1a; }
+.co-grand-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 0 20px; border-top: 2px solid #f0f0f4; margin-top: 6px;
+}
+.co-grand-total__label { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
+.co-grand-total__val { font-size: 1.4rem; font-weight: 900; color: var(--boskery-base, #C56533); }
+
+/* ---- Botón confirmar ---- */
+.co-btn-confirm {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 15px;
+    background: var(--boskery-base, #C56533); color: #fff;
+    border: none; border-radius: 12px;
+    font-size: 1rem; font-weight: 800; cursor: pointer;
+    box-shadow: 0 6px 22px rgba(197,101,51,.32);
+    transition: background .2s, box-shadow .2s, transform .15s;
+    letter-spacing: .02em;
+}
+.co-btn-confirm:hover { background: #a34120; box-shadow: 0 8px 28px rgba(197,101,51,.42); transform: translateY(-1px); }
+
+.co-secure-note {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 12px; font-size: .74rem; color: #bbb;
+}
+.co-back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: #aaa; font-size: .8rem; text-decoration: none;
+    margin-top: 12px; transition: color .18s;
+}
+.co-back-link:hover { color: var(--boskery-base, #C56533); }
+
+@media (max-width: 575px) {
+    .co-card { padding: 22px 16px; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
     <div class="container">
-        <h2 class="page-header__title">Checkout</h2>
+        <h2 class="page-header__title">Finalizar pedido</h2>
         <ul class="boskery-breadcrumb list-unstyled">
             <li><a href="{% url 'home' %}">Inicio</a></li>
             <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
-            <li><span>Checkout</span></li>
+            <li><span>Pagar</span></li>
         </ul>
     </div>
 </section>
 
-<section class="checkout-page section-space">
+<section class="co-section">
     <div class="container">
-        <form method="post" class="row gutter-y-40">
-            {% csrf_token %}
-            <div class="col-lg-8">
-                <h4>Información de facturación</h4>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label>Nombre *</label>
-                        <input type="text" name="billing_first_name" required value="{{ user.first_name|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label>Apellido *</label>
-                        <input type="text" name="billing_last_name" required value="{{ user.last_name|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label>Email *</label>
-                        <input type="email" name="billing_email" required value="{{ user.email|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label>Teléfono</label>
-                        <input type="text" name="billing_phone" value="{{ user.phone|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label>Dirección *</label>
-                        <input type="text" name="billing_address" required value="{{ user.address|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label>Ciudad *</label>
-                        <input type="text" name="billing_city" required value="{{ user.city|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label>País *</label>
-                        <input type="text" name="billing_country" required value="{{ user.country|default:'Colombia' }}" class="form-control">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label>Código postal</label>
-                        <input type="text" name="billing_postal_code" value="{{ user.postal_code|default:'' }}" class="form-control">
-                    </div>
-                    <div class="col-12 mb-3">
-                        <label>Cupón de descuento</label>
-                        <input type="text" name="coupon_code" placeholder="Código de cupón" class="form-control">
-                    </div>
-                </div>
+
+        <!-- Pasos -->
+        <div class="co-steps mb-4">
+            <div class="co-step done">
+                <div class="co-step__num"><i class="fas fa-check" style="font-size:.6rem"></i></div>
+                <span>Carrito</span>
             </div>
-            <div class="col-lg-4">
-                <div class="cart-page__cart-checkout">
-                    <h4>Resumen del pedido</h4>
-                    <ul class="cart-page__cart-total list-unstyled">
-                        <li>
-                            <span>Subtotal</span>
-                            <span>${{ cart_total|floatformat:2 }}</span>
-                        </li>
-                        <li>
-                            <span>Total</span>
-                            <span class="cart-page__cart-total__amount">${{ cart_total|floatformat:2 }}</span>
-                        </li>
-                    </ul>
-                    <button type="submit" class="boskery-btn w-100">Confirmar pedido</button>
+            <div class="co-step-line"></div>
+            <div class="co-step active">
+                <div class="co-step__num">2</div>
+                <span>Datos</span>
+            </div>
+            <div class="co-step-line"></div>
+            <div class="co-step">
+                <div class="co-step__num">3</div>
+                <span>Confirmación</span>
+            </div>
+        </div>
+
+        <form method="post" id="checkout-form">
+            {% csrf_token %}
+            <div class="row gutter-y-30">
+
+                <!-- ============ FORMULARIO ============ -->
+                <div class="col-lg-7 col-xl-8">
+
+                    <!-- Datos personales -->
+                    <div class="co-card">
+                        <p class="co-section-title"><i class="fas fa-user"></i> Datos personales</p>
+                        <div class="row g-0">
+                            <div class="col-md-6 pe-md-2">
+                                <div class="co-field">
+                                    <label for="co-fname">Nombre *</label>
+                                    <input type="text" id="co-fname" name="billing_first_name" required
+                                           value="{{ user.first_name|default:'' }}" placeholder="Tu nombre">
+                                </div>
+                            </div>
+                            <div class="col-md-6 ps-md-2">
+                                <div class="co-field">
+                                    <label for="co-lname">Apellido *</label>
+                                    <input type="text" id="co-lname" name="billing_last_name" required
+                                           value="{{ user.last_name|default:'' }}" placeholder="Tu apellido">
+                                </div>
+                            </div>
+                            <div class="col-md-7 pe-md-2">
+                                <div class="co-field">
+                                    <label for="co-email">Email *</label>
+                                    <input type="email" id="co-email" name="billing_email" required
+                                           value="{{ user.email|default:'' }}" placeholder="tu@email.com">
+                                </div>
+                            </div>
+                            <div class="col-md-5 ps-md-2">
+                                <div class="co-field">
+                                    <label for="co-phone">Teléfono</label>
+                                    <input type="tel" id="co-phone" name="billing_phone"
+                                           value="{{ user.phone|default:'' }}" placeholder="(+57) 300 000 0000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="co-card">
+                        <p class="co-section-title"><i class="fas fa-map-marker-alt"></i> Dirección de envío</p>
+                        <div class="co-field">
+                            <label for="co-address">Dirección *</label>
+                            <input type="text" id="co-address" name="billing_address" required
+                                   value="{{ user.address|default:'' }}" placeholder="Calle, número, barrio…">
+                        </div>
+                        <div class="row g-0 js-geo-cascade"
+                             data-country-name="billing_country"
+                             data-state-name="billing_state"
+                             data-city-name="billing_city">
+                            <div class="col-md-4 pe-md-2">
+                                <div class="co-field">
+                                    <label>País *</label>
+                                    <select name="billing_country" required>
+                                        <option value="">Selecciona país…</option>
+                                        {% for c in countries %}
+                                        <option value="{{ c.name }}"
+                                            {% if user.country|default:'' == c.name or not user.is_authenticated and c.name == 'Colombia' %}selected{% endif %}>
+                                            {{ c.name }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 px-md-2">
+                                <div class="co-field">
+                                    <label>Departamento</label>
+                                    <select name="billing_state">
+                                        <option value="">Selecciona…</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4 ps-md-2">
+                                <div class="co-field">
+                                    <label>Ciudad *</label>
+                                    <select name="billing_city" required>
+                                        <option value="">Selecciona…</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-0">
+                            <div class="col-md-4">
+                                <div class="co-field">
+                                    <label for="co-postal">Código postal</label>
+                                    <input type="text" id="co-postal" name="billing_postal_code"
+                                           value="{{ user.postal_code|default:'' }}" placeholder="000000">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+                <!-- ============ RESUMEN ============ -->
+                <div class="col-lg-5 col-xl-4">
+                    <div class="co-card" style="position:sticky;top:90px;">
+                        <p class="co-section-title"><i class="fas fa-shopping-bag"></i> Tu pedido</p>
+
+                        <!-- Items -->
+                        <div class="co-order-items">
+                            {% for item in cart %}
+                            <div class="co-order-item">
+                                <div class="co-order-item__img">
+                                    {% if item.product.images.first %}
+                                    <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product.name }}" loading="lazy">
+                                    {% else %}
+                                    <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ item.product.name }}">
+                                    {% endif %}
+                                    <span class="co-order-item__qty-badge">{{ item.quantity }}</span>
+                                </div>
+                                <a href="{{ item.product.get_absolute_url }}" class="co-order-item__name">{{ item.product.name }}{% if item.variant %} <span style="font-weight:400;color:#aaa;font-size:.75rem">· {{ item.variant.attributes_display }}</span>{% endif %}</a>
+                                <span class="co-order-item__price">{{ site_settings.currency }}{{ item.total_price|floatformat:0|intcomma }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="co-total-rows">
+                            <div class="co-total-row">
+                                <span>Subtotal</span>
+                                <span id="co-subtotal-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
+                            </div>
+                            <div class="co-total-row" id="co-discount-row" style="display:none;">
+                                <span style="color:#16a34a;font-weight:600;display:flex;align-items:center;gap:5px;">
+                                    <i class="fas fa-tag" style="font-size:.7rem;"></i> Descuento
+                                </span>
+                                <span id="co-discount-val" style="color:#16a34a;font-weight:700;"></span>
+                            </div>
+                            <div class="co-total-row">
+                                <span>Envío</span>
+                                <span style="color:#22c55e;font-weight:700;">Por definir</span>
+                            </div>
+                        </div>
+
+                        <!-- Cupón (integrado en resumen) -->
+                        <div class="co-coupon-section">
+                            <button type="button" class="co-coupon-toggle" id="coupon-toggle-btn">
+                                <i class="fas fa-ticket-alt"></i>
+                                <span id="coupon-toggle-text">¿Tienes un cupón?</span>
+                                <i class="fas fa-chevron-down co-coupon-chevron" id="coupon-chevron"></i>
+                            </button>
+                            <div class="co-coupon-body" id="coupon-body" style="display:none;">
+                                <div class="co-coupon-row" id="coupon-input-row">
+                                    <div class="co-coupon-input-wrap">
+                                        <i class="fas fa-ticket-alt co-coupon-icon"></i>
+                                        <input type="text" id="coupon-input" name="coupon_code"
+                                               placeholder="Ej: DESCUENTO10"
+                                               autocomplete="off" autocapitalize="characters"
+                                               style="text-transform:uppercase;">
+                                    </div>
+                                    <button type="button" class="co-coupon-btn" id="coupon-apply-btn">
+                                        <span class="btn-text">Aplicar</span>
+                                    </button>
+                                </div>
+                                <div id="coupon-feedback" style="display:none;margin-top:10px;"></div>
+                                <div id="coupon-applied" style="display:none;margin-top:10px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="co-grand-total">
+                            <span class="co-grand-total__label">Total</span>
+                            <span class="co-grand-total__val" id="co-total-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
+                        </div>
+
+                        <!-- Confirmar -->
+                        <button type="submit" form="checkout-form" class="co-btn-confirm">
+                            <i class="fas fa-lock"></i> Confirmar pedido
+                        </button>
+                        <p class="co-secure-note"><i class="fas fa-shield-alt"></i> Pago seguro y cifrado</p>
+                        <a href="{% url 'cart:detail' %}" class="co-back-link">
+                            <i class="fas fa-arrow-left"></i> Volver al carrito
+                        </a>
+                    </div>
+                </div>
+
             </div>
         </form>
     </div>
 </section>
+
+{% include 'dashboard/_geo_cascade_script.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const VALIDATE_URL = "{% url 'orders:validate_coupon' %}";
+
+    const inp      = document.getElementById('coupon-input');
+    const applyBtn = document.getElementById('coupon-apply-btn');
+    const feedback = document.getElementById('coupon-feedback');
+    const appliedEl= document.getElementById('coupon-applied');
+
+    // Resumen totales
+    const discountRow = document.getElementById('co-discount-row');
+    const discountVal = document.getElementById('co-discount-val');
+    const totalVal    = document.getElementById('co-total-val');
+
+    // Estado activo del cupón
+    let activeCoupon = null;
+
+    function setFeedback(msg, type /* 'error' | 'success' */) {
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+        feedback.innerHTML = `<div class="co-coupon-msg co-coupon-msg--${type}">
+            <i class="fas ${icon}"></i><span>${msg}</span></div>`;
+        feedback.style.display = 'block';
+    }
+
+    function clearFeedback() {
+        feedback.style.display = 'none';
+        feedback.innerHTML = '';
+    }
+
+    function showApplied(data) {
+        appliedEl.innerHTML = `
+            <div class="co-coupon-tag">
+                <i class="fas fa-tag"></i>
+                <span>${data.code} — ${data.label}</span>
+                <button type="button" id="coupon-remove-btn" title="Quitar cupón">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>`;
+        appliedEl.style.display = 'block';
+        document.getElementById('coupon-remove-btn').addEventListener('click', removeCoupon);
+    }
+
+    function applyToSummary(data) {
+        discountVal.textContent = '−' + data.discount;
+        discountRow.style.display = '';
+        totalVal.textContent = data.new_total;
+    }
+
+    function resetSummary() {
+        discountRow.style.display = 'none';
+        discountVal.textContent = '';
+        // Restaurar con subtotal original
+        const subtotalEl = document.getElementById('co-subtotal-val');
+        if (subtotalEl) totalVal.textContent = subtotalEl.textContent;
+    }
+
+    function removeCoupon() {
+        activeCoupon = null;
+        inp.value = '';
+        inp.disabled = false;
+        applyBtn.disabled = false;
+        appliedEl.style.display = 'none';
+        appliedEl.innerHTML = '';
+        document.getElementById('coupon-input-row').style.display = 'flex';
+        document.getElementById('coupon-toggle-text').textContent = '¿Tienes un cupón?';
+        clearFeedback();
+        resetSummary();
+        // Abrir panel
+        couponBody.style.display = 'block';
+        chevron.classList.add('open');
+        inp.focus();
+    }
+
+    async function applyCoupon() {
+        const code = inp.value.trim();
+        if (!code) {
+            setFeedback('Ingresa un código de cupón.', 'error');
+            inp.focus();
+            return;
+        }
+
+        // loading state
+        applyBtn.classList.add('loading');
+        applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="btn-text">Aplicar</span>';
+        applyBtn.disabled = true;
+        clearFeedback();
+
+        try {
+            const res  = await fetch(`${VALIDATE_URL}?code=${encodeURIComponent(code)}`);
+            const data = await res.json();
+
+            if (data.valid) {
+                activeCoupon = data;
+                // Ocultar input y mostrar tag
+                document.getElementById('coupon-input-row').style.display = 'none';
+                showApplied(data);
+                applyToSummary(data);
+                // Sincronizar con el campo del form
+                inp.value = data.code;
+                // Actualizar texto del toggle y colapsar
+                document.getElementById('coupon-toggle-text').textContent = `Cupón: ${data.code}`;
+                couponBody.style.display = 'none';
+                chevron.classList.remove('open');
+                if (window.showToast) showToast(`Cupón ${data.code} aplicado — ahorras ${data.discount}`, 'success');
+            } else {
+                setFeedback(data.error || 'Cupón no válido.', 'error');
+                applyBtn.disabled = false;
+            }
+        } catch (e) {
+            setFeedback('Error de conexión. Inténtalo de nuevo.', 'error');
+            applyBtn.disabled = false;
+        } finally {
+            applyBtn.classList.remove('loading');
+            applyBtn.innerHTML = '<span class="btn-text">Aplicar</span>';
+        }
+    }
+
+    // Toggle expandir/colapsar cupón
+    const toggleBtn  = document.getElementById('coupon-toggle-btn');
+    const couponBody = document.getElementById('coupon-body');
+    const chevron    = document.getElementById('coupon-chevron');
+
+    toggleBtn.addEventListener('click', () => {
+        const open = couponBody.style.display !== 'none';
+        couponBody.style.display = open ? 'none' : 'block';
+        chevron.classList.toggle('open', !open);
+        if (!open) setTimeout(() => inp.focus(), 50);
+    });
+
+    applyBtn.addEventListener('click', applyCoupon);
+
+    inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
+    });
+
+    // Auto-uppercase mientras escribe
+    inp.addEventListener('input', () => {
+        const pos = inp.selectionStart;
+        inp.value = inp.value.toUpperCase();
+        inp.setSelectionRange(pos, pos);
+        if (activeCoupon) removeCoupon();
+        clearFeedback();
+    });
+})();
+</script>
 {% endblock %}

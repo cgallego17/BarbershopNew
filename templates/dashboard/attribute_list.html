@@ -33,8 +33,10 @@
                         <td>{% for v in attr.values.all %}{{ v.value }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
                         <td>{{ attr.order }}</td>
                         <td class="text-end">
-                            <a href="{% url 'admin_panel:attribute_edit' attr.pk %}" class="admin-link me-2">Editar</a>
-                            <a href="{% url 'admin_panel:attribute_delete' attr.pk %}" class="admin-link text-danger">Eliminar</a>
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:attribute_edit' attr.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'admin_panel:attribute_delete' attr.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

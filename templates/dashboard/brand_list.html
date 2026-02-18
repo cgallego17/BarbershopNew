@@ -35,8 +35,10 @@
                         <td>{{ brand.order }}</td>
                         <td>{{ brand.product_count }}</td>
                         <td class="text-end">
-                            <a href="{% url 'admin_panel:brand_edit' brand.pk %}" class="admin-link me-2">Editar</a>
-                            <a href="{% url 'admin_panel:brand_delete' brand.pk %}" class="admin-link text-danger">Eliminar</a>
+                            <div class="admin-actions">
+                                <a href="{% url 'admin_panel:brand_edit' brand.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'admin_panel:brand_delete' brand.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

@@ -4,9 +4,9 @@
         <div class="row gutter-y-60">
             <div class="col-lg-6 wow fadeInLeft" data-wow-duration="1500ms">
                 <div class="about-three__image">
-                    {% if about_block.image1 %}<img src="{{ about_block.image1.url }}" alt="{{ about_block.title }}" class="about-three__image__one">{% else %}<img src="{% static 'assets/images/about/about-3-1.jpg' %}" alt="{{ about_block.title }}" class="about-three__image__one">{% endif %}
+                    {% if about_block.image1 %}<img src="{{ about_block.image1.url }}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy">{% else %}<img src="{% static 'assets/images/about/about-3-1.jpg' %}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy">{% endif %}
                     {% if about_block.image2 %}
-                    <div class="about-three__image__inner"><img src="{{ about_block.image2.url }}" alt="" class="about-three__image__two"></div>
+                    <div class="about-three__image__inner"><img src="{{ about_block.image2.url }}" alt="Imagen secundaria sobre nosotros" class="about-three__image__two" loading="lazy"></div>
                     {% endif %}
                     {% if about_block.experience_years %}
                     <div class="about-three__experience">
@@ -22,7 +22,7 @@
             <div class="col-lg-6 wow fadeInRight" data-wow-duration="1500ms">
                 <div class="about-three__content">
                     <div class="sec-title">
-                        <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="" class="sec-title__img">
+                        <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="Decoración título" class="sec-title__img" loading="lazy">
                         {% if about_block.subtitle %}<h6 class="sec-title__tagline">{{ about_block.subtitle }}</h6>{% endif %}
                         <h2 class="sec-title__title">{{ about_block.title }}</h2>
                     </div>
@@ -33,7 +33,7 @@
                             <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                             <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                             <span class="boskery-btn__text">{{ about_block.button_text }}</span>
-                            <i class="icon-meat-3"></i>
+                            <i class="fas fa-cut" aria-hidden="true"></i>
                         </a>
                     </div>
                     {% endif %}

@@ -32,16 +32,33 @@
 .admin-badge--refunded { background: #f3e8ff; color: #6b21a8; }
 .admin-link { color: var(--admin-accent); text-decoration: none; font-size: .875rem; }
 .admin-link:hover { color: var(--admin-accent-hover); }
-.admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; justify-content: flex-end; }
-.admin-actions__sep { color: var(--admin-border); font-weight: 300; user-select: none; }
-.admin-actions .btn-link { background: none; border: none; padding: 0; cursor: pointer; font-size: .875rem; text-decoration: none; font-family: inherit; }
-.admin-actions .btn-link:hover { text-decoration: underline; }
-.admin-actions .btn-link--warning { color: #b45309; }
-.admin-actions .btn-link--warning:hover { color: #92400e; }
-.admin-actions .btn-link--success { color: #059669; }
-.admin-actions .btn-link--success:hover { color: #047857; }
-.admin-actions .btn-link--danger { color: #991b1b; }
-.admin-actions .btn-link--danger:hover { color: #b91c1c; }
+/* Botones de acción en tablas: aspecto compacto y claro */
+.admin-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
+.admin-actions form { display: inline; }
+.admin-action {
+    display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+    padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500;
+    text-decoration: none; border: none; cursor: pointer; font-family: inherit;
+    transition: background .15s, color .15s, box-shadow .15s; white-space: nowrap;
+}
+.admin-action:hover { box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.admin-action--primary { background: #f1eeeb; color: var(--admin-accent); }
+.admin-action--primary:hover { background: #e8e2dc; color: var(--admin-accent-hover); }
+.admin-action--success { background: #d1fae5; color: #047857; }
+.admin-action--success:hover { background: #a7f3d0; color: #065f46; }
+.admin-action--warning { background: #fef3c7; color: #b45309; }
+.admin-action--warning:hover { background: #fde68a; color: #92400e; }
+.admin-action--danger { background: #fee2e2; color: #991b1b; }
+.admin-action--danger:hover { background: #fecaca; color: #b91c1c; }
+/* Compatibilidad con botones antiguos (btn-link) */
+.admin-actions .btn-link { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 500; background: none; border: none; cursor: pointer; font-family: inherit; text-decoration: none; transition: background .15s, color .15s; }
+.admin-actions .btn-link--warning { background: #fef3c7; color: #b45309; }
+.admin-actions .btn-link--warning:hover { background: #fde68a; color: #92400e; }
+.admin-actions .btn-link--success { background: #d1fae5; color: #047857; }
+.admin-actions .btn-link--success:hover { background: #a7f3d0; color: #065f46; }
+.admin-actions .btn-link--danger { background: #fee2e2; color: #991b1b; }
+.admin-actions .btn-link--danger:hover { background: #fecaca; color: #b91c1c; }
+.admin-actions__sep { display: none; }
 .admin-list { list-style: none; padding: 0; margin: 0; }
 .admin-list__item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--admin-border); }
 .admin-list__item:last-child { border-bottom: 0; }

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}
+    {% if kind == 'success' %}¡Pago exitoso!
+    {% elif kind == 'warning' %}Pago en proceso
+    {% else %}Pago no completado
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ===== PAYMENT RESULT ===== */
+.pr-section {
+    background: #f2f3f5; min-height: 82vh;
+    display: flex; align-items: center; padding: 60px 0;
+}
+.pr-wrap { max-width: 520px; margin: 0 auto; width: 100%; text-align: center; }
+
+/* Icono animado */
+.pr-icon-wrap {
+    width: 90px; height: 90px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px; font-size: 2.2rem;
+    animation: pr-pop .5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pr-pop {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+.pr-icon-wrap--success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: #fff; box-shadow: 0 8px 30px rgba(34,197,94,.35);
+}
+.pr-icon-wrap--warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #fff; box-shadow: 0 8px 30px rgba(245,158,11,.35);
+}
+.pr-icon-wrap--error {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff; box-shadow: 0 8px 30px rgba(239,68,68,.3);
+}
+
+.pr-title {
+    font-size: 1.7rem; font-weight: 900; color: #1a1a2e;
+    margin-bottom: 8px; letter-spacing: -.02em;
+}
+.pr-subtitle {
+    font-size: .95rem; color: #666; margin-bottom: 30px; line-height: 1.6;
+}
+
+/* Card con detalles */
+.pr-card {
+    background: #fff; border-radius: 18px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 4px 24px rgba(0,0,0,.07);
+    padding: 26px 28px; margin-bottom: 24px; text-align: left;
+}
+.pr-card__title {
+    font-size: .65rem; font-weight: 800; letter-spacing: .15em;
+    text-transform: uppercase; color: #aaa; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 7px;
+}
+.pr-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid #f5f5f7;
+    font-size: .88rem;
+}
+.pr-row:last-child { border-bottom: none; }
+.pr-row__label { color: #888; }
+.pr-row__val { font-weight: 700; color: #1a1a2e; }
+.pr-row__val--success { color: #16a34a; }
+.pr-row__val--warning { color: #d97706; }
+.pr-row__val--error   { color: #dc2626; }
+
+/* Status badge */
+.pr-status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 20px;
+    font-size: .75rem; font-weight: 800;
+}
+.pr-status-badge--success { background:#dcfce7; color:#16a34a; }
+.pr-status-badge--warning { background:#fef3c7; color:#d97706; }
+.pr-status-badge--error   { background:#fee2e2; color:#dc2626; }
+
+/* Acciones */
+.pr-actions { display: flex; flex-direction: column; gap: 12px; }
+.pr-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 15px 24px; border-radius: 14px; font-size: .9rem; font-weight: 800;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+}
+.pr-btn:hover { transform: translateY(-2px); text-decoration: none; }
+.pr-btn--primary {
+    background: linear-gradient(135deg, var(--boskery-base,#C56533), #e07a45);
+    color: #fff; box-shadow: 0 6px 20px rgba(197,101,51,.3);
+}
+.pr-btn--primary:hover { box-shadow: 0 10px 28px rgba(197,101,51,.4); color: #fff; }
+.pr-btn--outline {
+    background: #fff; color: #555; border: 1.5px solid #e4e4e8;
+}
+.pr-btn--outline:hover { border-color: var(--boskery-base,#C56533); color: var(--boskery-base,#C56533); }
+
+/* Spinner para estado pending */
+.pr-pending-spinner {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: .82rem; color: #d97706; font-weight: 600; margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="pr-section">
+    <div class="container">
+        <div class="pr-wrap">
+
+            <!-- Icono principal -->
+            <div class="pr-icon-wrap pr-icon-wrap--{{ kind }}">
+                {% if kind == 'success' %}
+                    <i class="fas fa-check"></i>
+                {% elif kind == 'warning' %}
+                    <i class="fas fa-clock"></i>
+                {% else %}
+                    <i class="fas fa-times"></i>
+                {% endif %}
+            </div>
+
+            <h1 class="pr-title">{{ title }}</h1>
+            <p class="pr-subtitle">{{ subtitle }}</p>
+
+            {% if kind == 'warning' %}
+            <p class="pr-pending-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                Verificando tu pago…
+            </p>
+            {% endif %}
+
+            <!-- Detalle de la transacción -->
+            {% if order %}
+            <div class="pr-card">
+                <p class="pr-card__title"><i class="fas fa-receipt"></i> Detalles del pedido</p>
+
+                <div class="pr-row">
+                    <span class="pr-row__label">Número de pedido</span>
+                    <span class="pr-row__val">{{ order.order_number }}</span>
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row__label">Estado del pago</span>
+                    <span>
+                        <span class="pr-status-badge pr-status-badge--{{ kind }}">
+                            {% if kind == 'success' %}<i class="fas fa-check-circle"></i> Aprobado
+                            {% elif kind == 'warning' %}<i class="fas fa-clock"></i> En proceso
+                            {% else %}<i class="fas fa-times-circle"></i> No completado
+                            {% endif %}
+                        </span>
+                    </span>
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row__label">Total pagado</span>
+                    <span class="pr-row__val pr-row__val--{{ kind }}">
+                        {{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}
+                    </span>
+                </div>
+                {% if order.coupon_code %}
+                <div class="pr-row">
+                    <span class="pr-row__label">Cupón aplicado</span>
+                    <span class="pr-row__val pr-row__val--success">{{ order.coupon_code }}</span>
+                </div>
+                {% endif %}
+                <div class="pr-row">
+                    <span class="pr-row__label">Cliente</span>
+                    <span class="pr-row__val">{{ order.billing_first_name }} {{ order.billing_last_name }}</span>
+                </div>
+                <div class="pr-row">
+                    <span class="pr-row__label">Email</span>
+                    <span class="pr-row__val">{{ order.billing_email }}</span>
+                </div>
+                {% if transaction_id %}
+                <div class="pr-row">
+                    <span class="pr-row__label">ID Transacción</span>
+                    <span class="pr-row__val" style="font-size:.78rem;font-family:monospace;">{{ transaction_id }}</span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Acciones -->
+            <div class="pr-actions">
+                {% if kind == 'success' and order %}
+                    <a href="{% url 'orders:detail' order_number=order.order_number %}" class="pr-btn pr-btn--primary">
+                        <i class="fas fa-receipt"></i> Ver detalle del pedido
+                    </a>
+                    <a href="{% url 'products:list' %}" class="pr-btn pr-btn--outline">
+                        <i class="fas fa-store"></i> Seguir comprando
+                    </a>
+                {% elif kind == 'warning' and order %}
+                    <a href="{% url 'payments:payment_status' order_number=order.order_number %}"
+                       class="pr-btn pr-btn--outline" id="pr-check-btn">
+                        <i class="fas fa-sync-alt"></i> Verificar estado
+                    </a>
+                    <a href="{% url 'orders:detail' order_number=order.order_number %}" class="pr-btn pr-btn--outline">
+                        <i class="fas fa-receipt"></i> Ver pedido
+                    </a>
+                {% elif order %}
+                    <a href="{% url 'payments:payment_page' order_number=order.order_number %}" class="pr-btn pr-btn--primary">
+                        <i class="fas fa-redo"></i> Intentar de nuevo
+                    </a>
+                    <a href="{% url 'products:list' %}" class="pr-btn pr-btn--outline">
+                        <i class="fas fa-store"></i> Volver a la tienda
+                    </a>
+                {% else %}
+                    <a href="{% url 'products:list' %}" class="pr-btn pr-btn--primary">
+                        <i class="fas fa-store"></i> Ir a la tienda
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if kind == 'warning' and order %}
+<script>
+// Polling para pedidos en estado pending (verificación bancaria)
+(function () {
+    const STATUS_URL = "{% url 'payments:payment_status' order_number=order.order_number %}";
+    const ORDER_URL  = "{% url 'orders:detail' order_number=order.order_number %}";
+    let tries = 0;
+
+    async function checkStatus() {
+        if (tries >= 10) return;  // máximo 10 intentos (50 seg)
+        tries++;
+        try {
+            const res  = await fetch(STATUS_URL);
+            const data = await res.json();
+            if (data.payment_status === 'paid') {
+                window.location.href = ORDER_URL;
+            } else if (data.payment_status === 'failed') {
+                window.location.reload();
+            }
+        } catch (_) {}
+    }
+
+    // Verificar cada 5 segundos
+    setInterval(checkStatus, 5000);
+})();
+</script>
+{% endif %}
+{% endblock %}

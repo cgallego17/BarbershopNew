@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            <div class="mb-4">
+            <div class="mb-4 js-geo-cascade">
                 <h5 class="text-muted mb-3">Dirección</h5>
                 <div class="row g-3">
                     <div class="col-12">
@@ -58,12 +58,16 @@
                         {{ form.address }}
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">Ciudad</label>
-                        {{ form.city }}
-                    </div>
-                    <div class="col-md-4">
                         <label class="form-label">País</label>
                         {{ form.country }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Departamento / Estado</label>
+                        {{ form.state }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        {{ form.city }}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Código postal</label>
@@ -106,6 +110,19 @@
             </div>
 
             <div class="mb-4">
+                <h5 class="text-muted mb-3">Tienda</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            {{ form.show_out_of_stock_products }}
+                            <label class="form-check-label" for="id_show_out_of_stock_products">Mostrar productos sin stock</label>
+                        </div>
+                        <p class="form-text small text-muted mt-1">Si está desactivado, los productos agotados no se listarán en la tienda ni en la portada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-4">
                 <h5 class="text-muted mb-3">Información adicional</h5>
                 <div class="row g-3">
                     <div class="col-12">
@@ -139,4 +156,5 @@
         </form>
     </div>
 </div>
+{% include 'dashboard/_geo_cascade_script.html' %}
 {% endblock %}

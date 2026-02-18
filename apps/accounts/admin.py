@@ -12,5 +12,5 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['username']
 
     fieldsets = BaseUserAdmin.fieldsets + (
-        ('Información adicional', {'fields': ('phone', 'address', 'city', 'country', 'postal_code')}),
+        ('Información adicional', {'fields': ('phone', 'address', 'city', 'state', 'country', 'postal_code')}),
     )
