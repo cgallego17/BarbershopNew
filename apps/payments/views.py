@@ -181,7 +181,7 @@ def payment_page(request, order_number):
 
     # Seguridad: sólo el dueño del pedido (o invitados que lo crearon en sesión)
     if request.user.is_authenticated and order.user and order.user != request.user:
-        return redirect('home')
+        return redirect('core:home')
 
     # Si ya fue pagado, ir directo al detalle
     if order.payment_status == 'paid':
@@ -189,7 +189,7 @@ def payment_page(request, order_number):
 
     currency       = 'COP'
     amount_cents   = int(order.total * 100)
-    redirect_url   = request.build_absolute_uri('/payments/return/')
+    redirect_url   = request.build_absolute_uri('/pagos/confirmacion/')
     integrity      = _integrity_hash(order_number, amount_cents, currency)
 
     context = {
@@ -212,7 +212,7 @@ def payment_return(request):
     """
     transaction_id = request.GET.get('id', '').strip()
     if not transaction_id:
-        return redirect('home')
+        return redirect('core:home')
 
     tx_data   = _fetch_transaction_from_wompi(transaction_id)
     reference = tx_data.get('reference', '')

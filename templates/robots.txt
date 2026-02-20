@@ -1,9 +1,10 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
-Disallow: /accounts/
-Disallow: /cart/
-Disallow: /orders/
-Disallow: /payments/
+Disallow: /cuentas/
+Disallow: /carrito/
+Disallow: /pedidos/
+Disallow: /pagos/
+Disallow: /panel/
 
 Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

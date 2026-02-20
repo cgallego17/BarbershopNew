@@ -65,7 +65,6 @@
 <section class="product-page section-space-bottom" id="featured">
     <div class="container">
         <div class="sec-title sec-title--center">
-            <img src="{% static 'assets/images/shapes/sec-title-s-1.png' %}" alt="sec-title" class="sec-title__img">
             <h6 class="sec-title__tagline">destacados</h6>
             <h2 class="sec-title__title">Productos</h2>
         </div>
@@ -92,7 +91,7 @@
                         <form method="post" action="{% url 'cart:add' product.id %}">
                             {% csrf_token %}
                             <input type="hidden" name="quantity" value="1">
-                            <input type="hidden" name="next" value="{% url 'home' %}">
+                            <input type="hidden" name="next" value="{% url 'core:home' %}">
                             <button type="submit" class="boskery-btn product__item__link">
                                 <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                                 <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>

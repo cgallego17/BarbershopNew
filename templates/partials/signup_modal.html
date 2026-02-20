@@ -1,0 +1,275 @@
+{% load static i18n %}
+
+<style>
+  #signupModal .modal-dialog { max-width: 480px; }
+  #signupModal .modal-body { max-height: 70vh; overflow-y: auto; }
+  #signupModal .signup-modal__type-row {
+    display: flex; gap: 12px; margin-bottom: 14px;
+  }
+  #signupModal .signup-modal__type-row label {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px; border-radius: 14px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04);
+    color: rgba(255,255,255,.85); font-size: 14px; transition: all .2s;
+  }
+  #signupModal .signup-modal__type-row input:checked + label {
+    border-color: rgba(var(--boskery-base-rgb, 197, 101, 51), .6);
+    background: rgba(var(--boskery-base-rgb, 197, 101, 51), .15);
+  }
+  #signupModal .signup-modal__type-row input { position: absolute; opacity: 0; }
+  #signupModal .login-page__form__input-box select {
+    width: 100%; height: 52px; border-radius: 14px; padding-left: 46px; padding-right: 16px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92); outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='rgba(255,255,255,.6)' viewBox='0 0 12 8'%3E%3Cpath d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  /* Opciones del desplegable con fondo claro y texto oscuro para que se lean */
+  #signupModal .login-page__form__input-box select option {
+    background: #fff;
+    color: #222;
+  }
+  #signupModal .modal-content {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(16,15,15,.92);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+  }
+  #signupModal .modal-header {
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 18px 20px;
+    background: radial-gradient(100% 140% at 0% 0%, rgba(var(--boskery-base-rgb, 197, 101, 51), .22) 0%, rgba(16,15,15,0) 55%);
+  }
+  #signupModal .modal-title { margin: 0; }
+  #signupModal .signup-modal__logo {
+    display: block;
+    max-height: 32px;
+    width: auto;
+  }
+  #signupModal .signup-modal__subtitle { color: rgba(255,255,255,.7); }
+  #signupModal .modal-body { padding: 18px 20px 22px; }
+
+  #signupModal .login-page__form__input-box { position: relative; margin-top: 14px; }
+  #signupModal .login-page__form__input-box input {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px;
+    padding-left: 46px;
+    padding-right: 46px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
+    outline: none;
+    transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+  }
+  #signupModal .login-page__form__input-box input::placeholder { color: rgba(255,255,255,.55); }
+  #signupModal .login-page__form__input-box input:focus {
+    background: rgba(255,255,255,.06);
+    border-color: rgba(var(--boskery-base-rgb, 197, 101, 51), .6);
+    box-shadow: 0 0 0 4px rgba(var(--boskery-base-rgb, 197, 101, 51), .18);
+  }
+  #signupModal .login-page__form__input-box > span {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255,255,255,.65);
+    font-size: 18px;
+    line-height: 1;
+    pointer-events: none;
+  }
+  #signupModal .toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.03);
+    color: rgba(255,255,255,.9);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", sans-serif;
+    font-weight: 900;
+  }
+  #signupModal .toggle-password:hover { background: rgba(255,255,255,.06); }
+  #signupModal .toggle-password i { font-size: 1rem; }
+
+  #signupModal .signup-modal__links a { color: rgba(255,255,255,.82); text-decoration: none; }
+  #signupModal .signup-modal__links a:hover { color: var(--boskery-base, #C56533); }
+  #signupModal .btn-close { filter: invert(1) grayscale(1); opacity: .9; }
+  #signupModal .signup-person-only { transition: opacity .2s, margin .2s; }
+  #signupModal .signup-person-only.hidden { display: none !important; }
+  #signupModal .signup-modal__errors {
+    background: rgba(220, 53, 69, .15);
+    border: 1px solid rgba(220, 53, 69, .4);
+    color: #f8d7da;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+</style>
+
+<div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="d-flex align-items-center gap-3">
+          <img class="signup-modal__logo" src="{% static 'logo-768x317.png' %}" alt="Logo" />
+          <div>
+            <h5 class="modal-title" id="signupModalLabel">{% trans "Crear cuenta" %}</h5>
+            <div class="signup-modal__subtitle small">{% trans "Regístrate para guardar tus pedidos y comprar más rápido." %}</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Cerrar' %}"></button>
+      </div>
+      <div class="modal-body">
+        <div id="signupModalErrors" class="signup-modal__errors" style="display: none;" role="alert"></div>
+        <form method="post" action="{% url 'account_signup' %}" class="login-page__form" novalidate>
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+          <div class="mb-2" style="font-size:13px; color: rgba(255,255,255,.7);">{% trans "Registrarse como" %}</div>
+          <div class="signup-modal__type-row">
+            <input type="radio" name="customer_type" id="signup_type_person" value="person" checked>
+            <label for="signup_type_person">{% trans "Persona natural" %}</label>
+            <input type="radio" name="customer_type" id="signup_type_company" value="company">
+            <label for="signup_type_company">{% trans "Empresa" %}</label>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_document">{% trans "Número de identificación" %}</label>
+            <input id="modal_signup_document" type="text" name="document_number" placeholder="{% trans 'Número de identificación (cédula, NIT)' %}" required>
+            <span class="icon-padlock"></span>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_first_name">{% trans "Nombre" %}</label>
+            <input id="modal_signup_first_name" type="text" name="first_name" placeholder="{% trans 'Nombre' %}" required>
+            <span class="icon-padlock"></span>
+          </div>
+
+          <div id="signup-person-fields" class="signup-person-only">
+            <div class="login-page__form__input-box">
+              <label class="sr-only" for="modal_signup_document_type">{% trans "Tipo de documento" %}</label>
+              <select id="modal_signup_document_type" name="document_type">
+                <option value="">{% trans "-- Seleccione --" %}</option>
+                <option value="CC">{% trans "Cédula de ciudadanía" %}</option>
+                <option value="CE">{% trans "Cédula de extranjería" %}</option>
+                <option value="PA">{% trans "Pasaporte" %}</option>
+              </select>
+            </div>
+            <div class="login-page__form__input-box">
+              <label class="sr-only" for="modal_signup_last_name">{% trans "Apellido" %}</label>
+              <input id="modal_signup_last_name" type="text" name="last_name" placeholder="{% trans 'Apellido' %}">
+              <span class="icon-padlock"></span>
+            </div>
+            <div class="login-page__form__input-box">
+              <label class="sr-only" for="modal_signup_birth">{% trans "Fecha de nacimiento" %}</label>
+              <input id="modal_signup_birth" type="date" name="date_of_birth" placeholder="{% trans 'Fecha de nacimiento' %}">
+              <span class="icon-padlock"></span>
+            </div>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_email">{% trans "Email" %}</label>
+            <input id="modal_signup_email" type="email" name="email" placeholder="{% trans 'Email' %}" autocomplete="email" required>
+            <span class="icon-email"></span>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_phone">{% trans "Teléfono" %}</label>
+            <input id="modal_signup_phone" type="tel" name="phone" placeholder="{% trans 'Teléfono' %}">
+            <span class="icon-padlock"></span>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_password1">{% trans "Contraseña" %}</label>
+            <input id="modal_signup_password1" type="password" name="password1" placeholder="{% trans 'Contraseña' %}" autocomplete="new-password" required>
+            <span class="icon-padlock"></span>
+            <button type="button" class="toggle-password" data-toggle-password="#modal_signup_password1" aria-label="{% trans 'Mostrar u ocultar contraseña' %}">
+              <i class="fas fa-eye-slash" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="login-page__form__input-box">
+            <label class="sr-only" for="modal_signup_password2">{% trans "Confirmar contraseña" %}</label>
+            <input id="modal_signup_password2" type="password" name="password2" placeholder="{% trans 'Confirmar contraseña' %}" autocomplete="new-password" required>
+            <span class="icon-padlock"></span>
+            <button type="button" class="toggle-password" data-toggle-password="#modal_signup_password2" aria-label="{% trans 'Mostrar u ocultar contraseña' %}">
+              <i class="fas fa-eye-slash" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="boskery-btn login-page__form__btn w-100">
+              {% trans "Registrarme" %}
+            </button>
+          </div>
+
+          <div class="text-center small mt-3 signup-modal__links">
+            {% trans "¿Ya tienes cuenta?" %}
+            <a href="#" id="signupModalToLogin">{% trans "Iniciar sesión" %}</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    function toggleSignupPersonFields() {
+      var personOnly = document.getElementById("signup-person-fields");
+      var docTypeSelect = document.getElementById("modal_signup_document_type");
+      var lastNameInput = document.getElementById("modal_signup_last_name");
+      var birthInput = document.getElementById("modal_signup_birth");
+      var isCompany = document.getElementById("signup_type_company") && document.getElementById("signup_type_company").checked;
+      if (!personOnly) return;
+      if (isCompany) {
+        personOnly.classList.add("hidden");
+        if (docTypeSelect) { docTypeSelect.removeAttribute("required"); docTypeSelect.value = ""; }
+        if (lastNameInput) { lastNameInput.removeAttribute("required"); lastNameInput.value = ""; }
+        if (birthInput) { birthInput.value = ""; }
+      } else {
+        personOnly.classList.remove("hidden");
+        if (docTypeSelect) docTypeSelect.setAttribute("required", "required");
+        if (lastNameInput) lastNameInput.setAttribute("required", "required");
+      }
+    }
+    document.addEventListener("shown.bs.modal", function (event) {
+      if (!event || !event.target || event.target.id !== "signupModal") return;
+      toggleSignupPersonFields();
+      var email = document.getElementById("modal_signup_email");
+      if (email) email.focus();
+    });
+    document.addEventListener("change", function (e) {
+      if (e.target && (e.target.id === "signup_type_person" || e.target.id === "signup_type_company")) toggleSignupPersonFields();
+    });
+    document.addEventListener("hidden.bs.modal", function (event) {
+      if (!event || !event.target || event.target.id !== "signupModal") return;
+      var err = document.getElementById("signupModalErrors");
+      if (err) { err.textContent = ""; err.style.display = "none"; }
+    });
+
+    document.addEventListener("click", function (e) {
+      var link = e.target.closest("#signupModalToLogin");
+      if (!link) return;
+      e.preventDefault();
+      var signupEl = document.getElementById("signupModal");
+      var loginEl = document.getElementById("loginModal");
+      if (!signupEl || !loginEl) return;
+      var signupModal = window.bootstrap && bootstrap.Modal.getInstance(signupEl);
+      if (signupModal) signupModal.hide();
+      var loginModal = window.bootstrap && bootstrap.Modal.getOrCreateInstance(loginEl);
+      if (loginModal) loginModal.show();
+    });
+  })();
+</script>

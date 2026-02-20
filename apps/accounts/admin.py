@@ -12,5 +12,6 @@ class UserAdmin(BaseUserAdmin):
     ordering = ['username']
 
     fieldsets = BaseUserAdmin.fieldsets + (
+        ('Tipo e identificación', {'fields': ('customer_type', 'document_type', 'document_number', 'date_of_birth')}),
         ('Información adicional', {'fields': ('phone', 'address', 'city', 'state', 'country', 'postal_code')}),
     )

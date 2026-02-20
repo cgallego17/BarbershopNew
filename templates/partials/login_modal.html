@@ -44,7 +44,8 @@
     border-color: rgba(var(--boskery-base-rgb, 197, 101, 51), .6);
     box-shadow: 0 0 0 4px rgba(var(--boskery-base-rgb, 197, 101, 51), .18);
   }
-  #loginModal .login-page__form__input-box > span {
+  #loginModal .login-page__form__input-box > span,
+  #loginModal .login-page__form__input-box .login-modal__input-icon {
     position: absolute;
     left: 16px;
     top: 50%;
@@ -54,6 +55,7 @@
     line-height: 1;
     pointer-events: none;
   }
+  #loginModal .login-modal__input-icon i { font-size: 1rem; }
   #loginModal .toggle-password {
     position: absolute;
     right: 12px;
@@ -64,16 +66,32 @@
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,.10);
     background: rgba(255,255,255,.03);
-    color: rgba(255,255,255,.75);
+    color: rgba(255,255,255,.9);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-size: 1rem;
+    font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", sans-serif;
+    font-weight: 900;
   }
   #loginModal .toggle-password:hover { background: rgba(255,255,255,.06); }
+  #loginModal .toggle-password i { font-size: 1rem; }
+  #loginModal .login-page__form__input-box .pass-field-icon { display: none !important; }
 
-  #loginModal .login-modal__links a { color: rgba(255,255,255,.82); text-decoration: none; }
-  #loginModal .login-modal__links a:hover { color: var(--boskery-base, #C56533); }
+  #loginModal .login-modal__links a,
+  #loginModal .login-modal__links button.login-page__form__forgot { color: rgba(255,255,255,.82); text-decoration: none; background: none; cursor: pointer; font-size: inherit; }
+  #loginModal .login-modal__links a:hover,
+  #loginModal .login-modal__links button.login-page__form__forgot:hover { color: var(--boskery-base, #C56533); }
   #loginModal .btn-close { filter: invert(1) grayscale(1); opacity: .9; }
+  #loginModal .login-modal__errors {
+    background: rgba(220, 53, 69, .15);
+    border: 1px solid rgba(220, 53, 69, .4);
+    color: #f8d7da;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
 </style>
 
 <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -90,6 +108,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Cerrar' %}"></button>
       </div>
       <div class="modal-body">
+        <div id="loginModalErrors" class="login-modal__errors" style="display: none;" role="alert"></div>
         <form method="post" action="{% url 'account_login' %}" class="login-page__form" novalidate>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -103,9 +122,9 @@
           <div class="login-page__form__input-box">
             <label class="sr-only" for="modal_password">{% trans "Contraseña" %}</label>
             <input id="modal_password" type="password" name="password" placeholder="{% trans 'Contraseña' %}" autocomplete="current-password" required>
-            <span class="icon-padlock"></span>
+            <span class="login-modal__input-icon" aria-hidden="true"><i class="fas fa-lock"></i></span>
             <button type="button" class="toggle-password" data-toggle-password="#modal_password" aria-label="{% trans 'Mostrar u ocultar contraseña' %}">
-              <i class="fa fa-fw fa-eye-slash" aria-hidden="true"></i>
+              <i class="fas fa-eye-slash" aria-hidden="true"></i>
             </button>
           </div>
 
@@ -114,9 +133,9 @@
               <input type="checkbox" name="remember" id="modal_remember">
               <label for="modal_remember" class="mb-0"><span></span>{% trans "Recordarme" %}</label>
             </div>
-            <a href="{% url 'account_reset_password' %}" class="login-page__form__forgot">
+            <button type="button" id="loginModalToPasswordReset" class="login-page__form__forgot btn-link p-0 border-0 bg-transparent text-decoration-none">
               {% trans "Olvidé mi contraseña" %}
-            </a>
+            </button>
           </div>
 
           <div class="mt-4">
@@ -127,7 +146,7 @@
 
           <div class="text-center small mt-3 login-modal__links">
             {% trans "¿No tienes cuenta?" %}
-            <a href="{% url 'account_signup' %}">{% trans "Crear cuenta" %}</a>
+            <a href="#" id="loginModalToSignup">{% trans "Crear cuenta" %}</a>
           </div>
         </form>
       </div>
@@ -137,26 +156,55 @@
 
 <script>
   (function () {
-    // Focus login field when modal opens
     document.addEventListener("shown.bs.modal", function (event) {
       if (!event || !event.target || event.target.id !== "loginModal") return;
-      const login = document.getElementById("modal_login");
+      var login = document.getElementById("modal_login");
       if (login) login.focus();
     });
+    document.addEventListener("hidden.bs.modal", function (event) {
+      if (!event || !event.target || event.target.id !== "loginModal") return;
+      var err = document.getElementById("loginModalErrors");
+      if (err) { err.textContent = ""; err.style.display = "none"; }
+    });
 
-    // Toggle password visibility
     document.addEventListener("click", function (e) {
-      const btn = e.target.closest(".toggle-password");
+      var link = e.target.closest("#loginModalToSignup");
+      if (link) {
+        e.preventDefault();
+        var loginEl = document.getElementById("loginModal");
+        var signupEl = document.getElementById("signupModal");
+        if (!loginEl || !signupEl) return;
+        var loginModal = window.bootstrap && bootstrap.Modal.getInstance(loginEl);
+        if (loginModal) loginModal.hide();
+        var signupModal = window.bootstrap && bootstrap.Modal.getOrCreateInstance(signupEl);
+        if (signupModal) signupModal.show();
+        return;
+      }
+      var resetLink = e.target.closest("#loginModalToPasswordReset");
+      if (resetLink) {
+        e.preventDefault();
+        e.stopPropagation();
+        var loginEl = document.getElementById("loginModal");
+        var resetEl = document.getElementById("passwordResetModal");
+        if (!loginEl || !resetEl) return false;
+        var loginModal = window.bootstrap && bootstrap.Modal.getInstance(loginEl);
+        if (loginModal) loginModal.hide();
+        var resetModal = window.bootstrap && bootstrap.Modal.getOrCreateInstance(resetEl);
+        if (resetModal) resetModal.show();
+        return false;
+      }
+      var btn = e.target.closest(".toggle-password");
       if (!btn) return;
-      const selector = btn.getAttribute("data-toggle-password");
-      const input = selector ? document.querySelector(selector) : null;
+      var selector = btn.getAttribute("data-toggle-password");
+      var input = selector ? document.querySelector(selector) : null;
       if (!input) return;
-      const isPassword = input.type === "password";
+      var isPassword = input.type === "password";
       input.type = isPassword ? "text" : "password";
-      const icon = btn.querySelector("i");
+      var icon = btn.querySelector("i");
       if (icon) {
         icon.classList.toggle("fa-eye-slash", !isPassword);
         icon.classList.toggle("fa-eye", isPassword);
+        icon.classList.add("fas");
       }
     });
   })();

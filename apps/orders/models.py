@@ -35,8 +35,29 @@ class Order(models.Model):
         max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending'
     )
     # Billing
+    billing_customer_type = models.CharField(
+        'Tipo', max_length=20,
+        choices=[('person', 'Persona natural'), ('company', 'Empresa')],
+        default='person'
+    )
+    billing_document_type = models.CharField(
+        'Tipo de documento', max_length=10, blank=True,
+        choices=[
+            ('', '--'),
+            ('CC', 'Cédula de ciudadanía'),
+            ('CE', 'Cédula de extranjería'),
+            ('PA', 'Pasaporte'),
+            ('NIT', 'NIT'),
+        ]
+    )
+    billing_document_number = models.CharField(
+        'Número de identificación', max_length=30, blank=True
+    )
+    billing_date_of_birth = models.DateField(
+        'Fecha de nacimiento', null=True, blank=True
+    )
     billing_first_name = models.CharField(max_length=100)
-    billing_last_name = models.CharField(max_length=100)
+    billing_last_name = models.CharField(max_length=100, blank=True)
     billing_email = models.EmailField()
     billing_phone = models.CharField(max_length=20, blank=True)
     billing_address = models.TextField()

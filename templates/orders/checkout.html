@@ -56,6 +56,17 @@
 .co-field input:focus,
 .co-field select:focus { border-color: var(--boskery-base, #C56533); background: #fff; }
 .co-field input::placeholder { color: #bbb; }
+.co-radio-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px; border-radius: 10px;
+    border: 1.5px solid #e4e4e8; background: #fafafa;
+    cursor: pointer; font-size: .9rem; font-weight: 600; color: #333;
+    transition: border-color .18s, background .18s;
+}
+.co-radio-option input { margin: 0; }
+.co-radio-option:has(input:checked) { border-color: var(--boskery-base, #C56533); background: rgba(197,101,51,.06); }
+.co-person-only { transition: opacity .2s; }
+.co-person-only.co-hidden { display: none !important; }
 .co-field select {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
@@ -84,6 +95,32 @@
 }
 .co-coupon-chevron.open { transform: rotate(180deg); }
 .co-coupon-body { padding: 10px 0 4px; }
+
+/* ---- Términos y política (checkboxes) ---- */
+.co-legal-checkboxes {
+    margin: 16px 0 20px;
+    padding: 14px 0;
+    border-top: 1px dashed #e4e4e8;
+}
+.co-checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: .85rem;
+    color: #444;
+    margin-bottom: 10px;
+}
+.co-checkbox-row:last-child { margin-bottom: 0; }
+.co-checkbox-row input {
+    margin: 3px 0 0;
+    flex-shrink: 0;
+}
+.co-checkbox-row a {
+    color: var(--boskery-base, #C56533);
+    text-decoration: underline;
+}
+.co-checkbox-row a:hover { text-decoration: none; }
 
 /* ---- Cupón ---- */
 .co-coupon-row { display: flex; gap: 10px; }
@@ -257,7 +294,7 @@
     <div class="container">
         <h2 class="page-header__title">Finalizar pedido</h2>
         <ul class="boskery-breadcrumb list-unstyled">
-            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
             <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
             <li><span>Pagar</span></li>
         </ul>
@@ -292,6 +329,55 @@
                 <!-- ============ FORMULARIO ============ -->
                 <div class="col-lg-7 col-xl-8">
 
+                    <!-- Tipo de comprador -->
+                    <div class="co-card">
+                        <p class="co-section-title"><i class="fas fa-id-card"></i> Tipo de comprador</p>
+                        <div class="row g-0 mb-3">
+                            <div class="col-6 pe-2">
+                                <label class="co-radio-option">
+                                    <input type="radio" name="billing_customer_type" value="person" {% if not user.is_authenticated or user.customer_type == 'person' %}checked{% endif %}>
+                                    <span>Persona natural</span>
+                                </label>
+                            </div>
+                            <div class="col-6 ps-2">
+                                <label class="co-radio-option">
+                                    <input type="radio" name="billing_customer_type" value="company" {% if user.customer_type == 'company' %}checked{% endif %}>
+                                    <span>Empresa</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="row g-0">
+                            <div class="col-md-6 pe-md-2">
+                                <div class="co-field">
+                                    <label for="co-doctype">Tipo de documento *</label>
+                                    <select id="co-doctype" name="billing_document_type" required data-initial-doctype="{{ user.document_type|default:'' }}">
+                                        <option value="">Seleccione…</option>
+                                        <option value="CC" {% if user.document_type == 'CC' %}selected{% endif %}>Cédula de ciudadanía</option>
+                                        <option value="CE" {% if user.document_type == 'CE' %}selected{% endif %}>Cédula de extranjería</option>
+                                        <option value="PA" {% if user.document_type == 'PA' %}selected{% endif %}>Pasaporte</option>
+                                        <option value="NIT" {% if user.customer_type == 'company' or user.document_type == 'NIT' %}selected{% endif %}>NIT</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6 ps-md-2">
+                                <div class="co-field">
+                                    <label for="co-document">Número de identificación *</label>
+                                    <input type="text" id="co-document" name="billing_document_number" required
+                                           value="{{ user.document_number|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-0">
+                            <div id="co-person-birth-wrap" class="col-md-6 pe-md-2 co-person-only">
+                                <div class="co-field">
+                                    <label for="co-birth">Fecha de nacimiento</label>
+                                    <input type="date" id="co-birth" name="billing_date_of_birth"
+                                           value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}" placeholder="dd/mm/aaaa">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Datos personales -->
                     <div class="co-card">
                         <p class="co-section-title"><i class="fas fa-user"></i> Datos personales</p>
@@ -303,10 +389,10 @@
                                            value="{{ user.first_name|default:'' }}" placeholder="Tu nombre">
                                 </div>
                             </div>
-                            <div class="col-md-6 ps-md-2">
+                            <div id="co-person-lname-wrap" class="col-md-6 ps-md-2 co-person-only">
                                 <div class="co-field">
                                     <label for="co-lname">Apellido *</label>
-                                    <input type="text" id="co-lname" name="billing_last_name" required
+                                    <input type="text" id="co-lname" name="billing_last_name"
                                            value="{{ user.last_name|default:'' }}" placeholder="Tu apellido">
                                 </div>
                             </div>
@@ -454,10 +540,28 @@
                             <span class="co-grand-total__val" id="co-total-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
                         </div>
 
+                        <!-- Aceptación de términos y política -->
+                        <div class="co-legal-checkboxes">
+                            <label class="co-checkbox-row">
+                                <input type="checkbox" name="accept_terms" id="co-accept-terms" required>
+                                <span>Acepto los <a href="{{ site_settings.terms_url|default:'#' }}" target="_blank" rel="noopener noreferrer">términos y condiciones</a></span>
+                            </label>
+                            <label class="co-checkbox-row">
+                                <input type="checkbox" name="accept_privacy" id="co-accept-privacy" required>
+                                <span>Acepto la <a href="{{ site_settings.privacy_url|default:'#' }}" target="_blank" rel="noopener noreferrer">política de tratamiento de datos</a></span>
+                            </label>
+                        </div>
+
                         <!-- Confirmar -->
                         <button type="submit" form="checkout-form" class="co-btn-confirm">
                             <i class="fas fa-lock"></i> Confirmar pedido
                         </button>
+                        
+                        <!-- Logos de pago para seguridad -->
+                        <div class="co-payment-logos" style="margin-top: 20px; text-align: center;">
+                            <img src="{% static 'wompi-logos (1).webp' %}" alt="Métodos de pago seguros Wompi" style="max-width: 100%; height: auto; border-radius: 8px; opacity: 0.9;">
+                        </div>
+
                         <p class="co-secure-note"><i class="fas fa-shield-alt"></i> Pago seguro y cifrado</p>
                         <a href="{% url 'cart:detail' %}" class="co-back-link">
                             <i class="fas fa-arrow-left"></i> Volver al carrito
@@ -476,6 +580,45 @@
 {% block extra_js %}
 <script>
 (function () {
+    // Opciones del select tipo de documento: persona (CC, CE, PA) o solo NIT para empresa
+    var PERSON_DOCTYPE_OPTIONS = '<option value="">Seleccione…</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option>';
+    var COMPANY_DOCTYPE_OPTIONS = '<option value="NIT">NIT</option>';
+
+    function toggleCheckoutPersonFields() {
+        var personBirth = document.getElementById('co-person-birth-wrap');
+        var personLname = document.getElementById('co-person-lname-wrap');
+        var doctypeSelect = document.getElementById('co-doctype');
+        var lnameInput = document.getElementById('co-lname');
+        var birthInput = document.getElementById('co-birth');
+        var radios = document.querySelectorAll('input[name="billing_customer_type"]');
+        var isCompany = false;
+        if (radios.length) {
+            for (var i = 0; i < radios.length; i++) { if (radios[i].value === 'company' && radios[i].checked) { isCompany = true; break; } }
+        }
+        if (personBirth) personBirth.classList.toggle('co-hidden', isCompany);
+        if (personLname) personLname.classList.toggle('co-hidden', isCompany);
+        if (doctypeSelect) {
+            if (isCompany) {
+                doctypeSelect.innerHTML = COMPANY_DOCTYPE_OPTIONS;
+                doctypeSelect.value = 'NIT';
+            } else {
+                doctypeSelect.innerHTML = PERSON_DOCTYPE_OPTIONS;
+                var current = doctypeSelect.getAttribute('data-initial-doctype') || '';
+                if (current && ['CC','CE','PA'].indexOf(current) !== -1) doctypeSelect.value = current;
+                else doctypeSelect.value = '';
+            }
+        }
+        if (lnameInput) {
+            if (isCompany) { lnameInput.removeAttribute('required'); lnameInput.value = ''; }
+            else lnameInput.setAttribute('required', 'required');
+        }
+        if (birthInput && isCompany) birthInput.value = '';
+    }
+    toggleCheckoutPersonFields();
+    document.getElementById('checkout-form').addEventListener('change', function (e) {
+        if (e.target && e.target.name === 'billing_customer_type') toggleCheckoutPersonFields();
+    });
+
     const VALIDATE_URL = "{% url 'orders:validate_coupon' %}";
 
     const inp      = document.getElementById('coupon-input');

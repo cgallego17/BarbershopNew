@@ -1,4 +1,5 @@
 """Modelos de la aplicación core."""
+import re
 from django.db import models
 
 
@@ -63,6 +64,13 @@ class SiteSettings(models.Model):
 
     # Meta
     meta_description = models.CharField('Meta descripción (SEO)', max_length=300, blank=True)
+    # Barra superior (marquee)
+    topbar_marquee_text = models.TextField(
+        'Texto barra superior (marquee)',
+        blank=True,
+        default='Por compras superiores a $120.000 el envío es gratis',
+        help_text='Texto que se muestra en la barra superior en movimiento. Si está vacío, la barra no se muestra.'
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -77,6 +85,18 @@ class SiteSettings(models.Model):
         """Retorna la instancia única de configuración."""
         obj, _ = cls.objects.get_or_create(pk=1, defaults={'site_name': 'The BARBERSHOP'})
         return obj
+
+    def get_whatsapp_wa_me_url(self):
+        """Número solo dígitos para enlace wa.me. Si tiene 10 dígitos se asume Colombia (+57)."""
+        raw = (self.whatsapp or '').strip()
+        if not raw:
+            return ''
+        digits = re.sub(r'\D', '', raw)
+        if len(digits) == 10 and digits[0] in '3':
+            return f'https://wa.me/57{digits}'
+        if len(digits) >= 10:
+            return f'https://wa.me/{digits}'
+        return ''
 
 
 # --- Módulo de secciones del Home ---

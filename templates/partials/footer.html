@@ -5,7 +5,7 @@
         <div class="main-footer__top">
             <div class="row gutter-y-40 align-items-center">
                 <div class="col-md-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
-                    <a href="{% url 'home' %}" class="main-footer__logo">
+                    <a href="{% url 'core:home' %}" class="main-footer__logo">
                         {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" width="119" alt="{{ site_settings.site_name }}" loading="lazy">{% else %}<img src="{% static 'logo-768x317.png' %}" width="119" alt="{{ site_settings.site_name|default:'Logo' }}" loading="lazy">{% endif %}
                     </a>
                 </div>
@@ -26,7 +26,7 @@
                 <div class="col-lg-5 col-xl-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
                     <div class="footer-widget footer-widget--about">
                         <h2 class="footer-widget__title">{% if site_settings.about_text %}{{ site_settings.about_text|safe }}{% else %}Tienda online conectada a tu API + administración local + integración con ERP.{% endif %}</h2>
-                        <a href="{% url 'contact' %}" class="boskery-btn">
+                        <a href="{% url 'core:contact' %}" class="boskery-btn">
                             <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                             <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                             <span class="boskery-btn__text">Contactar</span>
@@ -39,11 +39,12 @@
                     <div class="footer-widget footer-widget--links">
                         <h2 class="footer-widget__title">Explorar</h2>
                         <ul class="list-unstyled footer-widget__links">
-                            <li><a href="{% url 'home' %}">Home</a></li>
+                            <li><a href="{% url 'core:home' %}">Inicio</a></li>
                             <li><a href="{% url 'products:list' %}">Productos</a></li>
+                            <li><a href="{% url 'core:about' %}">Nosotros</a></li>
                             <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
-                            <li><a href="{% url 'orders:checkout' %}">Checkout</a></li>
-                            <li><a href="{% url 'contact' %}">Contacto</a></li>
+                            <li><a href="{% url 'orders:checkout' %}">Finalizar compra</a></li>
+                            <li><a href="{% url 'core:contact' %}">Contacto</a></li>
                         </ul>
                     </div>
                 </div>
@@ -106,7 +107,7 @@
         <div class="container">
             <div class="main-footer__bottom__inner">
                 <p class="main-footer__copyright">
-                    &copy; {% now "Y" %} {{ site_settings.site_name|default:'Boskery E-commerce Django' }}
+                    Copyright © {% now "Y" %} {{ site_settings.site_name|default:'BARBERSHOP' }}. Todos los derechos reservados. by <a href="https://megadominio.co" target="_blank" rel="noopener noreferrer">megadominio.co</a>
                 </p>
             </div>
         </div>

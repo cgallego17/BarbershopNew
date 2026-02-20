@@ -280,6 +280,7 @@ class SiteSettingsForm(forms.ModelForm):
         model = SiteSettings
         fields = [
             'site_name', 'tagline', 'logo',
+            'topbar_marquee_text',
             'email', 'phone', 'whatsapp',
             'address', 'city', 'state', 'country', 'postal_code',
             'business_hours',
@@ -292,6 +293,7 @@ class SiteSettingsForm(forms.ModelForm):
         widgets = {
             'about_text': CKEDITOR_WIDGET,
             'meta_description': forms.Textarea(attrs={'rows': 2}),
+            'topbar_marquee_text': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ej: Envíos a todo el país • Ofertas esta semana • Contáctanos por WhatsApp'}),
             'show_out_of_stock_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 

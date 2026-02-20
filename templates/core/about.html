@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nosotros - BarberShop{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Nosotros</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
+            <li><span>Nosotros</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="about-page section-space">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="about-page__content">
+                    <div class="sec-title text-left">
+                        <p class="sec-title__tagline">Acerca de Tersa Cosméticos</p>
+                        <h2 class="sec-title__title">Líderes en Belleza Natural y Cosmética de Alta Calidad</h2>
+                    </div>
+                    <p class="about-page__text">
+                        Tersa Cosméticos S.A.S, empresa familiar fundada en 1998 y legalizada en 2003, es pionera en la importación y comercialización de cosméticos en Colombia. Con marcas propias desde 2013, promueve la belleza natural con ingredientes eficaces, sin pruebas en animales. Se destaca por su calidad humana y excelencia operativa.
+                    </p>
+                    <div class="about-page__contact-info">
+                        <div class="about-page__contact-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="about-page__contact-details">
+                            <span>Contáctenos</span>
+                            <p><a href="tel:+573217529699">+57 321 7529699</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="about-page__images">
+                    <div class="row">
+                        <div class="col-6">
+                            <img src="{% static 'assets/images/resources/about-1-1.jpg' %}" alt="Tersa Cosméticos" class="img-fluid rounded">
+                        </div>
+                        <div class="col-6">
+                            <img src="{% static 'assets/images/resources/about-1-2.jpg' %}" alt="Productos de Belleza" class="img-fluid rounded">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row section-space-top">
+            <div class="col-md-6">
+                <div class="about-page__mission-box p-4 bg-light rounded shadow-sm h-100">
+                    <h3 class="mb-3">Misión</h3>
+                    <p>Importar y comercializar productos del sector cosmético y accesorios de belleza a nivel nacional, brindando servicios con altos estándares de calidad y generando bienestar a nuestros grupos de interés.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="about-page__vision-box p-4 bg-light rounded shadow-sm h-100">
+                    <h3 class="mb-3">Visión</h3>
+                    <p>Ser líder para el año 2030 en el mercado de líneas cosméticas y accesorios de belleza, femeninas y masculinas, destacándonos con nuestras marcas por la innovación, calidad, buen servicio y la mejor cobertura a nivel nacional e incursionando en el exterior.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row section-space-top">
+            <div class="col-12">
+                <div class="sec-title text-center">
+                    <h2 class="sec-title__title">Nuestros Valores</h2>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Excelencia Operacional</h4>
+                            <p>Buscamos optimizar los recursos en todas las áreas.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Solidaridad</h4>
+                            <p>La experiencia del cliente es fundamental, trabajamos eficientemente para que sea garantizada y retribuida.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Compromiso</h4>
+                            <p>Conscientes de la importancia de cumplir con nuestro trabajo con entrega y disposición.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Competitividad</h4>
+                            <p>Desarrollamos propuestas competitivas por medio de la innovación y actualización.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Calidad</h4>
+                            <p>Mejora continua de los procesos internos garantizando la satisfacción de los clientes.</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 mb-4">
+                        <div class="value-card p-4 border rounded h-100">
+                            <h4>Prudencia y Perseverancia</h4>
+                            <p>Actuamos con sensatez y buscamos reinventarnos antes de desistir.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testimonials-one section-space-top">
+    <div class="container">
+        <div class="sec-title text-center">
+            <p class="sec-title__tagline">Testimonios</p>
+            <h2 class="sec-title__title">Historias reales, resultados reales</h2>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <div class="testimonial-card p-4 bg-white shadow-sm rounded">
+                    <p>"Desde que uso los productos para el cabello de Barbershop, mi look se ve más profesional. El control y el brillo que obtengo no lo cambio por nada."</p>
+                    <div class="testimonial-author mt-3">
+                        <strong>Sebastián R.</strong>
+                        <span>Cliente</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="testimonial-card p-4 bg-white shadow-sm rounded">
+                    <p>"Mi barba era rebelde hasta que encontré esta línea. Ahora se ve fuerte, cuidada y huele increíble. Ahora es parte esencial de mi rutina."</p>
+                    <div class="testimonial-author mt-3">
+                        <strong>Andrés G.</strong>
+                        <span>Cliente</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fondo claro y texto oscuro en toda la página Nosotros */
+    .about-page { background-color: #fff !important; }
+    .testimonials-one { background-color: #f8f9fa !important; }
+    .about-page,
+    .about-page .sec-title__tagline,
+    .about-page .sec-title__title,
+    .about-page .about-page__text,
+    .about-page .about-page__content,
+    .about-page .about-page__content p,
+    .about-page h2, .about-page h3, .about-page h4 {
+        color: #1a1a1a !important;
+    }
+    .about-page .sec-title__tagline { color: var(--boskery-base, #be9458) !important; }
+    .about-page .about-page__text { color: #444 !important; }
+    .about-page .about-page__contact-details span { color: #666 !important; }
+    .about-page .about-page__contact-details p,
+    .about-page .about-page__contact-details a { color: #1a1a1a !important; }
+    .about-page .about-page__contact-details a:hover { color: var(--boskery-base, #be9458) !important; }
+
+    .about-page__mission-box,
+    .about-page__vision-box {
+        background-color: #f8f9fa !important;
+        color: #1a1a1a !important;
+    }
+    .about-page__mission-box h3,
+    .about-page__vision-box h3 { color: #1a1a1a !important; }
+    .about-page__mission-box p,
+    .about-page__vision-box p { color: #444 !important; }
+
+    .about-page .value-card {
+        background-color: #fff !important;
+        color: #1a1a1a !important;
+        border-color: #e0e0e0 !important;
+    }
+    .about-page .value-card h4 { color: var(--boskery-base, #be9458) !important; }
+    .about-page .value-card p { color: #444 !important; }
+
+    .testimonials-one .sec-title__tagline { color: var(--boskery-base, #be9458) !important; }
+    .testimonials-one .sec-title__title { color: #1a1a1a !important; }
+    .testimonials-one .testimonial-card {
+        background-color: #fff !important;
+        color: #444 !important;
+        border: 1px solid #eee;
+    }
+    .testimonials-one .testimonial-card p { color: #444 !important; font-style: italic; }
+    .testimonials-one .testimonial-author strong { color: #1a1a1a !important; }
+    .testimonials-one .testimonial-author span { color: #666 !important; font-size: 14px; }
+
+    .section-space-top { padding-top: 80px; }
+    .about-page__contact-info { display: flex; align-items: center; margin-top: 30px; }
+    .about-page__contact-icon { width: 50px; height: 50px; background: var(--boskery-base, #be9458); color: white !important; display: flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: 15px; font-size: 20px; }
+    .about-page__contact-details span { display: block; font-size: 14px; }
+    .about-page__contact-details p { margin: 0; font-weight: 700; font-size: 18px; }
+    .about-page__contact-details a { text-decoration: none; }
+</style>
+{% endblock %}

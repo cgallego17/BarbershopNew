@@ -75,6 +75,10 @@ def contact_view(request):
     return render(request, 'core/contact.html')
 
 
+def about_view(request):
+    return render(request, 'core/about.html')
+
+
 def robots_txt(request):
     return render(request, 'robots.txt', content_type='text/plain')
 

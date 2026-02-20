@@ -2,6 +2,14 @@
 {% load static %}
 {% block title %}{{ site_settings.site_name|default:"Inicio" }}{% endblock %}
 
+{% block extra_preload %}
+    {% with first_slide=hero_slides|first %}
+        {% if first_slide and first_slide.image %}
+            <link rel="preload" href="{{ first_slide.image.url }}" as="image">
+        {% endif %}
+    {% endwith %}
+{% endblock %}
+
 {% block meta_description %}{{ site_settings.meta_description|default:site_settings.tagline|default:"Bienvenido a nuestra tienda de barbería online." }}{% endblock %}
 
 {% block og_title %}{{ site_settings.site_name }} — Tu Barbería de Confianza{% endblock %}

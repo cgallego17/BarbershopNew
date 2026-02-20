@@ -10,11 +10,33 @@ class User(AbstractUser):
         ('staff', 'Staff'),
         ('admin', 'Administrador'),
     ]
+    CUSTOMER_TYPE_CHOICES = [
+        ('person', 'Persona natural'),
+        ('company', 'Empresa'),
+    ]
+    DOCUMENT_TYPE_CHOICES = [
+        ('', '--'),
+        ('CC', 'Cédula de ciudadanía'),
+        ('CE', 'Cédula de extranjería'),
+        ('PA', 'Pasaporte'),
+    ]
 
     role = models.CharField(
         max_length=20, choices=ROLE_CHOICES, default='client',
         verbose_name='Tipo de usuario'
     )
+    customer_type = models.CharField(
+        max_length=20, choices=CUSTOMER_TYPE_CHOICES, default='person',
+        verbose_name='Registrado como', blank=True
+    )
+    document_type = models.CharField(
+        'Tipo de documento', max_length=10,
+        choices=DOCUMENT_TYPE_CHOICES, default='', blank=True
+    )
+    document_number = models.CharField(
+        'Número de identificación', max_length=30, blank=True
+    )
+    date_of_birth = models.DateField('Fecha de nacimiento', null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)

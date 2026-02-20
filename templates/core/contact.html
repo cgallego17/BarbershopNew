@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Contacto{% endblock %}
+{% block title %}Contacto - BarberShop{% endblock %}
 
 {% block content %}
 <section class="page-header">
@@ -9,7 +9,7 @@
     <div class="container">
         <h2 class="page-header__title">Contacto</h2>
         <ul class="boskery-breadcrumb list-unstyled">
-            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
             <li><span>Contacto</span></li>
         </ul>
     </div>
@@ -17,12 +17,205 @@
 
 <section class="contact-page section-space">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <h4>Contáctanos</h4>
-                <p>Envíanos un mensaje y te responderemos pronto.</p>
+        <div class="sec-title text-center mb-5">
+            <p class="sec-title__tagline">BarberShop</p>
+            <h2 class="sec-title__title">Contactémonos</h2>
+        </div>
+
+        <div class="row gutter-y-40">
+            <div class="col-lg-5">
+                <div class="contact-page__info">
+                    <div class="contact-page__info-card p-4 rounded shadow-sm h-100">
+                        <p class="contact-page__company mb-4">{{ site_settings.site_name|default:"Tersa cosmeticos S.A.S" }}</p>
+                        <ul class="list-unstyled contact-page__list">
+                            <li class="contact-page__item">
+                                <span class="contact-page__icon"><i class="icon-maps-and-flags"></i></span>
+                                <div>
+                                    <strong>Dirección</strong><br>
+                                    {% if site_settings.address %}
+                                        {{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% if site_settings.state %}, {{ site_settings.state }}{% endif %}{% if site_settings.country %}, {{ site_settings.country }}{% endif %}{% endif %}
+                                    {% else %}
+                                        Cra. 56 #9-41, Campo Amor, Medellín, Medellín, Antioquia
+                                    {% endif %}
+                                </div>
+                            </li>
+                            <li class="contact-page__item">
+                                <span class="contact-page__icon"><i class="icon-phone-call"></i></span>
+                                <div>
+                                    <strong>Teléfono</strong><br>
+                                    {% if site_settings.phone %}
+                                        <a href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a>
+                                    {% else %}
+                                        <a href="tel:+573217529699">+57 321 7529699</a> (604) 444 2232
+                                    {% endif %}
+                                </div>
+                            </li>
+                            <li class="contact-page__item">
+                                <span class="contact-page__icon"><i class="icon-paper-plane"></i></span>
+                                <div>
+                                    <strong>Correo</strong><br>
+                                    {% if site_settings.email %}
+                                        <a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
+                                    {% else %}
+                                        <a href="mailto:info@barbershop.com.co">info@barbershop.com.co</a>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="contact-page__social mt-4">
+                            <span class="d-block mb-2"><strong>Redes sociales</strong></span>
+                            <div class="contact-page__social-links">
+                                {% if site_settings.facebook_url %}
+                                    <a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener" class="contact-page__social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                {% endif %}
+                                {% if site_settings.instagram_url %}
+                                    <a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener" class="contact-page__social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                                {% endif %}
+                                {% if site_settings.twitter_url %}
+                                    <a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener" class="contact-page__social-link" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                                {% endif %}
+                                {% if site_settings.youtube_url %}
+                                    <a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener" class="contact-page__social-link" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                                {% endif %}
+                                {% if not site_settings.facebook_url and not site_settings.instagram_url and not site_settings.twitter_url and not site_settings.youtube_url %}
+                                    <a href="#" class="contact-page__social-link" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                                    <a href="#" class="contact-page__social-link" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="contact-page__tagline p-4 bg-light rounded mb-4">
+                    <p class="mb-0 text-center">Cuida tu barba, cabello y rostro con fórmulas de alta calidad que combinan estilo, frescura y personalidad.</p>
+                </div>
+                <div class="contact-page__form-wrap">
+                    <h3 class="mb-4">Déjanos tus inquietudes</h3>
+                    {% with contact_email=site_settings.email|default:"info@barbershop.com.co" %}
+                    <form id="contact-form" class="contact-form" action="mailto:{{ contact_email }}" method="get" target="_blank">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="contact-name" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="contact-name" name="name" placeholder="Tu nombre" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact-email" class="form-label">Correo</label>
+                                <input type="email" class="form-control" id="contact-email" name="email" placeholder="tu@correo.com" required>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="contact-message" class="form-label">Mensaje</label>
+                                <textarea class="form-control" id="contact-message" name="body" rows="5" placeholder="Escribe tu mensaje o consulta..." required></textarea>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="boskery-btn">
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
+                                    <span class="boskery-btn__text">Enviar</span>
+                                    <i class="icon-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    {% endwith %}
+                </div>
             </div>
         </div>
     </div>
 </section>
+
+<section class="contact-page__footer-info section-space-top">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h3 class="mb-3">Contacto</h3>
+                <address class="contact-page__address">
+                    {% if site_settings.address %}
+                        {{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% if site_settings.country %}, {{ site_settings.country }}{% endif %}{% endif %}
+                    {% else %}
+                        Cra. 56 #9-41, Campo Amor, Medellín, Medellín, Antioquia
+                    {% endif %}
+                </address>
+                <p class="mb-1">{{ site_settings.site_name|default:"Tersa cosmeticos S.A.S" }}</p>
+                <p>
+                    {% if site_settings.phone %}
+                        <a href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a>
+                    {% else %}
+                        <a href="tel:+573217529699">+57 321 7529699</a> (604) 444 2232
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fondo claro y texto oscuro en toda la página Contacto */
+    .contact-page { background-color: #fff !important; }
+    .contact-page .sec-title__tagline { color: var(--boskery-base, #be9458) !important; }
+    .contact-page .sec-title__title { color: #1a1a1a !important; }
+    .contact-page .contact-page__company,
+    .contact-page .contact-page__info-card,
+    .contact-page .contact-page__item,
+    .contact-page .contact-page__item strong,
+    .contact-page .contact-page__item div { color: #1a1a1a !important; }
+    .contact-page .contact-page__company { font-size: 1.1rem; color: var(--boskery-base, #be9458) !important; font-weight: 600; }
+    .contact-page .contact-page__item a { color: #1a1a1a !important; text-decoration: none; }
+    .contact-page .contact-page__item a:hover { color: var(--boskery-base, #be9458) !important; }
+    .contact-page .contact-page__social strong { color: #1a1a1a !important; }
+
+    .contact-page .contact-page__tagline { background-color: #f8f9fa !important; }
+    .contact-page .contact-page__tagline p { color: #444 !important; }
+    .contact-page .contact-page__form-wrap h3 { color: #1a1a1a !important; }
+    .contact-page .form-label { color: #1a1a1a !important; }
+    .contact-page .form-control {
+        color: #1a1a1a !important;
+        background-color: #fff !important;
+        border-color: #ced4da !important;
+    }
+    .contact-page .form-control::placeholder { color: #6c757d !important; }
+
+    .contact-page__footer-info {
+        background-color: #f8f9fa !important;
+        padding-top: 60px;
+        border-top: 1px solid #eee;
+    }
+    .contact-page__footer-info h3,
+    .contact-page__footer-info p,
+    .contact-page__footer-info .contact-page__address { color: #1a1a1a !important; }
+    .contact-page__footer-info a { color: #1a1a1a !important; }
+    .contact-page__footer-info a:hover { color: var(--boskery-base, #be9458) !important; }
+
+    .contact-page__list { margin: 0; }
+    .contact-page__item { display: flex; gap: 1rem; margin-bottom: 1.25rem; align-items: flex-start; }
+    .contact-page__item:last-child { margin-bottom: 0; }
+    .contact-page__icon { width: 44px; height: 44px; min-width: 44px; background: var(--boskery-base, #be9458); color: #fff !important; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    .contact-page__social-links { display: flex; gap: 12px; flex-wrap: wrap; }
+    .contact-page__social-link { width: 40px; height: 40px; border-radius: 50%; background: #e9ecef !important; color: #333 !important; display: inline-flex; align-items: center; justify-content: center; transition: all 0.3s; }
+    .contact-page__social-link:hover { background: var(--boskery-base, #be9458) !important; color: #fff !important; }
+    .contact-page__address { font-style: normal; margin-bottom: 0.5rem; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var form = document.getElementById('contact-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var name = document.getElementById('contact-name').value.trim();
+        var email = document.getElementById('contact-email').value.trim();
+        var body = document.getElementById('contact-message').value.trim();
+        var mailto = form.getAttribute('action');
+        var subject = 'Consulta desde BarberShop - ' + (name || 'Contacto');
+        var bodyText = 'Nombre: ' + name + '\nEmail: ' + email + '\n\n' + body;
+        var uri = mailto + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyText);
+        window.location.href = uri;
+    });
+})();
+</script>
 {% endblock %}

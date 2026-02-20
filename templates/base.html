@@ -30,6 +30,8 @@
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    {% if site_settings.logo %}<link rel="preload" href="{{ site_settings.logo.url }}" as="image">{% endif %}
+    {% block extra_preload %}{% endblock %}
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript>
@@ -37,21 +39,26 @@
         <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     </noscript>
     <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap/css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap-select/bootstrap-select.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/animate/animate.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/fontawesome/css/all.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/jquery-ui/jquery-ui.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/jarallax/jarallax.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/bootstrap-select/bootstrap-select.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/animate/animate.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/fontawesome/css/all.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/jquery-ui/jquery-ui.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/jarallax/jarallax.css' %}" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="{% static 'assets/vendors/boskery-icons/style.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel/css/owl.carousel.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel/css/owl.theme.default.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/swiper/css/swiper-bundle.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendors/jquery-magnific-popup/jquery.magnific-popup.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel/css/owl.carousel.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/owl-carousel/css/owl.theme.default.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/swiper/css/swiper-bundle.min.css' %}" media="print" onload="this.media='all'" />
+    <link rel="stylesheet" href="{% static 'assets/vendors/jquery-magnific-popup/jquery.magnific-popup.css' %}" media="print" onload="this.media='all'" />
     <link rel="stylesheet" href="{% static 'assets/css/boskery.css' %}" />
     <link rel="stylesheet" href="{% static 'assets/css/boskery-dark.css' %}" />
     <style>
     /* Optimización CLS: Reservar espacio para imágenes y elementos dinámicos */
-    .product__item__image, 
+    .product__item__image {
+        aspect-ratio: 1 / 1;
+        display: block;
+        overflow: hidden;
+        background-color: #f5f5f8;
+    }
     .shop-product-card__image,
     .pd-gallery { min-height: 400px; }
     .pd-gallery__main,
@@ -72,8 +79,52 @@
         object-fit: cover;
     }
     /* Reservar espacio para el header sticky */
-    .main-header { min-height: 90px; }
-    @media (max-width: 991px) { .main-header { min-height: 70px; } }
+    .main-header { min-height: 140px; }
+    @media (max-width: 991px) { .main-header { min-height: 110px; } }
+
+    /* Estabilización Hero Slider para CLS */
+    .hero-slider-three { min-height: 100vh; position: relative; overflow: hidden; background: #1a1a1d; }
+    .hero-slider-three__item { min-height: 100vh; display: flex; align-items: center; }
+    @media (max-width: 767px) {
+        .hero-slider-three, .hero-slider-three__item { min-height: 600px; }
+    }
+
+    /* Estabilización Experience Badge */
+    .about-three__experience { min-width: 180px; min-height: 180px; }
+
+    /* Estabilización Header Icons para CLS */
+    .main-header__top__right { display: flex; align-items: center; justify-content: space-between; min-height: 60px; }
+    .main-header__top__icon-group { 
+        display: flex; 
+        align-items: center; 
+        gap: 15px; 
+        min-width: 140px; 
+        justify-content: flex-end;
+    }
+    .main-header__user, .main-header__cart, .main-header__search {
+        width: 40px; height: 40px; 
+        display: flex !important; align-items: center; justify-content: center;
+        position: relative;
+    }
+    .main-header__search {
+        color: inherit;
+        transition: color .2s, transform .2s;
+    }
+    .main-header__search:hover {
+        color: var(--boskery-base, #C56533);
+        transform: scale(1.1);
+    }
+    .main-header__search i { font-size: 1.1rem; }
+    /* El badge del carrito debe ser absoluto para no mover el icono */
+    .main-header__cart .cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        margin: 0 !important;
+    }
+    /* Estabilización del total en el sidebar */
+    .cs-total { min-height: 30px; }
+    #cs-total-val { min-width: 80px; display: inline-block; text-align: right; }
 
     .product__item__out-of-stock {
         display: inline-block;
@@ -248,6 +299,8 @@
     {% include 'partials/search_popup.html' %}
     {% include 'partials/sidebar.html' %}
     {% include 'partials/login_modal.html' %}
+    {% include 'partials/signup_modal.html' %}
+    {% include 'partials/password_reset_modal.html' %}
     {% include 'partials/floating_cart.html' %}
     {% include 'partials/cart_sidebar.html' %}
     <a href="#" data-target="html" class="scroll-to-target scroll-to-top">
@@ -255,27 +308,27 @@
         <span class="scroll-to-top__wrapper"><span class="scroll-to-top__inner"></span></span>
     </a>
     <script src="{% static 'assets/vendors/jquery/jquery-3.7.0.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/bootstrap-select/bootstrap-select.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jarallax/jarallax.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-ui/jquery-ui.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-ajaxchimp/jquery.ajaxchimp.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-appear/jquery.appear.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-circle-progress/jquery.circle-progress.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-magnific-popup/jquery.magnific-popup.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-validate/jquery.validate.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/nouislider/nouislider.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/tiny-slider/tiny-slider.js' %}"></script>
-    <script src="{% static 'assets/vendors/wnumb/wNumb.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/owl-carousel/js/owl.carousel.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/swiper/js/swiper-bundle.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/wow/wow.js' %}"></script>
-    <script src="{% static 'assets/vendors/imagesloaded/imagesloaded.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/isotope/isotope.js' %}"></script>
-    <script src="{% static 'assets/vendors/countdown/countdown.min.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-circleType/jquery.circleType.js' %}"></script>
-    <script src="{% static 'assets/vendors/jquery-lettering/jquery.lettering.min.js' %}"></script>
-    <script src="{% static 'assets/js/boskery.js' %}"></script>
+    <script src="{% static 'assets/vendors/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/bootstrap-select/bootstrap-select.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jarallax/jarallax.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-ui/jquery-ui.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-ajaxchimp/jquery.ajaxchimp.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-appear/jquery.appear.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-circle-progress/jquery.circle-progress.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-magnific-popup/jquery.magnific-popup.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-validate/jquery.validate.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/nouislider/nouislider.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/tiny-slider/tiny-slider.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/wnumb/wNumb.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/owl-carousel/js/owl.carousel.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/swiper/js/swiper-bundle.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/wow/wow.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/imagesloaded/imagesloaded.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/isotope/isotope.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/countdown/countdown.min.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-circleType/jquery.circleType.js' %}" defer></script>
+    <script src="{% static 'assets/vendors/jquery-lettering/jquery.lettering.min.js' %}" defer></script>
+    <script src="{% static 'assets/js/boskery.js' %}" defer></script>
     <script>
     (function($) {
       $(document).on('click', '.video-popup', function(e) {
@@ -768,7 +821,7 @@
         /* ---- Interceptar "Añadir al carrito" vía AJAX ---- */
         document.addEventListener('submit', function(e) {
             var form = e.target;
-            if (!form.action || form.action.indexOf('/cart/add/') === -1) return;
+            if (!form.action || form.action.indexOf('/carrito/agregar/') === -1) return;
             e.preventDefault();
             var fd = new FormData(form);
             fetch(form.action, {
@@ -797,5 +850,39 @@
         }
     })();
     </script>
+
+    <!-- Botón flotante WhatsApp -->
+    {% if site_settings.get_whatsapp_wa_me_url %}
+    <a href="{{ site_settings.get_whatsapp_wa_me_url }}" target="_blank" rel="noopener noreferrer" class="wa-float" title="Chatear por WhatsApp" aria-label="Abrir WhatsApp">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    <style>
+    .wa-float {
+        position: fixed;
+        bottom: 108px;
+        right: 44px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #25d366;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        box-shadow: 0 4px 20px rgba(37, 211, 102, .45);
+        z-index: 999;
+        transition: transform .2s, box-shadow .2s;
+    }
+    .wa-float:hover {
+        color: #fff;
+        transform: scale(1.08);
+        box-shadow: 0 6px 24px rgba(37, 211, 102, .5);
+    }
+    @media (max-width: 575px) {
+        .wa-float { bottom: 92px; right: 36px; width: 50px; height: 50px; font-size: 24px; }
+    }
+    </style>
+    {% endif %}
 </body>
 </html>

@@ -22,11 +22,41 @@ def checkout_view(request):
         return redirect('products:list')
 
     if request.method == 'POST':
+        # Validar aceptación de términos y política de datos
+        if not request.POST.get('accept_terms') or not request.POST.get('accept_privacy'):
+            messages.error(
+                request,
+                'Debes aceptar los términos y condiciones y la política de tratamiento de datos para continuar.'
+            )
+            from django.urls import reverse
+            from apps.core.models import Country
+            import json
+            countries = Country.objects.all().order_by('name')
+            user = getattr(request, 'user', None)
+            return render(request, 'orders/checkout.html', {
+                'cart': cart,
+                'cart_total': cart.get_total_price(),
+                'countries': countries,
+                'geo_countries_json': json.dumps([{'id': c.id, 'name': c.name} for c in countries]),
+                'geo_states_url': reverse('core:geo_states'),
+                'geo_cities_url': reverse('core:geo_cities'),
+                'initial_state': getattr(user, 'state', '') or '' if user and user.is_authenticated else '',
+                'initial_city': getattr(user, 'city', '') or '' if user and user.is_authenticated else '',
+            })
         # Crear orden
+        from django.utils.dateparse import parse_date
+        billing_type = request.POST.get('billing_customer_type', 'person')
+        billing_dob = request.POST.get('billing_date_of_birth') if billing_type == 'person' else None
+        billing_last = request.POST.get('billing_last_name', '') if billing_type == 'person' else ''
+        billing_doctype = request.POST.get('billing_document_type', '')
         order = Order(
             user=request.user if request.user.is_authenticated else None,
+            billing_customer_type=billing_type,
+            billing_document_type=billing_doctype,
+            billing_document_number=request.POST.get('billing_document_number', ''),
+            billing_date_of_birth=parse_date(billing_dob) if billing_dob else None,
             billing_first_name=request.POST.get('billing_first_name'),
-            billing_last_name=request.POST.get('billing_last_name'),
+            billing_last_name=billing_last,
             billing_email=request.POST.get('billing_email'),
             billing_phone=request.POST.get('billing_phone', ''),
             billing_address=request.POST.get('billing_address'),
@@ -72,8 +102,8 @@ def checkout_view(request):
         'cart_total': cart.get_total_price(),
         'countries': countries,
         'geo_countries_json': json.dumps([{'id': c.id, 'name': c.name} for c in countries]),
-        'geo_states_url': reverse('geo_states'),
-        'geo_cities_url': reverse('geo_cities'),
+        'geo_states_url': reverse('core:geo_states'),
+        'geo_cities_url': reverse('core:geo_cities'),
         'initial_state': getattr(user, 'state', '') or '' if user and user.is_authenticated else '',
         'initial_city': getattr(user, 'city', '') or '' if user and user.is_authenticated else '',
     })
@@ -82,11 +112,11 @@ def checkout_view(request):
 def order_detail(request, order_number):
     order = Order.objects.filter(order_number=order_number).prefetch_related('items').first()
     if not order:
-        return redirect('home')
+        return redirect('core:home')
     if request.user.is_authenticated and order.user and order.user != request.user:
-        return redirect('home')
+        return redirect('core:home')
     if not request.user.is_authenticated and order.user:
-        return redirect('home')
+        return redirect('core:home')
     return render(request, 'orders/order_detail.html', {'order': order})
 
 

@@ -9,7 +9,7 @@
     <div class="container">
         <h2 class="page-header__title">Pedido {{ order.order_number }}</h2>
         <ul class="boskery-breadcrumb list-unstyled">
-            <li><a href="{% url 'home' %}">Inicio</a></li>
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
             <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
             <li><span>{{ order.order_number }}</span></li>
         </ul>

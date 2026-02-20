@@ -403,8 +403,8 @@ class CustomerCreateView(StaffRequiredMixin, CreateView):
         from .models import Country
         import json
         ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
-        ctx['geo_states_url'] = reverse('geo_states')
-        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['geo_states_url'] = reverse('core:geo_states')
+        ctx['geo_cities_url'] = reverse('core:geo_cities')
         ctx['initial_state'] = ''
         ctx['initial_city'] = ''
         return ctx
@@ -442,8 +442,8 @@ class CustomerUpdateView(StaffRequiredMixin, UpdateView):
         from .models import Country
         import json
         ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
-        ctx['geo_states_url'] = reverse('geo_states')
-        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['geo_states_url'] = reverse('core:geo_states')
+        ctx['geo_cities_url'] = reverse('core:geo_cities')
         customer = ctx.get('customer')
         ctx['initial_state'] = getattr(customer, 'state', '') or ''
         ctx['initial_city'] = getattr(customer, 'city', '') or ''
@@ -626,7 +626,7 @@ class ShippingPriceCreateView(StaffRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['geo_cities_url'] = reverse('core:geo_cities')
         ctx['initial_state_id'] = ''
         ctx['initial_city_id'] = ''
         return ctx
@@ -645,7 +645,7 @@ class ShippingPriceUpdateView(StaffRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['geo_cities_url'] = reverse('core:geo_cities')
         obj = ctx.get('shipping_price')
         if obj and obj.city_id:
             ctx['initial_state_id'] = obj.city.state_id
@@ -688,8 +688,8 @@ class SiteSettingsUpdateView(StaffRequiredMixin, UpdateView):
         from .models import Country
         import json
         ctx['geo_countries_json'] = json.dumps([{'id': c.id, 'name': c.name} for c in Country.objects.all().order_by('name')])
-        ctx['geo_states_url'] = reverse('geo_states')
-        ctx['geo_cities_url'] = reverse('geo_cities')
+        ctx['geo_states_url'] = reverse('core:geo_states')
+        ctx['geo_cities_url'] = reverse('core:geo_cities')
         obj = ctx.get('settings')
         ctx['initial_state'] = getattr(obj, 'state', '') or ''
         ctx['initial_city'] = getattr(obj, 'city', '') or ''

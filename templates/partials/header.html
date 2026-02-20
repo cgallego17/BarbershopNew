@@ -1,36 +1,52 @@
 {% load static %}
-<div class="topbar topbar--three">
-    <div class="container">
-        <div class="topbar__inner">
-            <div class="topbar__left">
-                <ul class="list-unstyled topbar__info">
-                    {% if site_settings.email %}
-                    <li>
-                        <i class="icon-paper-plane"></i>
-                        <a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a>
-                    </li>
-                    {% endif %}
-                    {% if site_settings.address %}
-                    <li>
-                        <i class="icon-maps-and-flags"></i>
-                        <span>{{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% endif %}</span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
-            <div class="topbar__right">
-                <ul class="list-unstyled topbar__info">
-                    {% if site_settings.business_hours %}
-                    <li>
-                        <i class="icon-time"></i>
-                        <span>{{ site_settings.business_hours }}</span>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+{% if site_settings.topbar_marquee_text %}
+<div class="topbar topbar--three topbar--marquee">
+    <div class="topbar__marquee-wrap">
+        <div class="topbar__marquee-content" aria-live="polite">
+            {% for _ in "123456789012" %}
+            <span class="topbar__marquee-text">{{ site_settings.topbar_marquee_text }}</span>
+            <span class="topbar__marquee-sep" aria-hidden="true"> &nbsp;&bull;&nbsp; </span>
+            {% endfor %}
         </div>
     </div>
 </div>
+<style>
+.topbar--marquee {
+    width: 100vw;
+    max-width: none;
+    margin-left: calc(50% - 50vw);
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+.topbar--marquee .topbar__marquee-wrap {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    padding: 10px 20px;
+    color: #fff;
+    box-sizing: border-box;
+}
+.topbar--marquee .topbar__marquee-content {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: topbar-marquee 35s linear infinite;
+    color: #fff;
+    flex-shrink: 0;
+    /* Porcentajes relativos al ancho del wrap: entra por la derecha (100%) y recorre toda la barra */
+    margin-left: 100%;
+}
+.topbar--marquee .topbar__marquee-text,
+.topbar--marquee .topbar__marquee-sep { color: #fff; }
+.topbar--marquee .topbar__marquee-sep { opacity: .85; }
+/* Infinito: 12 repeticiones, un ciclo = 1/12 del contenido (-8.333%), bucle continuo */
+@keyframes topbar-marquee {
+    0%   { margin-left: 100%; }
+    100% { margin-left: -8.333%; }
+}
+</style>
+{% endif %}
 
 <header class="main-header main-header--three sticky-header sticky-header--normal">
     <div class="main-header__bg" style="background-image: url({% static 'assets/images/backgrounds/main-header-3-bg.jpg' %});"></div>
@@ -44,19 +60,14 @@
             </div>
             <div class="main-header__top__right">
                 <div class="main-header__logo">
-                    <a href="{% url 'home' %}">
+                    <a href="{% url 'core:home' %}">
                         {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" alt="Logo {{ site_settings.site_name }}" width="171">{% else %}<img src="{% static 'logo-768x317.png' %}" alt="Logo {{ site_settings.site_name|default:'The BARBERSHOP' }}" width="171">{% endif %}
                     </a>
                 </div>
                 <div class="main-header__top__icon-group">
-                    <a href="#" class="search-toggler main-header__search">
-                        <i class="icon-search" aria-hidden="true"></i>
+                    <a href="#" class="search-toggler main-header__search" title="Buscar">
+                        <i class="fas fa-search" aria-hidden="true"></i>
                         <span class="sr-only">Buscar</span>
-                    </a>
-                    <a href="#" class="main-header__cart cs-trigger" id="header-cart-trigger" aria-label="Abrir carrito" title="Ver carrito">
-                        <i class="icon-cart" aria-hidden="true"></i>
-                        <span class="sr-only">Carrito</span>
-                        {% if cart_count %}<span class="cart-count cs-badge" id="header-cart-badge">{{ cart_count }}</span>{% endif %}
                     </a>
                     {% if user.is_authenticated %}
                     <a href="{% url 'orders:list' %}" class="main-header__user" title="Mi cuenta">
@@ -102,10 +113,11 @@
             </div>
             <nav class="main-header__nav main-menu">
                 <ul class="main-menu__list">
-                    <li><a href="{% url 'home' %}">Inicio</a></li>
+                    <li><a href="{% url 'core:home' %}">Inicio</a></li>
                     <li><a href="{% url 'products:list' %}">Productos</a></li>
+                    <li><a href="{% url 'core:about' %}">Nosotros</a></li>
                     <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
-                    <li><a href="{% url 'contact' %}">Contacto</a></li>
+                    <li><a href="{% url 'core:contact' %}">Contacto</a></li>
                     {% if user.is_authenticated %}
                     <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
                     {% if user.can_access_dashboard %}
@@ -117,7 +129,7 @@
                     <li><a href="{% url 'account_logout' %}">Salir</a></li>
                     {% else %}
                     <li><a href="{% url 'account_login' %}" role="button" data-bs-toggle="modal" data-bs-target="#loginModal">Ingresar</a></li>
-                    <li><a href="{% url 'account_signup' %}">Registro</a></li>
+                    <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#signupModal">Registro</a></li>
                     {% endif %}
                 </ul>
             </nav>
@@ -125,7 +137,7 @@
                 <div class="mobile-nav__btn mobile-nav__toggler">
                     <span></span><span></span><span></span>
                 </div>
-                <a href="#" class="main-header__contac-btn boskery-btn cs-trigger" aria-label="Abrir carrito">
+                <a href="#" class="main-header__contac-btn boskery-btn cs-trigger" aria-label="Abrir carrito" style="min-width: 160px;">
                     <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                     <span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span><span class="boskery-btn__hover"></span>
                     <span class="boskery-btn__text">Ver carrito</span>
