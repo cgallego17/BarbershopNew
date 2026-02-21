@@ -1,17 +1,19 @@
 {% load static %}
 <footer class="main-footer">
-    <div class="main-footer__bg" style="background-image: url({% static 'assets/images/backgrounds/footer-bg.png' %});"></div>
+    <div class="main-footer__bg" style="background-image: url({% static '1970-x-670-d.jpg' %});"></div>
     <div class="container">
         <div class="main-footer__top">
             <div class="row gutter-y-40 align-items-center">
                 <div class="col-md-3 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
                     <a href="{% url 'core:home' %}" class="main-footer__logo">
-                        {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" width="119" alt="{{ site_settings.site_name }}" loading="lazy">{% else %}<img src="{% static 'logo-768x317.png' %}" width="119" alt="{{ site_settings.site_name|default:'Logo' }}" loading="lazy">{% endif %}
+                        {% if site_settings.logo %}<img src="{{ site_settings.logo.url }}" width="200" alt="{{ site_settings.site_name }}" loading="lazy">{% else %}<img src="{% static 'logo-768x317.png' %}" width="200" alt="{{ site_settings.site_name|default:'Logo' }}" loading="lazy">{% endif %}
                     </a>
                 </div>
                 <div class="col-md-9 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="300ms">
-                    <form action="#" data-url="" class="main-footer__newsletter mc-form">
-                        <input type="text" name="EMAIL" placeholder="Email Address">
+                    <form action="{% url 'core:newsletter_subscribe' %}" data-url="{% url 'core:newsletter_subscribe' %}" method="post" class="main-footer__newsletter js-newsletter-form">
+                        {% csrf_token %}
+                        <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">
+                        <input type="text" name="EMAIL" placeholder="Email Address" autocomplete="email" required>
                         <button type="submit" class="icon-paper-plane">
                             <span class="sr-only">submit</span>
                         </button>
@@ -63,6 +65,7 @@
                                 {% if site_settings.instagram_url %}<a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener"><i class="fab fa-instagram" aria-hidden="true"></i><span class="sr-only">Instagram</span></a>{% endif %}
                                 {% if site_settings.twitter_url %}<a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"><i class="fab fa-twitter" aria-hidden="true"></i><span class="sr-only">Twitter</span></a>{% endif %}
                                 {% if site_settings.youtube_url %}<a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener"><i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span></a>{% endif %}
+                                {% if site_settings.tiktok_url %}<a href="{{ site_settings.tiktok_url }}" target="_blank" rel="noopener"><i class="fab fa-tiktok" aria-hidden="true"></i><span class="sr-only">TikTok</span></a>{% endif %}
                             </div>
                         </div>
                     </div>
@@ -73,27 +76,27 @@
                         <h2 class="footer-widget__title">Galería</h2>
                         <div class="footer-widget__gallery">
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-1.jpg' %}" alt="Galería 1" loading="lazy">
+                                <img src="{% static '480-x-480-4.jpg' %}" alt="Galería 1" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-2.jpg' %}" alt="Galería 2" loading="lazy">
+                                <img src="{% static '480-x-480-3.jpg' %}" alt="Galería 2" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-3.jpg' %}" alt="Galería 3" loading="lazy">
+                                <img src="{% static '480-x-480-2.jpg' %}" alt="Galería 3" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-4.jpg' %}" alt="Galería 4" loading="lazy">
+                                <img src="{% static '480-x-480.jpg' %}" alt="Galería 4" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-5.jpg' %}" alt="Galería 5" loading="lazy">
+                                <img src="{% static '570-x-597-d (1).jpg' %}" alt="Galería 5" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                             <a href="{% url 'products:list' %}" class="footer-widget__gallery__link">
-                                <img src="{% static 'assets/images/gallery/footer-widget-gallery-6.jpg' %}" alt="Galería 6" loading="lazy">
+                                <img src="{% static '543-x-641-2.png' %}" alt="Galería 6" loading="lazy">
                                 <span class="footer-widget__gallery__icon icon-plus"></span>
                             </a>
                         </div>

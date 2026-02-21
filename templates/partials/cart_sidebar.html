@@ -25,22 +25,7 @@
 
     <!-- Footer (siempre visible) -->
     <div class="cs-foot" id="cs-foot">
-        {% if cart_count %}
-        <div class="cs-total">
-            <span>Total</span>
-            <strong id="cs-total-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</strong>
-        </div>
-        <a href="{% url 'cart:detail' %}" class="cs-btn cs-btn--primary">
-            <i class="fas fa-shopping-cart"></i> Ver carrito completo
-        </a>
-        <a href="{% url 'orders:checkout' %}" class="cs-btn cs-btn--outline">
-            <i class="fas fa-lock"></i> Pagar ahora
-        </a>
-        {% else %}
-        <a href="{% url 'products:list' %}" class="cs-btn cs-btn--primary">
-            <i class="fas fa-store"></i> Ir a la tienda
-        </a>
-        {% endif %}
+        {% include 'partials/cart_sidebar_footer.html' %}
     </div>
 
 </aside>

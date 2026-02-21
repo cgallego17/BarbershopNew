@@ -6,20 +6,20 @@
 
 {% block content %}
 <div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
-    <form method="post" action="{% url 'admin_panel:product_sync_tersa' %}" class="d-inline">
+    <form method="post" action="{% url 'core:admin_panel:product_sync_tersa' %}" class="d-inline">
         {% csrf_token %}
-        <button type="submit" class="admin-btn admin-btn--secondary" title="Importar productos BARBERSHOP y BARBER UP desde API Tersa">
+        <button type="submit" class="admin-btn admin-btn--secondary" title="Importar productos BARBERSHOP, BARBER UP y IDs 200233, 200691, 200692, 200693, 200694, 200699, 200068 desde API Tersa">
             <i class="fas fa-cloud-download-alt"></i> Importar Tersa
         </button>
     </form>
-    <a href="{% url 'admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
+    <a href="{% url 'core:admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
 </div>
 
 <div class="admin-card mb-4">
     <div class="admin-card__header">
         <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
         {% if request.GET.q or request.GET.status or request.GET.category or request.GET.brand or request.GET.type or request.GET.featured or request.GET.sort %}
-        <a href="{% url 'admin_panel:product_list' %}" class="admin-card__action">Limpiar filtros</a>
+        <a href="{% url 'core:admin_panel:product_list' %}" class="admin-card__action">Limpiar filtros</a>
         {% endif %}
     </div>
     <div class="admin-card__body">
@@ -103,6 +103,7 @@
                         <th>Código</th>
                         <th>Marca</th>
                         <th>Precio</th>
+                        <th>Vistas</th>
                         <th>Stock</th>
                         <th>Estado</th>
                         <th class="text-end">Acciones</th>
@@ -124,23 +125,24 @@
                         <td><code>{{ p.codigo|default:p.sku|default:"—" }}</code></td>
                         <td>{{ p.brand.name|default:"—" }}</td>
                         <td>${{ p.price|floatformat:2|intcomma }}</td>
+                        <td>{{ p.view_count|intcomma }}</td>
                         <td>{% if p.manage_stock %}{{ p.stock_quantity }}{% else %}—{% endif %}</td>
                         <td>{% if p.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
-                                <form method="post" action="{% url 'admin_panel:product_toggle_active' p.pk %}" class="d-inline">
+                                <a href="{% url 'core:admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <form method="post" action="{% url 'core:admin_panel:product_toggle_active' p.pk %}" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="admin-action {% if p.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
                                         {% if p.is_active %}Inactivar{% else %}Activar{% endif %}
                                     </button>
                                 </form>
-                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                                <a href="{% url 'core:admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="admin-table__empty">No hay productos{% if request.GET.q or request.GET.status or request.GET.category or request.GET.brand %} con los filtros aplicados. <a href="{% url 'admin_panel:product_list' %}">Ver todos</a>{% else %}. <a href="{% url 'admin_panel:product_create' %}">Crear primer producto</a>{% endif %}</td></tr>
+                    <tr><td colspan="9" class="admin-table__empty">No hay productos{% if request.GET.q or request.GET.status or request.GET.category or request.GET.brand %} con los filtros aplicados. <a href="{% url 'core:admin_panel:product_list' %}">Ver todos</a>{% else %}. <a href="{% url 'core:admin_panel:product_create' %}">Crear primer producto</a>{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

@@ -1,0 +1,119 @@
+{% extends 'dashboard/base.html' %}
+{% load humanize %}
+{% block title %}Newsletter{% endblock %}
+{% block topbar_title %}Newsletter{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    <a href="{% url 'core:admin_panel:newsletter_export_excel' %}" class="admin-btn admin-btn--primary">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+    </a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-envelope me-2"></i>Suscriptores</h3>
+        {% if request.GET.q or request.GET.status or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:newsletter_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Más antiguos</option>
+                        <option value="email" {% if request.GET.sort == 'email' %}selected{% endif %}>Email A-Z</option>
+                        <option value="-email" {% if request.GET.sort == '-email' %}selected{% endif %}>Email Z-A</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}
+        <p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} suscriptor{{ page_obj.paginator.count|pluralize }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Estado</th>
+                        <th>Origen</th>
+                        <th>Suscripción</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscribers %}
+                    <tr>
+                        <td><strong>{{ sub.email }}</strong></td>
+                        <td>
+                            {% if sub.is_active %}
+                            <span class="admin-badge admin-badge--completed">Activo</span>
+                            {% else %}
+                            <span class="admin-badge admin-badge--cancelled">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ sub.source|default:"footer" }}</td>
+                        <td>{{ sub.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <form method="post" action="{% url 'core:admin_panel:newsletter_toggle' sub.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-action admin-action--primary">
+                                        {% if sub.is_active %}Inactivar{% else %}Activar{% endif %}
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'core:admin_panel:newsletter_delete' sub.pk %}" onsubmit="return confirm('¿Eliminar este suscriptor?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-action admin-action--danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="admin-table__empty">
+                            No hay suscriptores registrados todavía.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

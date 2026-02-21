@@ -1,0 +1,90 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}Pago fallido – #{{ order.order_number }}{% endblock %}
+{% block header_label %}Panel Admin – Alertas{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:20px;font-weight:800;color:#f87171;">
+    ⚠ Alerta de pago fallido
+</h2>
+<p style="margin:0 0 22px 0;font-size:13px;color:#8892a4;">
+    El pedido <strong style="color:#e07a40;">#{{ order.order_number }}</strong>
+    presentó un fallo en el proceso de pago.
+</p>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:16px 20px;background:#2a1414;border-radius:10px;border:1px solid #4c1d1d;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="font-size:12px;color:#9e6b6b;padding-bottom:8px;">Pedido</td>
+                    <td align="right" style="font-size:14px;font-weight:700;color:#e07a40;padding-bottom:8px;">
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#9e6b6b;padding-bottom:8px;">Cliente</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ order.billing_first_name }} {{ order.billing_last_name }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#9e6b6b;padding-bottom:8px;">Email cliente</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ order.billing_email }}
+                    </td>
+                </tr>
+                {% if order.billing_phone %}
+                <tr>
+                    <td style="font-size:12px;color:#9e6b6b;padding-bottom:8px;">Teléfono</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ order.billing_phone }}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-size:12px;color:#9e6b6b;padding-bottom:8px;">Estado de pago</td>
+                    <td align="right" style="padding-bottom:8px;">
+                        <span style="display:inline-block;padding:3px 10px;background:#4c1d1d;border-radius:20px;font-size:12px;font-weight:600;color:#f87171;">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:14px;font-weight:700;color:#ffffff;border-top:1px solid #4c1d1d;padding-top:10px;">
+                        Total del pedido
+                    </td>
+                    <td align="right" style="font-size:18px;font-weight:800;color:#d1d9eb;border-top:1px solid #4c1d1d;padding-top:10px;">
+                        ${{ order.total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- NOTE -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:18px;">
+    <tr>
+        <td style="padding:12px 16px;background:#1e1e1e;border-radius:8px;border-left:3px solid #f87171;">
+            <p style="margin:0;font-size:12px;color:#8892a4;line-height:1.6;">
+                Puedes contactar al cliente para ayudarlo a completar el pago o
+                revisar el estado del pedido desde el panel.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/panel/pedidos/?payment_status=failed"
+               style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver pagos fallidos →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

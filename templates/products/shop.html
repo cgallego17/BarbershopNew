@@ -1,12 +1,58 @@
 {% extends 'base.html' %}
 {% load static humanize %}
 
-{% block title %}Productos{% endblock %}
+{% block title %}{{ seo_shop_title }}{% endblock %}
+{% block meta_robots %}{{ seo_shop_robots }}{% endblock %}
+{% block canonical_url %}{{ seo_shop_canonical_url }}{% endblock %}
+{% block og_url %}{{ seo_shop_canonical_url }}{% endblock %}
+{% block twitter_url %}{{ seo_shop_canonical_url }}{% endblock %}
 
-{% block meta_description %}Explora nuestra amplia gama de productos de barbería y cuidado personal. Encuentra las mejores marcas y ofertas en {{ site_settings.site_name }}.{% endblock %}
+{% block meta_description %}{{ seo_shop_description }}{% endblock %}
 
-{% block og_title %}Tienda de Productos de Barbería || {{ site_settings.site_name }}{% endblock %}
-{% block og_description %}Encuentra ceras, aceites, máquinas y todo lo que necesitas para el cuidado personal en nuestra tienda online.{% endblock %}
+{% block og_title %}{{ seo_shop_title }}{% endblock %}
+{% block og_description %}{{ seo_shop_description }}{% endblock %}
+{% block twitter_title %}{{ seo_shop_title }}{% endblock %}
+{% block twitter_description %}{{ seo_shop_description }}{% endblock %}
+
+{% block extra_head %}
+{% if seo_shop_prev_url %}<link rel="prev" href="{{ seo_shop_prev_url }}">{% endif %}
+{% if seo_shop_next_url %}<link rel="next" href="{{ seo_shop_next_url }}">{% endif %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "{% if selected_category_obj %}{{ selected_category_obj.name|escapejs }}{% else %}Tienda{% endif %} | {{ site_settings.site_name|escapejs }}",
+  "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+  "description": "{{ site_settings.meta_description|default:site_settings.tagline|default:'Tienda online'|striptags|truncatechars:180|escapejs }}"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'core:home' %}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Tienda",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{% url 'products:list' %}"
+    }{% if selected_category_obj %},
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ selected_category_obj.name|escapejs }}",
+      "item": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}"
+    }{% endif %}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -325,6 +371,14 @@
 .shop-product-card__badge--out {
     background: #6c757d;
 }
+.shop-product-card__badge--featured {
+    left: auto; right: 54px; top: 12px;
+    width: 32px; height: 32px; padding: 0;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem;
+}
+.shop-product-card__badge--featured i { margin: 0; }
 .shop-product-card__wishlist {
     position: absolute; top: 12px; right: 12px;
     background: rgba(255,255,255,.92);
@@ -337,9 +391,14 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.1);
 }
 .shop-product-card__wishlist:hover { color: #e74c3c; background: #fff; }
+.shop-product-card__wishlist.is-active {
+    color: #e74c3c;
+    background: #fff;
+}
 .shop-product-card__body {
     padding: 16px 18px 18px;
     display: flex; flex-direction: column; flex: 1;
+    background-color: #f2f3f569;
 }
 .shop-product-card__category {
     font-size: .7rem;
@@ -668,19 +727,24 @@
                             <div class="shop-product-card__image">
                                 <a href="{{ product.get_absolute_url }}">
                                     {% if product.images.first %}
-                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+                                    <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                                     {% else %}
-                                    <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy">
+                                    <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                                     {% endif %}
                                 </a>
+                                {% if product.is_featured %}<span class="shop-product-card__badge shop-product-card__badge--featured" title="Destacado"><i class="fas fa-star"></i></span>{% endif %}
                                 {% if product.is_on_sale %}
                                 <span class="shop-product-card__badge">Oferta</span>
                                 {% elif not product.in_stock %}
                                 <span class="shop-product-card__badge shop-product-card__badge--out">Agotado</span>
                                 {% endif %}
-                                <a href="{{ product.get_absolute_url }}" class="shop-product-card__wishlist" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </a>
+                                <form method="post" action="{% url 'products:toggle_favorite' product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="shop-product-card__wishlist{% if product.id in favorite_product_ids %} is-active{% endif %}" title="{% if product.id in favorite_product_ids %}Quitar de favoritos{% else %}Agregar a favoritos{% endif %}">
+                                        <i class="{% if product.id in favorite_product_ids %}fas{% else %}far{% endif %} fa-heart"></i>
+                                    </button>
+                                </form>
                             </div>
                             <div class="shop-product-card__body">
                                 {% with cat=product.categories.first %}

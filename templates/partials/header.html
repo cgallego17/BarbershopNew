@@ -49,7 +49,7 @@
 {% endif %}
 
 <header class="main-header main-header--three sticky-header sticky-header--normal">
-    <div class="main-header__bg" style="background-image: url({% static 'assets/images/backgrounds/main-header-3-bg.jpg' %});"></div>
+    <div class="main-header__bg" style="background-image: url({% static 'assets/images/backgrounds/header-banner.jpg' %});"></div>
     <div class="main-header__container container">
         <div class="main-header__top">
             <div class="main-header__social">
@@ -57,6 +57,7 @@
                 {% if site_settings.instagram_url %}<a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener"><i class="fab fa-instagram" aria-hidden="true"></i><span class="sr-only">Instagram</span></a>{% endif %}
                 {% if site_settings.twitter_url %}<a href="{{ site_settings.twitter_url }}" target="_blank" rel="noopener"><i class="fab fa-twitter" aria-hidden="true"></i><span class="sr-only">Twitter</span></a>{% endif %}
                 {% if site_settings.youtube_url %}<a href="{{ site_settings.youtube_url }}" target="_blank" rel="noopener"><i class="fab fa-youtube" aria-hidden="true"></i><span class="sr-only">YouTube</span></a>{% endif %}
+                {% if site_settings.tiktok_url %}<a href="{{ site_settings.tiktok_url }}" target="_blank" rel="noopener"><i class="fab fa-tiktok" aria-hidden="true"></i><span class="sr-only">TikTok</span></a>{% endif %}
             </div>
             <div class="main-header__top__right">
                 <div class="main-header__logo">
@@ -75,7 +76,7 @@
                         <span class="sr-only">Mi cuenta</span>
                     </a>
                     {% if user.can_access_dashboard %}
-                    <a href="{% url 'dashboard' %}" class="main-header__user" title="Panel admin">
+                    <a href="{% url 'core:admin_panel:dashboard' %}" class="main-header__user" title="Panel admin">
                         <i class="fas fa-chart-line" aria-hidden="true"></i>
                         <span class="sr-only">Panel</span>
                     </a>
@@ -112,26 +113,28 @@
                 <span></span>
             </div>
             <nav class="main-header__nav main-menu">
+                {% with ns=request.resolver_match.namespace name=request.resolver_match.url_name %}
                 <ul class="main-menu__list">
-                    <li><a href="{% url 'core:home' %}">Inicio</a></li>
-                    <li><a href="{% url 'products:list' %}">Productos</a></li>
-                    <li><a href="{% url 'core:about' %}">Nosotros</a></li>
-                    <li><a href="{% url 'cart:detail' %}">Carrito</a></li>
-                    <li><a href="{% url 'core:contact' %}">Contacto</a></li>
+                    <li class="{% if ns == 'core' and name == 'home' %}current{% endif %}"><a href="{% url 'core:home' %}">Inicio</a></li>
+                    <li class="{% if ns == 'products' %}current{% endif %}"><a href="{% url 'products:list' %}">Productos</a></li>
+                    <li class="{% if ns == 'core' and name == 'about' %}current{% endif %}"><a href="{% url 'core:about' %}">Nosotros</a></li>
+                    <li class="{% if ns == 'cart' %}current{% endif %}"><a href="{% url 'cart:detail' %}">Carrito</a></li>
+                    <li class="{% if ns == 'core' and name == 'contact' %}current{% endif %}"><a href="{% url 'core:contact' %}">Contacto</a></li>
                     {% if user.is_authenticated %}
-                    <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
+                    <li class="{% if ns == 'orders' %}current{% endif %}"><a href="{% url 'orders:list' %}">Mi cuenta</a></li>
                     {% if user.can_access_dashboard %}
-                    <li><a href="{% url 'dashboard' %}">Panel</a></li>
+                    <li class="{% if ns == 'admin_panel' %}current{% endif %}"><a href="{% url 'core:admin_panel:dashboard' %}">Panel</a></li>
                     {% endif %}
                     {% if user.is_wholesale %}
-                    <li><a href="{% url 'wholesale:panel' %}">Mayoristas</a></li>
+                    <li class="{% if ns == 'wholesale' %}current{% endif %}"><a href="{% url 'wholesale:panel' %}">Mayoristas</a></li>
                     {% endif %}
-                    <li><a href="{% url 'account_logout' %}">Salir</a></li>
+                    <li><a href="{% url 'account_logout' %}" class="js-logout-link">Salir</a></li>
                     {% else %}
-                    <li><a href="{% url 'account_login' %}" role="button" data-bs-toggle="modal" data-bs-target="#loginModal">Ingresar</a></li>
+                    <li class="{% if ns == 'account' and name == 'login' %}current{% endif %}"><a href="{% url 'account_login' %}" role="button" data-bs-toggle="modal" data-bs-target="#loginModal">Ingresar</a></li>
                     <li><a href="#" role="button" data-bs-toggle="modal" data-bs-target="#signupModal">Registro</a></li>
                     {% endif %}
                 </ul>
+                {% endwith %}
             </nav>
             <div class="main-header__inner__right">
                 <div class="mobile-nav__btn mobile-nav__toggler">

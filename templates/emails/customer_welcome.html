@@ -1,0 +1,82 @@
+{% extends "emails/base.html" %}
+{% block title %}Bienvenido a {{ site_name|default:"The BARBERSHOP" }}{% endblock %}
+{% block header_label %}Bienvenida{% endblock %}
+{% block content %}
+
+<!-- ICON + TITLE -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td align="center" style="padding:0 0 24px 0;">
+            <div style="display:inline-block;width:64px;height:64px;background:linear-gradient(135deg,#c56533,#e07a40);border-radius:50%;text-align:center;line-height:64px;font-size:28px;">
+                ✂
+            </div>
+        </td>
+    </tr>
+    <tr>
+        <td align="center" style="padding:0 0 8px 0;">
+            <h1 style="margin:0;font-size:26px;font-weight:800;color:#ffffff;line-height:1.2;">
+                ¡Bienvenido, {{ user.first_name|default:user.username }}!
+            </h1>
+        </td>
+    </tr>
+    <tr>
+        <td align="center" style="padding:0 0 24px 0;">
+            <p style="margin:0;font-size:15px;color:#adb5c9;line-height:1.6;">
+                Tu cuenta en <strong style="color:#e07a40;">{{ site_name|default:"The BARBERSHOP" }}</strong> ya está activa.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<!-- DIVIDER -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr><td style="height:1px;background:#272c38;margin:0 0 24px 0;"></td></tr>
+</table>
+
+<!-- BENEFITS -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:24px 0;">
+    <tr>
+        <td style="padding:14px 16px;background:#1e2330;border-radius:10px;border-left:3px solid #c56533;">
+            <p style="margin:0 0 4px 0;font-size:13px;font-weight:700;color:#e07a40;text-transform:uppercase;letter-spacing:.5px;">
+                Lo que puedes hacer desde tu cuenta
+            </p>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:12px;">
+                <tr>
+                    <td style="padding:4px 0;font-size:14px;color:#d1d9eb;">
+                        📦 &nbsp; Revisar el historial de pedidos
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;font-size:14px;color:#d1d9eb;">
+                        📍 &nbsp; Gestionar tus direcciones de envío
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;font-size:14px;color:#d1d9eb;">
+                        ❤️ &nbsp; Guardar productos favoritos
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 0;font-size:14px;color:#d1d9eb;">
+                        🔐 &nbsp; Cambiar tu contraseña en cualquier momento
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:28px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/tienda/"
+               style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Explorar tienda →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

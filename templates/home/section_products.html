@@ -10,10 +10,11 @@
             <div class="col-xl-3 col-lg-4 col-sm-6">
                 <div class="product__item wow fadeInUp">
                     <div class="product__item__image">
+                        {% if product.is_featured %}<span class="product__item__badge product__item__badge--featured" title="Destacado"><i class="fas fa-star"></i></span>{% endif %}
                         {% if product.images.first %}
-                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                         {% else %}
-                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy">
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                         {% endif %}
                     </div>
                     <div class="product__item__content">

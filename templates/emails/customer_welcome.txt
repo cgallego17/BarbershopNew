@@ -1,0 +1,15 @@
+{% extends "emails/base.txt" %}
+{% block content %}
+¡Bienvenido, {{ user.first_name|default:user.username }}!
+
+Tu cuenta en {{ site_name|default:"The BARBERSHOP" }} ya está activa.
+
+Desde tu cuenta puedes:
+  📦 Revisar el historial de pedidos
+  📍 Gestionar tus direcciones de envío
+  ❤️  Guardar productos favoritos
+  🔐 Cambiar tu contraseña
+
+Visita nuestra tienda:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/tienda/
+{% endblock %}

@@ -1,11 +1,12 @@
 """URLs del panel de administración."""
 from django.urls import path
 
-from . import views_admin
+from . import views, views_admin
 
 app_name = 'admin_panel'
 
 urlpatterns = [
+    path('', views.dashboard_view, name='dashboard'),
     # Categorías
     path('categorias/', views_admin.CategoryListView.as_view(), name='category_list'),
     path('categorias/nuevo/', views_admin.CategoryCreateView.as_view(), name='category_create'),
@@ -30,11 +31,21 @@ urlpatterns = [
     path('productos/<int:pk>/editar/', views_admin.ProductUpdateView.as_view(), name='product_edit'),
     path('productos/<int:pk>/inactivar/', views_admin.product_toggle_active_view, name='product_toggle_active'),
     path('productos/<int:pk>/eliminar/', views_admin.ProductDeleteView.as_view(), name='product_delete'),
+    # Reseñas
+    path('resenas/', views_admin.ReviewListView.as_view(), name='review_list'),
+    path('resenas/<int:pk>/autorizar/', views_admin.review_approve_view, name='review_approve'),
+    path('resenas/<int:pk>/rechazar/', views_admin.review_reject_view, name='review_reject'),
+    path('resenas/<int:pk>/eliminar/', views_admin.review_delete_view, name='review_delete'),
     # Clientes
     path('clientes/', views_admin.CustomerListView.as_view(), name='customer_list'),
     path('clientes/nuevo/', views_admin.CustomerCreateView.as_view(), name='customer_create'),
     path('clientes/<int:pk>/', views_admin.customer_detail_view, name='customer_detail'),
     path('clientes/<int:pk>/editar/', views_admin.CustomerUpdateView.as_view(), name='customer_edit'),
+    # Newsletter
+    path('newsletter/', views_admin.NewsletterSubscriberListView.as_view(), name='newsletter_list'),
+    path('newsletter/exportar-excel/', views_admin.newsletter_export_excel_view, name='newsletter_export_excel'),
+    path('newsletter/<int:pk>/toggle/', views_admin.newsletter_toggle_active_view, name='newsletter_toggle'),
+    path('newsletter/<int:pk>/eliminar/', views_admin.newsletter_delete_view, name='newsletter_delete'),
     # Pedidos
     path('pedidos/', views_admin.OrderListView.as_view(), name='order_list'),
     path('pedidos/<int:pk>/', views_admin.order_detail_view, name='order_detail'),
@@ -45,7 +56,9 @@ urlpatterns = [
     path('cupones/<int:pk>/eliminar/', views_admin.CouponDeleteView.as_view(), name='coupon_delete'),
     # Precios de envío por ciudad
     path('envios/', views_admin.ShippingPriceListView.as_view(), name='shipping_price_list'),
+    path('envios/envio-gratis/', views_admin.shipping_free_rule_update_view, name='shipping_free_rule_update'),
     path('envios/cargar-todas-colombia/', views_admin.shipping_price_load_all_colombia_view, name='shipping_price_load_all_colombia'),
+    path('envios/importar-excel/', views_admin.shipping_price_import_excel_view, name='shipping_price_import_excel'),
     path('envios/exportar-excel/', views_admin.shipping_price_export_excel_view, name='shipping_price_export_excel'),
     path('envios/nuevo/', views_admin.ShippingPriceCreateView.as_view(), name='shipping_price_create'),
     path('envios/<int:pk>/editar/', views_admin.ShippingPriceUpdateView.as_view(), name='shipping_price_edit'),
@@ -61,6 +74,7 @@ urlpatterns = [
     path('secciones/about/', views_admin.HomeAboutBlockUpdateView.as_view(), name='home_about'),
     path('secciones/categorias/', views_admin.HomeMeatCategoryBlockUpdateView.as_view(), name='home_meat_category'),
     path('secciones/marcas/', views_admin.HomeBrandListView.as_view(), name='home_brand_list'),
+    path('secciones/marcas/configurar/', views_admin.HomeBrandBlockUpdateView.as_view(), name='home_brand_block_config'),
     path('secciones/marcas/nuevo/', views_admin.HomeBrandCreateView.as_view(), name='home_brand_create'),
     path('secciones/marcas/<int:pk>/editar/', views_admin.HomeBrandUpdateView.as_view(), name='home_brand_edit'),
     path('secciones/marcas/<int:pk>/eliminar/', views_admin.HomeBrandDeleteView.as_view(), name='home_brand_delete'),

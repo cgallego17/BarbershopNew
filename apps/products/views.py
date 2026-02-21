@@ -1,13 +1,30 @@
 import json
+from urllib.parse import urlencode
 from django.db import models
+from django.db import IntegrityError
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
+from django.contrib.auth.views import redirect_to_login
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.html import strip_tags
 from django.utils.text import Truncator
+from django.views.decorators.http import require_POST
 
-from .models import Product, Category, Brand, ProductReview
+from .models import (
+    Product, Category, Brand, ProductReview, ProductView, ProductFavorite
+)
+
+
+def _safe_next_url(request, candidate, fallback):
+    if candidate and url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return fallback
 
 
 class ProductListView(ListView):
@@ -98,10 +115,30 @@ class ProductListView(ListView):
         context['brands'] = Brand.objects.filter(is_active=True).annotate(
             product_count=Count('products', filter=count_filter)
         ).filter(product_count__gt=0)
-        context['filter_category'] = self.request.GET.get('category') or self.kwargs.get('category_slug', '')
+        filter_category = self.request.GET.get('category')
+        if not filter_category:
+            filter_category = self.kwargs.get('category_slug', '')
+        context['filter_category'] = filter_category
         context['filter_brand'] = self.request.GET.get('brand', '')
+        context['filter_q'] = self.request.GET.get('q', '')
+        context['selected_category_obj'] = None
+        if context['filter_category']:
+            context['selected_category_obj'] = Category.objects.filter(
+                is_active=True, slug=context['filter_category']
+            ).first()
+        context['selected_brand_obj'] = None
+        if context['filter_brand']:
+            context['selected_brand_obj'] = Brand.objects.filter(
+                is_active=True, slug=context['filter_brand']
+            ).first()
         context['filter_min_price'] = self.request.GET.get('min_price', '')
         context['filter_max_price'] = self.request.GET.get('max_price', '')
+        context['favorite_product_ids'] = set()
+        if self.request.user.is_authenticated:
+            favorite_ids = ProductFavorite.objects.filter(
+                user=self.request.user
+            ).values_list('product_id', flat=True)
+            context['favorite_product_ids'] = set(favorite_ids)
         # Rango de precios en catálogo (para placeholder en el form)
         price_range = Product.objects.filter(is_active=True).aggregate(
             min_p=models.Min('regular_price'),
@@ -109,6 +146,65 @@ class ProductListView(ListView):
         )
         context['price_min_catalog'] = int(price_range['min_p'] or 0)
         context['price_max_catalog'] = int(price_range['max_p'] or 1000000)
+        site_name = getattr(self.request, 'site_settings', None)
+        site_name = getattr(site_name, 'site_name', '') or 'The Barbershop'
+        seo_scope = 'productos de barbería'
+        if context['selected_category_obj']:
+            seo_scope = context['selected_category_obj'].name
+        elif context['selected_brand_obj']:
+            seo_scope = f"marca {context['selected_brand_obj'].name}"
+        elif context['filter_q']:
+            seo_scope = f"resultados para {context['filter_q']}"
+
+        context['seo_shop_title'] = f"Tienda: {seo_scope} | {site_name}"
+        context['seo_shop_description'] = (
+            f"Explora {seo_scope} en {site_name}. "
+            "Compara precios, encuentra ofertas y compra online de forma rápida y segura."
+        )
+        facet_filter_keys = {'q', 'category', 'brand', 'min_price', 'max_price', 'sort'}
+        query_dict = self.request.GET.copy()
+        has_facet_filters = any(query_dict.get(key) for key in facet_filter_keys)
+        has_extra_params = any(
+            key not in facet_filter_keys and key != 'page' for key in query_dict.keys()
+        )
+        page_obj = context.get('page_obj')
+        is_paginated_page = bool(page_obj and page_obj.number > 1)
+
+        canonical_url = self.request.build_absolute_uri(self.request.path)
+        if not has_facet_filters and not has_extra_params and is_paginated_page:
+            canonical_url = (
+                f"{canonical_url}?{urlencode({'page': page_obj.number})}"
+            )
+
+        context['seo_shop_robots'] = (
+            'noindex, follow' if (has_facet_filters or has_extra_params) else 'index, follow'
+        )
+        context['seo_shop_canonical_url'] = canonical_url
+        context['seo_shop_prev_url'] = ''
+        context['seo_shop_next_url'] = ''
+        if (
+            page_obj
+            and not has_facet_filters
+            and not has_extra_params
+            and page_obj.paginator.num_pages > 1
+        ):
+            if page_obj.has_previous():
+                prev_num = page_obj.previous_page_number()
+                if prev_num == 1:
+                    context['seo_shop_prev_url'] = self.request.build_absolute_uri(
+                        self.request.path
+                    )
+                else:
+                    context['seo_shop_prev_url'] = (
+                        f"{self.request.build_absolute_uri(self.request.path)}"
+                        f"?{urlencode({'page': prev_num})}"
+                    )
+            if page_obj.has_next():
+                next_num = page_obj.next_page_number()
+                context['seo_shop_next_url'] = (
+                    f"{self.request.build_absolute_uri(self.request.path)}"
+                    f"?{urlencode({'page': next_num})}"
+                )
         return context
 
 
@@ -117,6 +213,12 @@ class ProductDetailView(DetailView):
     template_name = 'products/shop-details.html'
     context_object_name = 'product'
     slug_url_kwarg = 'slug'
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self._track_unique_view(self.object)
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_queryset(self):
         return Product.objects.filter(is_active=True).prefetch_related(
@@ -133,7 +235,54 @@ class ProductDetailView(DetailView):
         context['product_schema_json'] = self._build_product_schema_json(
             self.object, context['approved_reviews'], context['share_url'], stats
         )
+        context['product_breadcrumb_schema_json'] = self._build_breadcrumb_schema_json(
+            self.object
+        )
+        context['is_favorite'] = False
+        if self.request.user.is_authenticated:
+            context['is_favorite'] = ProductFavorite.objects.filter(
+                product=self.object, user=self.request.user
+            ).exists()
         return context
+
+    def _track_unique_view(self, product):
+        """Cuenta una vista real (única) por usuario o sesión."""
+        if self.request.user.is_authenticated:
+            already_viewed = ProductView.objects.filter(
+                product=product, user=self.request.user
+            ).exists()
+            if already_viewed:
+                return
+            create_kwargs = {
+                'product': product,
+                'user': self.request.user,
+                'session_key': self.request.session.session_key or '',
+            }
+        else:
+            session_key = self.request.session.session_key
+            if not session_key:
+                self.request.session.create()
+                session_key = self.request.session.session_key
+            already_viewed = ProductView.objects.filter(
+                product=product, user__isnull=True, session_key=session_key
+            ).exists()
+            if already_viewed:
+                return
+            create_kwargs = {
+                'product': product,
+                'session_key': session_key,
+            }
+
+        try:
+            ProductView.objects.create(**create_kwargs)
+        except IntegrityError:
+            # Otra petición paralela pudo registrar la vista.
+            return
+
+        Product.objects.filter(pk=product.pk).update(
+            view_count=models.F('view_count') + 1
+        )
+        product.refresh_from_db(fields=['view_count'])
 
     def _build_product_schema_json(self, product, approved_reviews, share_url, rating_stats):
         """Schema.org Product + AggregateRating + Review para SEO (JSON-LD)."""
@@ -187,6 +336,51 @@ class ProductDetailView(DetailView):
             ]
         return json.dumps(schema, ensure_ascii=False)
 
+    def _build_breadcrumb_schema_json(self, product):
+        request = self.request
+        base = f"{request.scheme}://{request.get_host()}"
+        shop_url = f"{base}{reverse('products:list')}"
+        category = product.categories.filter(is_active=True).first()
+        item_list = [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Inicio",
+                "item": f"{base}{reverse('core:home')}",
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Tienda",
+                "item": shop_url,
+            },
+        ]
+        position = 3
+        if category:
+            item_list.append(
+                {
+                    "@type": "ListItem",
+                    "position": position,
+                    "name": category.name,
+                    "item": f"{shop_url}?{urlencode({'category': category.slug})}",
+                }
+            )
+            position += 1
+        item_list.append(
+            {
+                "@type": "ListItem",
+                "position": position,
+                "name": product.name,
+                "item": self.request.build_absolute_uri(self.request.path),
+            }
+        )
+        schema = {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": item_list,
+        }
+        return json.dumps(schema, ensure_ascii=False)
+
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         if request.POST.get('action') == 'review':
@@ -213,3 +407,26 @@ class ProductDetailView(DetailView):
             url = reverse('products:detail', kwargs={'slug': self.object.slug}) + '#product-reviews'
             return redirect(url)
         return self.get(request, *args, **kwargs)
+
+
+@require_POST
+def toggle_favorite_view(request, product_id):
+    product = get_object_or_404(Product, pk=product_id, is_active=True)
+    fallback = reverse('products:detail', kwargs={'slug': product.slug})
+    next_url = _safe_next_url(
+        request,
+        request.POST.get('next') or request.META.get('HTTP_REFERER'),
+        fallback,
+    )
+    if not request.user.is_authenticated:
+        return redirect_to_login(next_url)
+
+    favorite, created = ProductFavorite.objects.get_or_create(
+        product=product, user=request.user
+    )
+    if created:
+        messages.success(request, f'"{product.name}" se agregó a tus favoritos.')
+    else:
+        favorite.delete()
+        messages.info(request, f'"{product.name}" se quitó de favoritos.')
+    return redirect(next_url)

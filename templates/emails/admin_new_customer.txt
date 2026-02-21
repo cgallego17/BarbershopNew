@@ -1,0 +1,13 @@
+{% extends "emails/base.txt" %}
+{% block content %}
+[Admin] Nuevo cliente registrado
+
+  Nombre:    {{ user.get_full_name|default:user.username }}
+  Email:     {{ user.email }}
+{% if user.phone %}  Teléfono:  {{ user.phone }}
+{% endif %}{% if user.document_number %}  Documento: {{ user.document_type }} {{ user.document_number }}
+{% endif %}  Registro:  {{ user.date_joined|date:"d/m/Y H:i" }}
+
+Ver en el panel:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/clientes/
+{% endblock %}

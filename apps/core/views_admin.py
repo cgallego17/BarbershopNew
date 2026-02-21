@@ -7,10 +7,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib import messages
 
-from apps.products.models import Product, Category, Brand, ProductAttribute
+from apps.products.models import Product, Category, Brand, ProductAttribute, ProductReview
 from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
@@ -18,10 +19,23 @@ from .forms import (
     CategoryForm, BrandForm, ProductForm, OrderStatusForm, CouponForm,
     ProductAttributeForm, ProductAttributeValueFormSet,
     get_product_variant_formset, CustomerForm, CustomerCreateForm, SiteSettingsForm,
-    HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeMeatCategoryBlockForm, HomeBrandForm, HomeTestimonialForm,
-    ShippingPriceForm,
+    HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeMeatCategoryBlockForm, HomeBrandBlockForm, HomeBrandForm, HomeTestimonialForm,
+    ShippingPriceForm, ShippingFreeRuleForm,
 )
-from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrand, HomeTestimonial, ShippingPrice, Country, City
+from .models import (
+    SiteSettings,
+    HomeSection,
+    HomeHeroSlide,
+    HomeAboutBlock,
+    HomeMeatCategoryBlock,
+    HomeBrandBlock,
+    HomeBrand,
+    HomeTestimonial,
+    ShippingPrice,
+    Country,
+    City,
+    NewsletterSubscriber,
+)
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -29,6 +43,16 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
     def test_func(self):
         return getattr(self.request.user, 'can_access_dashboard', False)
+
+
+def _safe_next_url(request, candidate, fallback):
+    if candidate and url_has_allowed_host_and_scheme(
+        url=candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return fallback
 
 
 def _dashboard_required(view):
@@ -53,9 +77,29 @@ class CategoryListView(StaffRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Category.objects.annotate(
+        qs = Category.objects.annotate(
             product_count=Count('products')
-        ).order_by('order', 'name')
+        )
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                models.Q(name__icontains=search) |
+                models.Q(slug__icontains=search)
+            )
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        sort = self.request.GET.get('sort', 'order')
+        order_map = {
+            'order': ['order', 'name'],
+            'name': ['name'],
+            '-name': ['-name'],
+            'products': ['product_count', 'name'],
+            '-products': ['-product_count', 'name'],
+        }
+        return qs.order_by(*order_map.get(sort, ['order', 'name']))
 
 
 class CategoryProductListView(StaffRequiredMixin, ListView):
@@ -79,7 +123,7 @@ class CategoryCreateView(StaffRequiredMixin, CreateView):
     model = Category
     form_class = CategoryForm
     template_name = 'dashboard/category_form.html'
-    success_url = reverse_lazy('admin_panel:category_list')
+    success_url = reverse_lazy('core:admin_panel:category_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Categoría creada correctamente.')
@@ -91,7 +135,7 @@ class CategoryUpdateView(StaffRequiredMixin, UpdateView):
     form_class = CategoryForm
     template_name = 'dashboard/category_form.html'
     context_object_name = 'category'
-    success_url = reverse_lazy('admin_panel:category_list')
+    success_url = reverse_lazy('core:admin_panel:category_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Categoría actualizada correctamente.')
@@ -102,7 +146,7 @@ class CategoryDeleteView(StaffRequiredMixin, DeleteView):
     model = Category
     template_name = 'dashboard/category_confirm_delete.html'
     context_object_name = 'category'
-    success_url = reverse_lazy('admin_panel:category_list')
+    success_url = reverse_lazy('core:admin_panel:category_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Categoría eliminada.')
@@ -113,13 +157,13 @@ class CategoryDeleteView(StaffRequiredMixin, DeleteView):
 def category_toggle_active_view(request, pk):
     """Activa o inactiva una categoría."""
     if request.method != 'POST':
-        return redirect('admin_panel:category_list')
+        return redirect('core:admin_panel:category_list')
     category = get_object_or_404(Category, pk=pk)
     category.is_active = not category.is_active
     category.save()
     action = 'activada' if category.is_active else 'inactivada'
     messages.success(request, f'Categoría «{category.name}» {action} correctamente.')
-    return redirect('admin_panel:category_list')
+    return redirect('core:admin_panel:category_list')
 
 
 # --- Marcas (catálogo) ---
@@ -131,16 +175,36 @@ class BrandListView(StaffRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Brand.objects.annotate(
+        qs = Brand.objects.annotate(
             product_count=models.Count('products')
-        ).order_by('order', 'name')
+        )
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                models.Q(name__icontains=search) |
+                models.Q(slug__icontains=search)
+            )
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        sort = self.request.GET.get('sort', 'order')
+        order_map = {
+            'order': ['order', 'name'],
+            'name': ['name'],
+            '-name': ['-name'],
+            'products': ['product_count', 'name'],
+            '-products': ['-product_count', 'name'],
+        }
+        return qs.order_by(*order_map.get(sort, ['order', 'name']))
 
 
 class BrandCreateView(StaffRequiredMixin, CreateView):
     model = Brand
     form_class = BrandForm
     template_name = 'dashboard/brand_form.html'
-    success_url = reverse_lazy('admin_panel:brand_list')
+    success_url = reverse_lazy('core:admin_panel:brand_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Marca creada correctamente.')
@@ -152,7 +216,7 @@ class BrandUpdateView(StaffRequiredMixin, UpdateView):
     form_class = BrandForm
     template_name = 'dashboard/brand_form.html'
     context_object_name = 'brand'
-    success_url = reverse_lazy('admin_panel:brand_list')
+    success_url = reverse_lazy('core:admin_panel:brand_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Marca actualizada correctamente.')
@@ -163,7 +227,7 @@ class BrandDeleteView(StaffRequiredMixin, DeleteView):
     model = Brand
     template_name = 'dashboard/brand_confirm_delete.html'
     context_object_name = 'brand'
-    success_url = reverse_lazy('admin_panel:brand_list')
+    success_url = reverse_lazy('core:admin_panel:brand_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Marca eliminada.')
@@ -178,12 +242,28 @@ class AttributeListView(StaffRequiredMixin, ListView):
     context_object_name = 'attributes'
     paginate_by = 20
 
+    def get_queryset(self):
+        qs = ProductAttribute.objects.prefetch_related('values')
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                models.Q(name__icontains=search) |
+                models.Q(slug__icontains=search)
+            )
+        sort = self.request.GET.get('sort', 'order')
+        order_map = {
+            'order': ['order', 'name'],
+            'name': ['name'],
+            '-name': ['-name'],
+        }
+        return qs.order_by(*order_map.get(sort, ['order', 'name']))
+
 
 class AttributeCreateView(StaffRequiredMixin, CreateView):
     model = ProductAttribute
     form_class = ProductAttributeForm
     template_name = 'dashboard/attribute_form.html'
-    success_url = reverse_lazy('admin_panel:attribute_list')
+    success_url = reverse_lazy('core:admin_panel:attribute_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Atributo creado. Agrega sus valores editándolo.')
@@ -195,7 +275,7 @@ class AttributeUpdateView(StaffRequiredMixin, UpdateView):
     form_class = ProductAttributeForm
     template_name = 'dashboard/attribute_form.html'
     context_object_name = 'attribute'
-    success_url = reverse_lazy('admin_panel:attribute_list')
+    success_url = reverse_lazy('core:admin_panel:attribute_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -222,7 +302,7 @@ class AttributeDeleteView(StaffRequiredMixin, DeleteView):
     model = ProductAttribute
     template_name = 'dashboard/attribute_confirm_delete.html'
     context_object_name = 'attribute'
-    success_url = reverse_lazy('admin_panel:attribute_list')
+    success_url = reverse_lazy('core:admin_panel:attribute_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Atributo eliminado.')
@@ -284,30 +364,30 @@ class ProductListView(StaffRequiredMixin, ListView):
 def sync_tersa_products_view(request):
     """Importa productos desde API Tersa (solo BARBERSHOP y BARBER UP)."""
     if request.method != 'POST':
-        return redirect('admin_panel:product_list')
+        return redirect('core:admin_panel:product_list')
     try:
         from apps.integrations.services import sync_tersa_products
         result = sync_tersa_products(brands=['BARBERSHOP', 'BARBER UP'], download_images=True)
         messages.success(
             request,
-            f'Tersa: {result["total"]} productos (BARBERSHOP, BARBER UP). '
+            f'Tersa: {result["total"]} productos (BARBERSHOP, BARBER UP + IDs extra). '
             f'{result["created"]} creados, {result["updated"]} actualizados.'
         )
     except Exception as e:
         messages.error(request, f'Error al sincronizar Tersa: {e}')
-    return redirect('admin_panel:product_list')
+    return redirect('core:admin_panel:product_list')
 
 
 class ProductCreateView(StaffRequiredMixin, CreateView):
     model = Product
     form_class = ProductForm
     template_name = 'dashboard/product_form.html'
-    success_url = reverse_lazy('admin_panel:product_list')
+    success_url = reverse_lazy('core:admin_panel:product_list')
 
     def form_valid(self, form):
         response = super().form_valid(form)
         messages.success(self.request, 'Producto creado. Edita el producto para agregar variantes si es variable.')
-        return redirect('admin_panel:product_edit', pk=self.object.pk)
+        return redirect('core:admin_panel:product_edit', pk=self.object.pk)
 
 
 class ProductUpdateView(StaffRequiredMixin, UpdateView):
@@ -315,7 +395,7 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
     form_class = ProductForm
     template_name = 'dashboard/product_form.html'
     context_object_name = 'product'
-    success_url = reverse_lazy('admin_panel:product_list')
+    success_url = reverse_lazy('core:admin_panel:product_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -348,24 +428,105 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
 def product_toggle_active_view(request, pk):
     """Activa o inactiva un producto."""
     if request.method != 'POST':
-        return redirect('admin_panel:product_list')
+        return redirect('core:admin_panel:product_list')
     product = get_object_or_404(Product, pk=pk)
     product.is_active = not product.is_active
     product.save()
     action = 'activado' if product.is_active else 'inactivado'
     messages.success(request, f'Producto {action} correctamente.')
-    return redirect('admin_panel:product_list')
+    return redirect('core:admin_panel:product_list')
 
 
 class ProductDeleteView(StaffRequiredMixin, DeleteView):
     model = Product
     template_name = 'dashboard/product_confirm_delete.html'
     context_object_name = 'product'
-    success_url = reverse_lazy('admin_panel:product_list')
+    success_url = reverse_lazy('core:admin_panel:product_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Producto eliminado.')
         return super().delete(request, *args, **kwargs)
+
+
+# --- Reseñas (Reviews) ---
+
+class ReviewListView(StaffRequiredMixin, ListView):
+    model = ProductReview
+    template_name = 'dashboard/review_list.html'
+    context_object_name = 'reviews'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = ProductReview.objects.select_related('product').order_by('-created_at')
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                Q(author_name__icontains=search) |
+                Q(author_email__icontains=search) |
+                Q(comment__icontains=search) |
+                Q(product__name__icontains=search)
+            )
+        status = self.request.GET.get('status')
+        if status == 'pending':
+            qs = qs.filter(is_approved=False)
+        elif status == 'approved':
+            qs = qs.filter(is_approved=True)
+        sort = self.request.GET.get('sort', '-created_at')
+        order_map = {
+            '-created_at': ['-created_at'],
+            'created_at': ['created_at'],
+            'rating': ['rating', '-created_at'],
+            '-rating': ['-rating', '-created_at'],
+            'author': ['author_name', '-created_at'],
+            '-author': ['-author_name', '-created_at'],
+        }
+        return qs.order_by(*order_map.get(sort, ['-created_at']))
+
+
+@_dashboard_required
+def review_approve_view(request, pk):
+    """Autoriza una reseña (la hace visible en la tienda)."""
+    if request.method != 'POST':
+        return redirect('core:admin_panel:review_list')
+    review = get_object_or_404(ProductReview, pk=pk)
+    review.is_approved = True
+    review.save()
+    messages.success(request, f'Reseña de {review.author_name} autorizada.')
+    next_url = _safe_next_url(
+        request,
+        request.GET.get('next') or request.POST.get('next'),
+        reverse('core:admin_panel:review_list'),
+    )
+    return redirect(next_url)
+
+
+@_dashboard_required
+def review_reject_view(request, pk):
+    """Rechaza una reseña (deja de mostrarla)."""
+    if request.method != 'POST':
+        return redirect('core:admin_panel:review_list')
+    review = get_object_or_404(ProductReview, pk=pk)
+    review.is_approved = False
+    review.save()
+    messages.success(request, f'Reseña de {review.author_name} rechazada.')
+    next_url = _safe_next_url(
+        request,
+        request.GET.get('next') or request.POST.get('next'),
+        reverse('core:admin_panel:review_list'),
+    )
+    return redirect(next_url)
+
+
+@_dashboard_required
+def review_delete_view(request, pk):
+    """Elimina una reseña (spam, etc.)."""
+    if request.method != 'POST':
+        return redirect('core:admin_panel:review_list')
+    review = get_object_or_404(ProductReview, pk=pk)
+    author = review.author_name
+    review.delete()
+    messages.success(request, f'Reseña de {author} eliminada.')
+    return redirect('core:admin_panel:review_list')
 
 
 # --- Clientes ---
@@ -377,18 +538,47 @@ class CustomerListView(StaffRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = User.objects.all().order_by('-date_joined')
-        search = self.request.GET.get('q')
+        qs = User.objects.annotate(
+            orders_count=models.Count('orders')
+        )
+        search = (self.request.GET.get('q') or '').strip()
         if search:
             qs = qs.filter(
                 models.Q(username__icontains=search) |
                 models.Q(email__icontains=search) |
                 models.Q(first_name__icontains=search) |
-                models.Q(last_name__icontains=search)
+                models.Q(last_name__icontains=search) |
+                models.Q(phone__icontains=search) |
+                models.Q(document_number__icontains=search)
             )
         role = self.request.GET.get('role')
         if role:
             qs = qs.filter(role=role)
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        customer_type = self.request.GET.get('customer_type')
+        if customer_type:
+            qs = qs.filter(customer_type=customer_type)
+        has_orders = self.request.GET.get('has_orders')
+        if has_orders == 'yes':
+            qs = qs.filter(orders_count__gt=0)
+        elif has_orders == 'no':
+            qs = qs.filter(orders_count=0)
+        sort = self.request.GET.get('sort', '-date_joined')
+        order_map = {
+            '-date_joined': ['-date_joined'],
+            'date_joined': ['date_joined'],
+            'name': ['first_name', 'last_name', 'email'],
+            '-name': ['-first_name', '-last_name', 'email'],
+            'email': ['email'],
+            '-email': ['-email'],
+            'orders': ['orders_count', '-date_joined'],
+            '-orders': ['-orders_count', '-date_joined'],
+        }
+        qs = qs.order_by(*order_map.get(sort, ['-date_joined']))
         return qs
 
 
@@ -396,7 +586,7 @@ class CustomerCreateView(StaffRequiredMixin, CreateView):
     model = User
     form_class = CustomerCreateForm
     template_name = 'dashboard/customer_form.html'
-    success_url = reverse_lazy('admin_panel:customer_list')
+    success_url = reverse_lazy('core:admin_panel:customer_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -435,7 +625,7 @@ class CustomerUpdateView(StaffRequiredMixin, UpdateView):
     form_class = CustomerForm
     template_name = 'dashboard/customer_form.html'
     context_object_name = 'customer'
-    success_url = reverse_lazy('admin_panel:customer_list')
+    success_url = reverse_lazy('core:admin_panel:customer_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -454,6 +644,104 @@ class CustomerUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+# --- Newsletter ---
+
+class NewsletterSubscriberListView(StaffRequiredMixin, ListView):
+    model = NewsletterSubscriber
+    template_name = 'dashboard/newsletter_list.html'
+    context_object_name = 'subscribers'
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = NewsletterSubscriber.objects.all()
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(email__icontains=search)
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        sort = self.request.GET.get('sort', '-created_at')
+        order_map = {
+            '-created_at': ['-created_at'],
+            'created_at': ['created_at'],
+            'email': ['email'],
+            '-email': ['-email'],
+        }
+        return qs.order_by(*order_map.get(sort, ['-created_at']))
+
+
+@_dashboard_required
+def newsletter_export_excel_view(request):
+    """Exporta suscriptores de newsletter a Excel (.xlsx)."""
+    from django.utils import timezone
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment
+    except ModuleNotFoundError:
+        messages.error(
+            request,
+            'Para exportar en Excel debe instalar openpyxl. '
+            'Ejecute: pip install openpyxl y reinicie el servidor.',
+        )
+        return redirect('core:admin_panel:newsletter_list')
+
+    qs = NewsletterSubscriber.objects.all().order_by('-created_at')
+    timestamp = timezone.now().strftime('%Y%m%d-%H%M')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Newsletter'
+    headers = ['Email', 'Estado', 'Origen', 'Suscrito en', 'Actualizado en']
+    for col, title in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=title)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    for row, sub in enumerate(qs, 2):
+        ws.cell(row=row, column=1, value=sub.email)
+        ws.cell(row=row, column=2, value='Activo' if sub.is_active else 'Inactivo')
+        ws.cell(row=row, column=3, value=sub.source or 'footer')
+        ws.cell(row=row, column=4, value=sub.created_at.strftime('%Y-%m-%d %H:%M'))
+        ws.cell(row=row, column=5, value=sub.updated_at.strftime('%Y-%m-%d %H:%M'))
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f'newsletter-suscriptores-{timestamp}.xlsx'
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@_dashboard_required
+def newsletter_toggle_active_view(request, pk):
+    if request.method != 'POST':
+        return redirect('core:admin_panel:newsletter_list')
+    sub = get_object_or_404(NewsletterSubscriber, pk=pk)
+    sub.is_active = not sub.is_active
+    sub.save(update_fields=['is_active', 'updated_at'])
+    action = 'activado' if sub.is_active else 'inactivado'
+    messages.success(request, f'Suscriptor {sub.email} {action} correctamente.')
+    return redirect('core:admin_panel:newsletter_list')
+
+
+@_dashboard_required
+def newsletter_delete_view(request, pk):
+    if request.method != 'POST':
+        return redirect('core:admin_panel:newsletter_list')
+    sub = get_object_or_404(NewsletterSubscriber, pk=pk)
+    email = sub.email
+    sub.delete()
+    messages.success(request, f'Suscriptor {email} eliminado.')
+    return redirect('core:admin_panel:newsletter_list')
+
+
 # --- Pedidos ---
 
 class OrderListView(StaffRequiredMixin, ListView):
@@ -464,15 +752,29 @@ class OrderListView(StaffRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset().select_related('user')
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                models.Q(order_number__icontains=search) |
+                models.Q(billing_email__icontains=search) |
+                models.Q(billing_first_name__icontains=search) |
+                models.Q(billing_last_name__icontains=search) |
+                models.Q(billing_phone__icontains=search)
+            )
         status = self.request.GET.get('status')
         if status:
             qs = qs.filter(status=status)
-        search = self.request.GET.get('q')
-        if search:
-            qs = qs.filter(
-                order_number__icontains=search
-            ) | qs.filter(billing_email__icontains=search)
-        return qs.order_by('-created_at')
+        payment_status = self.request.GET.get('payment_status')
+        if payment_status:
+            qs = qs.filter(payment_status=payment_status)
+        sort = self.request.GET.get('sort', '-created_at')
+        order_map = {
+            '-created_at': ['-created_at'],
+            'created_at': ['created_at'],
+            'total': ['total', '-created_at'],
+            '-total': ['-total', '-created_at'],
+        }
+        return qs.order_by(*order_map.get(sort, ['-created_at']))
 
 
 @_dashboard_required
@@ -484,7 +786,7 @@ def order_detail_view(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request, 'Pedido actualizado.')
-            return redirect('admin_panel:order_detail', pk=order.pk)
+            return redirect('core:admin_panel:order_detail', pk=order.pk)
     else:
         form = OrderStatusForm(instance=order)
     return render(request, 'dashboard/order_detail.html', {'order': order, 'form': form})
@@ -498,16 +800,51 @@ class CouponListView(StaffRequiredMixin, ListView):
     context_object_name = 'coupons'
     paginate_by = 20
 
+    def get_queryset(self):
+        qs = Coupon.objects.all()
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(code__icontains=search)
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        discount_type = self.request.GET.get('discount_type')
+        if discount_type:
+            qs = qs.filter(discount_type=discount_type)
+        sort = self.request.GET.get('sort', '-created_at')
+        order_map = {
+            '-created_at': ['-created_at'],
+            'created_at': ['created_at'],
+            'code': ['code'],
+            '-code': ['-code'],
+        }
+        return qs.order_by(*order_map.get(sort, ['-created_at']))
+
 
 class CouponCreateView(StaffRequiredMixin, CreateView):
     model = Coupon
     form_class = CouponForm
     template_name = 'dashboard/coupon_form.html'
-    success_url = reverse_lazy('admin_panel:coupon_list')
+    success_url = reverse_lazy('core:admin_panel:coupon_list')
 
     def form_valid(self, form):
+        code = (form.cleaned_data.get('code') or '').strip()
+        if not code:
+            form.instance.code = self._generate_unique_coupon_code()
         messages.success(self.request, 'Cupón creado correctamente.')
         return super().form_valid(form)
+
+    def _generate_unique_coupon_code(self):
+        import random
+        import string
+        for _ in range(100):
+            code = 'CUP' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+            if not Coupon.objects.filter(code=code).exists():
+                return code
+        from django.utils import timezone
+        return 'CUP' + timezone.now().strftime('%Y%m%d%H%M') + ''.join(random.choices(string.digits, k=4))
 
 
 class CouponUpdateView(StaffRequiredMixin, UpdateView):
@@ -515,7 +852,7 @@ class CouponUpdateView(StaffRequiredMixin, UpdateView):
     form_class = CouponForm
     template_name = 'dashboard/coupon_form.html'
     context_object_name = 'coupon'
-    success_url = reverse_lazy('admin_panel:coupon_list')
+    success_url = reverse_lazy('core:admin_panel:coupon_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Cupón actualizado correctamente.')
@@ -526,7 +863,7 @@ class CouponDeleteView(StaffRequiredMixin, DeleteView):
     model = Coupon
     template_name = 'dashboard/coupon_confirm_delete.html'
     context_object_name = 'coupon'
-    success_url = reverse_lazy('admin_panel:coupon_list')
+    success_url = reverse_lazy('core:admin_panel:coupon_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Cupón eliminado.')
@@ -542,7 +879,74 @@ class ShippingPriceListView(StaffRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        return ShippingPrice.objects.select_related('city', 'city__state', 'city__state__country').order_by('city__state__name', 'city__name')
+        qs = ShippingPrice.objects.select_related(
+            'city', 'city__state', 'city__state__country'
+        )
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                Q(city__name__icontains=search) |
+                Q(city__state__name__icontains=search) |
+                Q(city__state__country__name__icontains=search)
+            )
+        status = self.request.GET.get('status')
+        if status == 'active':
+            qs = qs.filter(is_active=True)
+        elif status == 'inactive':
+            qs = qs.filter(is_active=False)
+        country_id = self.request.GET.get('country')
+        if country_id:
+            qs = qs.filter(city__state__country_id=country_id)
+        state_id = self.request.GET.get('state')
+        if state_id:
+            qs = qs.filter(city__state_id=state_id)
+        sort = self.request.GET.get('sort', 'location')
+        order_map = {
+            'location': ['city__state__name', 'city__name'],
+            '-location': ['-city__state__name', '-city__name'],
+            'city': ['city__name', 'city__state__name'],
+            '-city': ['-city__name', 'city__state__name'],
+            'price': ['price', 'city__name'],
+            '-price': ['-price', 'city__name'],
+            'days': ['delivery_days_min', 'city__name'],
+            '-days': ['-delivery_days_max', 'city__name'],
+        }
+        qs = qs.order_by(*order_map.get(sort, order_map['location']))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        from .models import Country, State
+
+        ctx['free_shipping_form'] = ShippingFreeRuleForm(instance=SiteSettings.get())
+        country_ids = ShippingPrice.objects.values_list(
+            'city__state__country_id', flat=True
+        ).distinct()
+        ctx['filter_countries'] = Country.objects.filter(
+            id__in=country_ids
+        ).order_by('name')
+        state_ids = ShippingPrice.objects.values_list(
+            'city__state_id', flat=True
+        ).distinct()
+        ctx['filter_states'] = State.objects.filter(
+            id__in=state_ids
+        ).select_related('country').order_by('country__name', 'name')
+        return ctx
+
+
+@_dashboard_required
+def shipping_free_rule_update_view(request):
+    """Actualiza el monto mínimo para envío gratis."""
+    if request.method != 'POST':
+        return redirect('core:admin_panel:shipping_price_list')
+    settings_obj = SiteSettings.get()
+    form = ShippingFreeRuleForm(request.POST, instance=settings_obj)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Configuración de envío gratis guardada.')
+    else:
+        messages.error(request, 'No se pudo guardar el envío gratis. Verifica el valor ingresado.')
+    return redirect('core:admin_panel:shipping_price_list')
 
 
 @_dashboard_required
@@ -560,7 +964,7 @@ def shipping_price_export_excel_view(request):
             'En la misma terminal donde ejecuta el servidor (runserver), ejecute: pip install openpyxl '
             'y luego reinicie el servidor.'
         )
-        return redirect('admin_panel:shipping_price_list')
+        return redirect('core:admin_panel:shipping_price_list')
 
     qs = ShippingPrice.objects.select_related('city', 'city__state', 'city__state__country').order_by('city__state__name', 'city__name')
     timestamp = timezone.now().strftime('%Y%m%d-%H%M')
@@ -594,12 +998,12 @@ def shipping_price_export_excel_view(request):
 def shipping_price_load_all_colombia_view(request):
     """Crea precio de envío (0, 0-0 días) para todas las ciudades de Colombia que aún no tengan uno."""
     if request.method != 'POST':
-        return redirect('admin_panel:shipping_price_list')
+        return redirect('core:admin_panel:shipping_price_list')
     try:
         colombia = Country.objects.get(name='Colombia')
     except Country.DoesNotExist:
         messages.error(request, 'No existe el país Colombia. Ejecute: python manage.py load_colombia_geo')
-        return redirect('admin_panel:shipping_price_list')
+        return redirect('core:admin_panel:shipping_price_list')
     cities = City.objects.filter(state__country=colombia).select_related('state')
     created = 0
     for city in cities:
@@ -615,14 +1019,164 @@ def shipping_price_load_all_colombia_view(request):
         if created_flag:
             created += 1
     messages.success(request, f'Se agregaron {created} ciudades de Colombia con precio 0 y días 0-0. ({cities.count() - created} ya existían.)')
-    return redirect('admin_panel:shipping_price_list')
+    return redirect('core:admin_panel:shipping_price_list')
+
+
+@_dashboard_required
+def shipping_price_import_excel_view(request):
+    """Importa precios de envío desde Excel (.xlsx)."""
+    if request.method == 'GET':
+        return render(request, 'dashboard/shipping_price_import.html')
+
+    file = request.FILES.get('excel_file')
+    if not file:
+        messages.error(request, 'Debe seleccionar un archivo Excel.')
+        return redirect('core:admin_panel:shipping_price_import_excel')
+
+    if not file.name.lower().endswith(('.xlsx', '.xls')):
+        messages.error(request, 'El archivo debe ser Excel (.xlsx o .xls).')
+        return redirect('core:admin_panel:shipping_price_import_excel')
+
+    try:
+        from openpyxl import load_workbook
+    except ModuleNotFoundError:
+        messages.error(
+            request,
+            'Para importar Excel instale openpyxl: pip install openpyxl'
+        )
+        return redirect('core:admin_panel:shipping_price_list')
+
+    try:
+        wb = load_workbook(filename=io.BytesIO(file.read()), read_only=True, data_only=True)
+    except Exception as e:
+        messages.error(request, f'No se pudo leer el archivo Excel: {e}')
+        return redirect('core:admin_panel:shipping_price_import_excel')
+
+    ws = wb['Precios de envío'] if 'Precios de envío' in wb.sheetnames else wb.active
+    rows = list(ws.iter_rows(values_only=True))
+    if not rows:
+        messages.error(request, 'El archivo está vacío o no tiene filas.')
+        wb.close()
+        return redirect('core:admin_panel:shipping_price_import_excel')
+
+    header_row = [str(c).strip() if c is not None else '' for c in rows[0]]
+    col_map = {}
+    aliases = {
+        'ciudad': 'ciudad', 'departamento': 'departamento', 'pais': 'pais',
+        'país': 'pais', 'precio': 'precio',
+        'días mín': 'dias_min', 'dias mín': 'dias_min', 'días min': 'dias_min', 'dias min': 'dias_min',
+        'dias mn': 'dias_min', 'días mn': 'dias_min',
+        'días máx': 'dias_max', 'dias máx': 'dias_max', 'días max': 'dias_max', 'dias max': 'dias_max',
+        'dias mx': 'dias_max', 'días mx': 'dias_max', 'estado': 'estado',
+    }
+    for i, h in enumerate(header_row):
+        h_clean = h.lower().strip()
+        key = aliases.get(h_clean)
+        if key and key not in col_map:
+            col_map[key] = i
+        if not key and ('min' in h_clean or 'mín' in h_clean or 'mn' in h_clean) and ('dia' in h_clean or 'días' in h_clean or 'dias' in h_clean):
+            col_map.setdefault('dias_min', i)
+        if not key and ('max' in h_clean or 'máx' in h_clean or 'mx' in h_clean) and ('dia' in h_clean or 'días' in h_clean or 'dias' in h_clean):
+            col_map.setdefault('dias_max', i)
+
+    if len(header_row) >= 6 and 'dias_min' not in col_map:
+        col_map['dias_min'] = 4
+    if len(header_row) >= 7 and 'dias_max' not in col_map:
+        col_map['dias_max'] = 5
+
+    if 'ciudad' not in col_map or 'precio' not in col_map:
+        messages.error(
+            request,
+            'El Excel debe tener columnas: Ciudad, Departamento, País, Precio, Días mín, Días máx, Estado'
+        )
+        wb.close()
+        return redirect('core:admin_panel:shipping_price_import_excel')
+
+    created = 0
+    updated = 0
+    not_found = []
+
+    def _val(row, key, default=None):
+        idx = col_map.get(key)
+        if idx is None or idx >= len(row):
+            return default
+        v = row[idx]
+        if v is None or (isinstance(v, str) and not v.strip()):
+            return default
+        return v
+
+    for row in rows[1:]:
+        row = list(row) if row else []
+        ciudad = str(_val(row, 'ciudad', '') or '').strip()
+        if not ciudad:
+            continue
+        departamento = str(_val(row, 'departamento', '') or '').strip()
+        pais = str(_val(row, 'pais', '') or '').strip() or 'Colombia'
+        try:
+            price_val = _val(row, 'precio', 0)
+            price = float(price_val) if price_val is not None else 0
+        except (TypeError, ValueError):
+            price = 0
+        try:
+            dmin = int(_val(row, 'dias_min', 0) or 0)
+        except (TypeError, ValueError):
+            dmin = 0
+        try:
+            dmax = int(_val(row, 'dias_max', 0) or 0)
+        except (TypeError, ValueError):
+            dmax = 0
+        estado = str(_val(row, 'estado', 'Activo') or 'Activo').strip().lower()
+        is_active = estado.startswith('activo')
+
+        city = City.objects.filter(
+            name__iexact=ciudad,
+            state__name__iexact=departamento,
+            state__country__name__iexact=pais,
+        ).select_related('state', 'state__country').first()
+
+        if not city:
+            not_found.append(f'{ciudad}, {departamento}, {pais}')
+            continue
+
+        _, was_created = ShippingPrice.objects.update_or_create(
+            city=city,
+            defaults={
+                'price': price,
+                'delivery_days_min': max(0, dmin),
+                'delivery_days_max': max(0, dmax),
+                'is_active': is_active,
+            },
+        )
+        if was_created:
+            created += 1
+        else:
+            updated += 1
+
+    wb.close()
+
+    msg_parts = []
+    if created:
+        msg_parts.append(f'{created} creados')
+    if updated:
+        msg_parts.append(f'{updated} actualizados')
+    if not msg_parts:
+        msg_parts.append('0 registros procesados')
+    messages.success(request, 'Importación completada: ' + ', '.join(msg_parts))
+    if not_found:
+        samples = not_found[:5]
+        extra = f' ({len(not_found)} total)' if len(not_found) > 5 else ''
+        messages.warning(
+            request,
+            f'Ciudades no encontradas en la base de datos{extra}: ' + '; '.join(samples)
+        )
+    return redirect('core:admin_panel:shipping_price_list')
 
 
 class ShippingPriceCreateView(StaffRequiredMixin, CreateView):
     model = ShippingPrice
     form_class = ShippingPriceForm
     template_name = 'dashboard/shipping_price_form.html'
-    success_url = reverse_lazy('admin_panel:shipping_price_list')
+    success_url = reverse_lazy('core:admin_panel:shipping_price_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -641,7 +1195,7 @@ class ShippingPriceUpdateView(StaffRequiredMixin, UpdateView):
     form_class = ShippingPriceForm
     template_name = 'dashboard/shipping_price_form.html'
     context_object_name = 'shipping_price'
-    success_url = reverse_lazy('admin_panel:shipping_price_list')
+    success_url = reverse_lazy('core:admin_panel:shipping_price_list')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -664,7 +1218,7 @@ class ShippingPriceDeleteView(StaffRequiredMixin, DeleteView):
     model = ShippingPrice
     template_name = 'dashboard/shipping_price_confirm_delete.html'
     context_object_name = 'shipping_price'
-    success_url = reverse_lazy('admin_panel:shipping_price_list')
+    success_url = reverse_lazy('core:admin_panel:shipping_price_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Precio de envío eliminado.')
@@ -678,7 +1232,7 @@ class SiteSettingsUpdateView(StaffRequiredMixin, UpdateView):
     form_class = SiteSettingsForm
     template_name = 'dashboard/config_form.html'
     context_object_name = 'settings'
-    success_url = reverse_lazy('admin_panel:config')
+    success_url = reverse_lazy('core:admin_panel:config')
 
     def get_object(self, queryset=None):
         return SiteSettings.get()
@@ -731,7 +1285,7 @@ class HomeSectionsConfigView(StaffRequiredMixin, ListView):
         if formset.is_valid():
             formset.save()
             messages.success(request, 'Configuración de secciones guardada.')
-            return redirect('admin_panel:home_sections')
+            return redirect('core:admin_panel:home_sections')
         return self.render_to_response(self.get_context_data(formset=formset))
 
 
@@ -745,7 +1299,7 @@ class HomeHeroSlideCreateView(StaffRequiredMixin, CreateView):
     model = HomeHeroSlide
     form_class = HomeHeroSlideForm
     template_name = 'dashboard/home_hero_form.html'
-    success_url = reverse_lazy('admin_panel:home_hero_list')
+    success_url = reverse_lazy('core:admin_panel:home_hero_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Slide creado.')
@@ -757,7 +1311,7 @@ class HomeHeroSlideUpdateView(StaffRequiredMixin, UpdateView):
     form_class = HomeHeroSlideForm
     template_name = 'dashboard/home_hero_form.html'
     context_object_name = 'slide'
-    success_url = reverse_lazy('admin_panel:home_hero_list')
+    success_url = reverse_lazy('core:admin_panel:home_hero_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Slide actualizado.')
@@ -768,7 +1322,7 @@ class HomeHeroSlideDeleteView(StaffRequiredMixin, DeleteView):
     model = HomeHeroSlide
     template_name = 'dashboard/home_hero_confirm_delete.html'
     context_object_name = 'slide'
-    success_url = reverse_lazy('admin_panel:home_hero_list')
+    success_url = reverse_lazy('core:admin_panel:home_hero_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Slide eliminado.')
@@ -780,7 +1334,7 @@ class HomeAboutBlockUpdateView(StaffRequiredMixin, UpdateView):
     form_class = HomeAboutBlockForm
     template_name = 'dashboard/home_about_form.html'
     context_object_name = 'block'
-    success_url = reverse_lazy('admin_panel:home_sections')
+    success_url = reverse_lazy('core:admin_panel:home_sections')
 
     def get_object(self, queryset=None):
         return HomeAboutBlock.get()
@@ -795,7 +1349,7 @@ class HomeMeatCategoryBlockUpdateView(StaffRequiredMixin, UpdateView):
     form_class = HomeMeatCategoryBlockForm
     template_name = 'dashboard/home_meat_category_form.html'
     context_object_name = 'block'
-    success_url = reverse_lazy('admin_panel:home_sections')
+    success_url = reverse_lazy('core:admin_panel:home_sections')
 
     def get_object(self, queryset=None):
         return HomeMeatCategoryBlock.get()
@@ -805,19 +1359,40 @@ class HomeMeatCategoryBlockUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
+class HomeBrandBlockUpdateView(StaffRequiredMixin, UpdateView):
+    """Configuración de la sección Marcas (imagen de fondo)."""
+    model = HomeBrandBlock
+    form_class = HomeBrandBlockForm
+    template_name = 'dashboard/home_brand_block_form.html'
+    context_object_name = 'block'
+    success_url = reverse_lazy('core:admin_panel:home_brand_list')
+
+    def get_object(self, queryset=None):
+        return HomeBrandBlock.get()
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Imagen de fondo guardada.')
+        return super().form_valid(form)
+
+
 class HomeBrandListView(StaffRequiredMixin, ListView):
-    """Lista las marcas del modelo de producto (Brand), no HomeBrand."""
+    """Lista las marcas del catálogo de productos (Brand)."""
     model = Brand
     template_name = 'dashboard/home_brand_list.html'
     context_object_name = 'brands'
-    queryset = Brand.objects.all()
+    queryset = Brand.objects.all().order_by('order', 'name')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['brand_block'] = HomeBrandBlock.get()
+        return ctx
 
 
 class HomeBrandCreateView(StaffRequiredMixin, CreateView):
     model = HomeBrand
     form_class = HomeBrandForm
     template_name = 'dashboard/home_brand_form.html'
-    success_url = reverse_lazy('admin_panel:home_brand_list')
+    success_url = reverse_lazy('core:admin_panel:home_brand_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Marca creada.')
@@ -829,7 +1404,7 @@ class HomeBrandUpdateView(StaffRequiredMixin, UpdateView):
     form_class = HomeBrandForm
     template_name = 'dashboard/home_brand_form.html'
     context_object_name = 'brand'
-    success_url = reverse_lazy('admin_panel:home_brand_list')
+    success_url = reverse_lazy('core:admin_panel:home_brand_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Marca actualizada.')
@@ -840,7 +1415,7 @@ class HomeBrandDeleteView(StaffRequiredMixin, DeleteView):
     model = HomeBrand
     template_name = 'dashboard/home_brand_confirm_delete.html'
     context_object_name = 'brand'
-    success_url = reverse_lazy('admin_panel:home_brand_list')
+    success_url = reverse_lazy('core:admin_panel:home_brand_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Marca eliminada.')
@@ -857,7 +1432,7 @@ class HomeTestimonialCreateView(StaffRequiredMixin, CreateView):
     model = HomeTestimonial
     form_class = HomeTestimonialForm
     template_name = 'dashboard/home_testimonial_form.html'
-    success_url = reverse_lazy('admin_panel:home_testimonial_list')
+    success_url = reverse_lazy('core:admin_panel:home_testimonial_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Testimonio creado.')
@@ -869,7 +1444,7 @@ class HomeTestimonialUpdateView(StaffRequiredMixin, UpdateView):
     form_class = HomeTestimonialForm
     template_name = 'dashboard/home_testimonial_form.html'
     context_object_name = 'testimonial'
-    success_url = reverse_lazy('admin_panel:home_testimonial_list')
+    success_url = reverse_lazy('core:admin_panel:home_testimonial_list')
 
     def form_valid(self, form):
         messages.success(self.request, 'Testimonio actualizado.')
@@ -880,7 +1455,7 @@ class HomeTestimonialDeleteView(StaffRequiredMixin, DeleteView):
     model = HomeTestimonial
     template_name = 'dashboard/home_testimonial_confirm_delete.html'
     context_object_name = 'testimonial'
-    success_url = reverse_lazy('admin_panel:home_testimonial_list')
+    success_url = reverse_lazy('core:admin_panel:home_testimonial_list')
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Testimonio eliminado.')

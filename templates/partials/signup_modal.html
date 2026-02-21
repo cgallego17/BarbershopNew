@@ -135,6 +135,7 @@
         <form method="post" action="{% url 'account_signup' %}" class="login-page__form" novalidate>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">
 
           <div class="mb-2" style="font-size:13px; color: rgba(255,255,255,.7);">{% trans "Registrarse como" %}</div>
           <div class="signup-modal__type-row">
@@ -146,20 +147,20 @@
 
           <div class="login-page__form__input-box">
             <label class="sr-only" for="modal_signup_document">{% trans "Número de identificación" %}</label>
-            <input id="modal_signup_document" type="text" name="document_number" placeholder="{% trans 'Número de identificación (cédula, NIT)' %}" required>
+            <input id="modal_signup_document" type="text" name="document_number" placeholder="{% trans 'Número de identificación (cédula, NIT)' %}" autocomplete="off" required>
             <span class="icon-padlock"></span>
           </div>
 
           <div class="login-page__form__input-box">
             <label class="sr-only" for="modal_signup_first_name">{% trans "Nombre" %}</label>
-            <input id="modal_signup_first_name" type="text" name="first_name" placeholder="{% trans 'Nombre' %}" required>
+            <input id="modal_signup_first_name" type="text" name="first_name" placeholder="{% trans 'Nombre' %}" autocomplete="given-name" required>
             <span class="icon-padlock"></span>
           </div>
 
           <div id="signup-person-fields" class="signup-person-only">
             <div class="login-page__form__input-box">
               <label class="sr-only" for="modal_signup_document_type">{% trans "Tipo de documento" %}</label>
-              <select id="modal_signup_document_type" name="document_type">
+              <select id="modal_signup_document_type" name="document_type" autocomplete="off">
                 <option value="">{% trans "-- Seleccione --" %}</option>
                 <option value="CC">{% trans "Cédula de ciudadanía" %}</option>
                 <option value="CE">{% trans "Cédula de extranjería" %}</option>
@@ -168,12 +169,12 @@
             </div>
             <div class="login-page__form__input-box">
               <label class="sr-only" for="modal_signup_last_name">{% trans "Apellido" %}</label>
-              <input id="modal_signup_last_name" type="text" name="last_name" placeholder="{% trans 'Apellido' %}">
+              <input id="modal_signup_last_name" type="text" name="last_name" placeholder="{% trans 'Apellido' %}" autocomplete="family-name">
               <span class="icon-padlock"></span>
             </div>
             <div class="login-page__form__input-box">
               <label class="sr-only" for="modal_signup_birth">{% trans "Fecha de nacimiento" %}</label>
-              <input id="modal_signup_birth" type="date" name="date_of_birth" placeholder="{% trans 'Fecha de nacimiento' %}">
+              <input id="modal_signup_birth" type="date" name="date_of_birth" placeholder="{% trans 'Fecha de nacimiento' %}" autocomplete="bday">
               <span class="icon-padlock"></span>
             </div>
           </div>
@@ -186,7 +187,7 @@
 
           <div class="login-page__form__input-box">
             <label class="sr-only" for="modal_signup_phone">{% trans "Teléfono" %}</label>
-            <input id="modal_signup_phone" type="tel" name="phone" placeholder="{% trans 'Teléfono' %}">
+            <input id="modal_signup_phone" type="tel" name="phone" placeholder="{% trans 'Teléfono' %}" autocomplete="tel">
             <span class="icon-padlock"></span>
           </div>
 

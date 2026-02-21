@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a precios de envío</a>
+    <a href="{% url 'core:admin_panel:shipping_price_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a precios de envío</a>
 </div>
 
 <div class="admin-card">
@@ -16,7 +16,7 @@
             {% csrf_token %}
             <button type="submit" class="admin-btn admin-btn--danger">Sí, eliminar</button>
         </form>
-        <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+        <a href="{% url 'core:admin_panel:shipping_price_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
     </div>
 </div>
 {% endblock %}

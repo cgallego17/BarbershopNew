@@ -2,12 +2,13 @@
 from django import forms
 from django.forms import inlineformset_factory
 from django_ckeditor_5.widgets import CKEditor5Widget
+from apps.core.html_sanitizer import sanitize_html
 
 from apps.products.models import Product, Category, Brand, ProductAttribute, ProductAttributeValue, ProductVariant
 from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
-from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrand, HomeTestimonial, Country, State, City, ShippingPrice
+from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeBrand, HomeTestimonial, Country, State, City, ShippingPrice
 
 
 def _add_form_control(form):
@@ -37,6 +38,9 @@ class CategoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+
+    def clean_description(self):
+        return sanitize_html(self.cleaned_data.get('description'))
 
 
 class ProductForm(forms.ModelForm):
@@ -68,6 +72,9 @@ class ProductForm(forms.ModelForm):
         self.fields['used_attributes'].help_text = 'Solo para productos variables.'
         self.fields['brand'].required = False
 
+    def clean_description(self):
+        return sanitize_html(self.cleaned_data.get('description'))
+
 
 class BrandForm(forms.ModelForm):
     """Formulario de marca de catálogo."""
@@ -80,6 +87,9 @@ class BrandForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+
+    def clean_description(self):
+        return sanitize_html(self.cleaned_data.get('description'))
 
 
 class ProductAttributeForm(forms.ModelForm):
@@ -249,6 +259,9 @@ class OrderStatusForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
 
+    def clean_notes(self):
+        return sanitize_html(self.cleaned_data.get('notes'))
+
 
 class CouponForm(forms.ModelForm):
     """Formulario de cupón."""
@@ -268,6 +281,11 @@ class CouponForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+        if not self.instance or not self.instance.pk:
+            self.fields['code'].required = False
+            attrs = self.fields['code'].widget.attrs
+            if 'placeholder' not in attrs:
+                attrs['placeholder'] = 'Vacío = se genera automáticamente'
         for f in ('date_start', 'date_end'):
             if f in self.fields:
                 self.fields[f].input_formats = ['%Y-%m-%dT%H:%M', '%Y-%m-%d %H:%M', '%Y-%m-%d']
@@ -284,7 +302,7 @@ class SiteSettingsForm(forms.ModelForm):
             'email', 'phone', 'whatsapp',
             'address', 'city', 'state', 'country', 'postal_code',
             'business_hours',
-            'facebook_url', 'instagram_url', 'twitter_url', 'youtube_url',
+            'facebook_url', 'instagram_url', 'twitter_url', 'youtube_url', 'tiktok_url',
             'show_out_of_stock_products',
             'about_text', 'currency',
             'terms_url', 'privacy_url',
@@ -323,6 +341,9 @@ class SiteSettingsForm(forms.ModelForm):
         self.fields['state'].widget = forms.Select(choices=state_choices, attrs={**select_attrs, 'data-geo': 'state'})
         self.fields['city'].widget = forms.Select(choices=city_choices, attrs={**select_attrs, 'data-geo': 'city'})
 
+    def clean_about_text(self):
+        return sanitize_html(self.cleaned_data.get('about_text'))
+
 
 # --- Formularios Secciones del Home ---
 
@@ -346,6 +367,9 @@ class HomeHeroSlideForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
 
+    def clean_text(self):
+        return sanitize_html(self.cleaned_data.get('text'))
+
 
 class HomeAboutBlockForm(forms.ModelForm):
     class Meta:
@@ -361,11 +385,24 @@ class HomeAboutBlockForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
 
+    def clean_content(self):
+        return sanitize_html(self.cleaned_data.get('content'))
+
 
 class HomeMeatCategoryBlockForm(forms.ModelForm):
     class Meta:
         model = HomeMeatCategoryBlock
         fields = ['tagline', 'title', 'top_image', 'background_image']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)
+
+
+class HomeBrandBlockForm(forms.ModelForm):
+    class Meta:
+        model = HomeBrandBlock
+        fields = ['background_image']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -391,6 +428,9 @@ class HomeTestimonialForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
+
+    def clean_text(self):
+        return sanitize_html(self.cleaned_data.get('text'))
 
 
 class ShippingPriceForm(forms.ModelForm):
@@ -448,3 +488,15 @@ class ShippingPriceForm(forms.ModelForm):
         if d_min is not None and d_max is not None and d_min > d_max:
             raise forms.ValidationError('El mínimo de días no puede ser mayor que el máximo.')
         return data
+
+
+class ShippingFreeRuleForm(forms.ModelForm):
+    """Formulario para configurar el umbral de envío gratis."""
+
+    class Meta:
+        model = SiteSettings
+        fields = ['free_shipping_min_amount']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)

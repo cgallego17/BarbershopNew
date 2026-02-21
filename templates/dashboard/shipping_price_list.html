@@ -5,11 +5,95 @@
 {% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-    <p class="text-muted mb-0">Configura precio y días de entrega por ciudad</p>
-    <div class="d-flex gap-2">
-        <a href="{% url 'admin_panel:shipping_price_export_excel' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-file-excel"></i> Exportar a Excel</a>
-        <a href="{% url 'admin_panel:shipping_price_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Agregar precio por ciudad</a>
+<div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    <a href="{% url 'core:admin_panel:shipping_price_import_excel' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-file-import"></i> Importar Excel</a>
+    <a href="{% url 'core:admin_panel:shipping_price_export_excel' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-file-excel"></i> Exportar a Excel</a>
+    <a href="{% url 'core:admin_panel:shipping_price_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Agregar precio por ciudad</a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-truck me-2"></i>Envío gratis</h3>
+    </div>
+    <div class="admin-card__body">
+        <form method="post" action="{% url 'core:admin_panel:shipping_free_rule_update' %}" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">{{ free_shipping_form.free_shipping_min_amount.label }}</label>
+                    {{ free_shipping_form.free_shipping_min_amount }}
+                    {% if free_shipping_form.free_shipping_min_amount.errors %}
+                    <div class="text-danger small">{{ free_shipping_form.free_shipping_min_amount.errors.0 }}</div>
+                    {% endif %}
+                    <p class="small text-muted mb-0 mt-1">Si el subtotal del carrito es igual o mayor a este valor, el envío será gratis.</p>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100">Guardar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
+        {% if request.GET.q or request.GET.status or request.GET.country or request.GET.state or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:shipping_price_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Ciudad, departamento o país">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">País</label>
+                    <select name="country" class="form-select">
+                        <option value="">Todos</option>
+                        {% for c in filter_countries %}
+                        <option value="{{ c.id }}" {% if request.GET.country == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Departamento</label>
+                    <select name="state" class="form-select">
+                        <option value="">Todos</option>
+                        {% for s in filter_states %}
+                        <option value="{{ s.id }}" {% if request.GET.state == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }} ({{ s.country.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="location" {% if request.GET.sort == 'location' or not request.GET.sort %}selected{% endif %}>Ubicación A-Z</option>
+                        <option value="-location" {% if request.GET.sort == '-location' %}selected{% endif %}>Ubicación Z-A</option>
+                        <option value="city" {% if request.GET.sort == 'city' %}selected{% endif %}>Ciudad A-Z</option>
+                        <option value="-city" {% if request.GET.sort == '-city' %}selected{% endif %}>Ciudad Z-A</option>
+                        <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Precio menor</option>
+                        <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Precio mayor</option>
+                        <option value="days" {% if request.GET.sort == 'days' %}selected{% endif %}>Días menor</option>
+                        <option value="-days" {% if request.GET.sort == '-days' %}selected{% endif %}>Días mayor</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
     </div>
 </div>
 
@@ -37,13 +121,13 @@
                         <td>{% if sp.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:shipping_price_edit' sp.pk %}" class="admin-action admin-action--primary">Editar</a>
-                                <a href="{% url 'admin_panel:shipping_price_delete' sp.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                                <a href="{% url 'core:admin_panel:shipping_price_edit' sp.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'core:admin_panel:shipping_price_delete' sp.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="admin-table__empty">No hay precios de envío configurados. <a href="{% url 'admin_panel:shipping_price_create' %}">Agregar primera ciudad</a></td></tr>
+                    <tr><td colspan="6" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.country or request.GET.state %}No se encontraron resultados con los filtros aplicados. <a href="{% url 'core:admin_panel:shipping_price_list' %}">Ver todos</a>{% else %}No hay precios de envío configurados. <a href="{% url 'core:admin_panel:shipping_price_create' %}">Agregar primera ciudad</a>{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -52,9 +136,9 @@
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
 <nav class="mt-4 pagination">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>{% endif %}
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
     <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>{% endif %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
 </nav>
 {% endif %}
 {% endblock %}

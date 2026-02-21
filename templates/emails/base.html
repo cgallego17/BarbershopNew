@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="es" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}{{ site_name|default:"The BARBERSHOP" }}{% endblock %}</title>
+    <style>
+        @media only screen and (max-width:620px){
+            .email-wrapper { padding: 12px 6px !important; }
+            .email-card { border-radius: 8px !important; }
+            .email-header { padding: 22px 18px !important; }
+            .email-body { padding: 22px 18px !important; }
+            .email-footer { padding: 16px 18px !important; }
+            .email-logo { font-size: 20px !important; }
+            .btn-main { display: block !important; width: 100% !important; box-sizing: border-box !important; text-align: center !important; }
+            .order-table td { font-size: 13px !important; padding: 8px 10px !important; }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#0c0e13;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+    <!--[if mso]><table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+    <table class="email-wrapper" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+           style="background-color:#0c0e13;padding:30px 10px;">
+        <tr>
+            <td align="center">
+                <table class="email-card" role="presentation" width="600" cellspacing="0" cellpadding="0" border="0"
+                       style="max-width:600px;width:100%;background-color:#161921;border-radius:14px;overflow:hidden;border:1px solid #272c38;">
+
+                    <!-- HEADER -->
+                    <tr>
+                        <td class="email-header"
+                            style="padding:28px 32px;background:linear-gradient(135deg,#c56533 0%,#a04a22 45%,#1a1f2d 100%);">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td>
+                                        <p class="email-logo" style="margin:0 0 6px 0;font-size:24px;font-weight:900;color:#ffffff;letter-spacing:2px;text-transform:uppercase;">
+                                            ✂ {{ site_name|default:"The BARBERSHOP" }}
+                                        </p>
+                                        <p style="margin:0;font-size:12px;color:#f5dece;letter-spacing:1px;text-transform:uppercase;">
+                                            Experiencia premium
+                                        </p>
+                                    </td>
+                                    <td align="right" style="vertical-align:middle;">
+                                        <p style="margin:0;font-size:11px;color:#f5dece;opacity:.75;">
+                                            {% block header_label %}Notificación{% endblock %}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- DIVIDER LINE -->
+                    <tr>
+                        <td style="height:3px;background:linear-gradient(90deg,#c56533,#e07a40,#c56533);"></td>
+                    </tr>
+
+                    <!-- BODY -->
+                    <tr>
+                        <td class="email-body" style="padding:28px 32px;">
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <!-- FOOTER -->
+                    <tr>
+                        <td class="email-footer"
+                            style="padding:20px 32px;background-color:#111318;border-top:1px solid #272c38;">
+                            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                                <tr>
+                                    <td>
+                                        <p style="margin:0 0 6px 0;font-size:12px;color:#8892a4;line-height:1.6;">
+                                            Este correo fue generado automáticamente. Por favor no respondas a este mensaje.
+                                        </p>
+                                        {% if site_settings.email %}
+                                        <p style="margin:0;font-size:12px;color:#8892a4;">
+                                            Soporte:
+                                            <a href="mailto:{{ site_settings.email }}"
+                                               style="color:#e07a40;text-decoration:none;">{{ site_settings.email }}</a>
+                                        </p>
+                                        {% endif %}
+                                        {% if site_settings.phone %}
+                                        <p style="margin:4px 0 0 0;font-size:12px;color:#8892a4;">
+                                            Tel: {{ site_settings.phone }}
+                                        </p>
+                                        {% endif %}
+                                    </td>
+                                    <td align="right" style="vertical-align:bottom;padding-left:12px;">
+                                        <p style="margin:0;font-size:10px;color:#4a5568;line-height:1.4;">
+                                            © {{ site_name|default:"The BARBERSHOP" }}<br>
+                                            Todos los derechos reservados
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+    <!--[if mso]></td></tr></table><![endif]-->
+</body>
+</html>

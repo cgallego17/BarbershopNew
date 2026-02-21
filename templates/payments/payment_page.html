@@ -5,166 +5,231 @@
 
 {% block extra_css %}
 <style>
-/* ===== PAYMENT PAGE ===== */
+/* ==============================
+   PAYMENT PAGE — Premium design
+   ============================== */
 .pay-section {
-    background: #f2f3f5;
-    min-height: 80vh;
-    padding: 60px 0 80px;
-    display: flex; align-items: flex-start;
+    background: #0f0f12;
+    min-height: 100vh;
+    padding: 48px 0 64px;
+    position: relative;
+}
+.pay-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 30% 0%, rgba(197,101,51,.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(79,70,229,.12) 0%, transparent 55%);
+    pointer-events: none;
 }
 
-.pay-wrap {
-    max-width: 560px; margin: 0 auto; width: 100%;
+/* Encabezado */
+.pay-top {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+    margin-bottom: 28px;
+}
+.pay-top__brand {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 1rem; font-weight: 900; color: #fff; letter-spacing: .04em;
+    text-decoration: none;
+}
+.pay-top__brand i { color: var(--boskery-base, #C56533); }
+.pay-top__ref { font-size: .75rem; color: #606070; font-weight: 600; }
+.pay-sandbox-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(253,224,71,.12); border: 1px solid rgba(253,224,71,.3); border-radius: 20px;
+    padding: 5px 12px; font-size: .7rem; font-weight: 700; color: #fbbf24;
 }
 
-/* Cabecera */
-.pay-header {
-    text-align: center; margin-bottom: 30px;
-}
-.pay-header__logo {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-size: 1.3rem; font-weight: 800; color: #1a1a2e; margin-bottom: 8px;
-}
-.pay-header__logo i { color: var(--boskery-base, #C56533); font-size: 1.4rem; }
-.pay-header__sub {
-    font-size: .82rem; color: #999; letter-spacing: .05em;
+/* Layout dos columnas */
+.pay-layout {
+    display: grid;
+    grid-template-columns: minmax(0,1.05fr) minmax(0,.95fr);
+    gap: 16px;
+    align-items: start;
 }
 
-/* Card principal */
+/* Cards */
 .pay-card {
-    background: #fff;
-    border-radius: 22px;
-    border: 1px solid #e8e8ec;
-    box-shadow: 0 4px 30px rgba(0,0,0,.08);
+    background: #1a1a22;
+    border: 1px solid #2a2a36;
+    border-radius: 18px;
     overflow: hidden;
 }
+.pay-card--light {
+    background: #fff;
+    border-color: #e8e8ee;
+    box-shadow: 0 8px 40px rgba(0,0,0,.12);
+}
+.pay-card__head {
+    padding: 16px 20px 0;
+}
+.pay-card__title {
+    font-size: .65rem; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: #5a5a70; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+}
+.pay-card__title i { color: var(--boskery-base, #C56533); font-size: .7rem; }
+.pay-card__body { padding: 0 20px 18px; }
 
-/* Resumen del pedido */
-.pay-summary {
-    padding: 26px 30px 20px;
-    border-bottom: 1px solid #f0f0f4;
+/* Chips de meta */
+.pay-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.pay-meta__chip {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 999px; padding: 4px 10px;
+    font-size: .7rem; color: #9898b0; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 5px;
 }
-.pay-summary__title {
-    font-size: .65rem; font-weight: 800; letter-spacing: .15em;
-    text-transform: uppercase; color: #aaa; margin-bottom: 16px;
+.pay-meta__chip i { opacity: .6; }
+.pay-status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    border-radius: 999px; padding: 4px 10px;
+    font-size: .7rem; font-weight: 800; border: 1px solid transparent;
 }
-.pay-items { list-style: none; padding: 0; margin: 0 0 16px; }
+.pay-status-badge--pending    { background: #2d1a0a; color: #fb923c; border-color: #7c2d12; }
+.pay-status-badge--processing { background: #0a1f2d; color: #38bdf8; border-color: #0c4a6e; }
+.pay-status-badge--completed  { background: #0a2d14; color: #4ade80; border-color: #14532d; }
+.pay-status-badge--failed, .pay-status-badge--cancelled, .pay-status-badge--refunded { background: #2d0a0a; color: #f87171; border-color: #7f1d1d; }
+.pay-status-badge--on_hold    { background: #1a0a2d; color: #c084fc; border-color: #581c87; }
+
+/* Lista de productos */
+.pay-items { list-style: none; padding: 0; margin: 0 0 12px; }
 .pay-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f5f5f7;
+    padding: 9px 0; border-bottom: 1px solid #23232f;
 }
 .pay-item:last-child { border-bottom: none; }
 .pay-item__img-wrap {
     position: relative; flex-shrink: 0;
-    width: 48px; height: 48px; border-radius: 10px;
-    border: 1px solid #eee; overflow: hidden;
-    background: #f9f9f9;
+    width: 46px; height: 46px; border-radius: 10px;
+    border: 1px solid #2e2e3e; overflow: hidden; background: #121218;
 }
 .pay-item__img-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .pay-item__qty {
     position: absolute; top: -5px; right: -5px;
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 17px; height: 17px; border-radius: 50%;
     background: var(--boskery-base, #C56533); color: #fff;
-    font-size: .58rem; font-weight: 800;
+    font-size: .55rem; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid #1a1a22;
 }
 .pay-item__name {
-    flex: 1; font-size: .85rem; font-weight: 600; color: #2a2a3d;
-    line-height: 1.3;
+    flex: 1; font-size: .83rem; font-weight: 600; color: #e0e0ec; line-height: 1.3;
 }
-.pay-item__variant { font-size: .72rem; color: #aaa; font-weight: 400; }
-.pay-item__price { font-size: .9rem; font-weight: 700; color: #1a1a2e; flex-shrink: 0; }
+.pay-item__variant { font-size: .7rem; color: #5a5a70; font-weight: 400; }
+.pay-item__price { font-size: .88rem; font-weight: 700; color: #c8c8e0; flex-shrink: 0; }
 
-/* Totales resumen */
-.pay-totals { }
+/* Totales */
+.pay-totals { border-top: 1px solid #23232f; padding-top: 10px; }
 .pay-total-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 5px 0; font-size: .85rem; color: #666;
+    padding: 4px 0; font-size: .83rem; color: #68687e;
 }
-.pay-total-row--discount { color: #16a34a; font-weight: 600; }
+.pay-total-row span:last-child { font-weight: 700; color: #a0a0b8; }
+.pay-total-row--discount { }
+.pay-total-row--discount span { color: #4ade80 !important; }
 .pay-grand {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 14px 0 0;
-    margin-top: 10px;
-    border-top: 2px solid #1a1a2e;
+    padding: 12px 0 0; margin-top: 6px;
+    border-top: 1px solid rgba(255,255,255,.08);
 }
-.pay-grand__label { font-size: .9rem; font-weight: 800; color: #1a1a2e; }
-.pay-grand__val {
-    font-size: 1.4rem; font-weight: 900; color: var(--boskery-base, #C56533);
-    letter-spacing: -.01em;
-}
+.pay-grand__label { font-size: .88rem; font-weight: 800; color: #fff; }
+.pay-grand__val { font-size: 1.45rem; font-weight: 900; color: var(--boskery-base, #C56533); letter-spacing: -.01em; }
 
-/* Sección botón de pago */
-.pay-action {
-    padding: 28px 30px 30px;
-    text-align: center;
+/* Botón pago */
+.pay-action-wrap { text-align: center; }
+.pay-action__label {
+    font-size: .62rem; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: #4a4a5e; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px; justify-content: center;
 }
-.pay-action__title {
-    font-size: .72rem; font-weight: 700; letter-spacing: .12em;
-    text-transform: uppercase; color: #aaa; margin-bottom: 20px;
-}
-
-/* Botón Wompi */
 .pay-wompi-btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 12px;
-    width: 100%; padding: 18px 24px;
-    background: linear-gradient(135deg, #6D28D9 0%, #4F46E5 100%);
-    color: #fff; font-size: 1rem; font-weight: 800; letter-spacing: .02em;
+    display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+    width: 100%; padding: 17px 22px;
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    color: #fff; font-size: .95rem; font-weight: 800; letter-spacing: .01em;
     border: none; border-radius: 14px; cursor: pointer;
     text-decoration: none;
-    box-shadow: 0 6px 24px rgba(79,70,229,.35);
+    box-shadow: 0 6px 30px rgba(124,58,237,.4);
     transition: transform .18s, box-shadow .18s, opacity .18s;
 }
 .pay-wompi-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 32px rgba(79,70,229,.45);
+    box-shadow: 0 12px 36px rgba(124,58,237,.55);
     color: #fff; text-decoration: none;
 }
 .pay-wompi-btn:active { transform: translateY(0); }
 .pay-wompi-btn__logo {
-    background: rgba(255,255,255,.18); border-radius: 8px;
-    padding: 4px 10px; font-size: .75rem; font-weight: 900;
-    letter-spacing: .08em; color: #fff;
+    background: rgba(255,255,255,.15); border-radius: 8px;
+    padding: 5px 10px; font-size: .72rem; font-weight: 900;
+    letter-spacing: .1em;
 }
 .pay-wompi-btn__text { display: flex; flex-direction: column; align-items: flex-start; }
-.pay-wompi-btn__text span:first-child { font-size: .7rem; opacity: .75; font-weight: 600; }
-.pay-wompi-btn__text strong { font-size: 1rem; font-weight: 900; }
+.pay-wompi-btn__text span:first-child { font-size: .68rem; opacity: .7; font-weight: 600; }
+.pay-wompi-btn__text strong { font-size: .95rem; font-weight: 900; }
+
+/* Divider */
+.pay-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 16px 0; color: #3a3a4e; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+}
+.pay-divider::before, .pay-divider::after { content: ''; flex: 1; height: 1px; background: #2a2a36; }
+
+/* Métodos */
+.pay-methods {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px;
+}
+.pay-method-badge {
+    background: rgba(255,255,255,.04); border: 1px solid #2e2e3e;
+    border-radius: 8px; padding: 5px 10px;
+    font-size: .68rem; font-weight: 700; color: #6a6a80;
+    display: inline-flex; align-items: center; gap: 5px;
+}
+.pay-method-badge i { opacity: .7; }
 
 /* Seguridad */
 .pay-security {
+    margin-top: 14px;
     display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 14px; font-size: .74rem; color: #aaa;
+    font-size: .72rem; color: #4a4a5e;
 }
-.pay-security i { color: #22c55e; font-size: .8rem; }
+.pay-security i { color: #22c55e; }
 
-/* Métodos aceptados */
-.pay-methods {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    margin-top: 18px; flex-wrap: wrap;
+/* Dirección */
+.pay-address {
+    font-size: .78rem; color: #68687e; line-height: 1.6;
+    padding: 10px 12px; background: rgba(255,255,255,.03);
+    border: 1px solid #2a2a36; border-radius: 10px;
+    margin-bottom: 0;
 }
-.pay-method-badge {
-    background: #f5f5f8; border: 1px solid #e8e8ec; border-radius: 8px;
-    padding: 5px 10px; font-size: .7rem; font-weight: 700; color: #555;
-    display: flex; align-items: center; gap: 5px;
+.pay-address strong { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #4a4a5e; margin-bottom: 4px; }
+
+/* Error */
+.pay-alert {
+    border-radius: 12px; border: 1px solid #7f1d1d;
+    background: #2d0a0a; color: #fca5a5;
+    padding: 12px 14px; font-size: .82rem; font-weight: 600; text-align: left;
 }
-.pay-method-badge i { font-size: .8rem; }
 
 /* Volver */
 .pay-back {
-    display: block; text-align: center;
-    margin-top: 20px; font-size: .8rem; color: #aaa;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-top: 16px; font-size: .78rem; color: #4a4a5e;
     text-decoration: none; transition: color .18s;
 }
 .pay-back:hover { color: var(--boskery-base, #C56533); }
-.pay-back i { margin-right: 4px; }
 
-/* Sandbox badge */
-.pay-sandbox-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: #fef9c3; border: 1px solid #fde047; border-radius: 20px;
-    padding: 5px 14px; font-size: .72rem; font-weight: 700; color: #854d0e;
-    margin-bottom: 16px;
+/* Responsive */
+@media (max-width: 991px) {
+    .pay-layout { grid-template-columns: 1fr; }
+    .pay-card--sticky { position: static !important; }
+}
+@media (max-width: 575px) {
+    .pay-section { padding: 28px 0 40px; }
+    .pay-top { margin-bottom: 18px; }
+    .pay-card { border-radius: 14px; }
+    .pay-card__head { padding: 14px 16px 0; }
+    .pay-card__body { padding: 0 16px 16px; }
+    .pay-item__img-wrap { width: 40px; height: 40px; }
 }
 </style>
 {% endblock %}
@@ -172,54 +237,54 @@
 {% block content %}
 <section class="pay-section">
     <div class="container">
-        <div class="pay-wrap">
 
-            <!-- Header -->
-            <div class="pay-header">
-                <div class="pay-header__logo">
-                    <i class="fas fa-lock"></i>
-                    Pago seguro
+        <!-- Top bar -->
+        <div class="pay-top">
+            <a href="{% url 'core:home' %}" class="pay-top__brand">
+                <i class="fas fa-lock"></i>
+                Pago seguro
+            </a>
+            <span class="pay-top__ref">Ref: {{ order.order_number }}</span>
+            {% if wompi_env == 'sandbox' %}
+            <span class="pay-sandbox-badge"><i class="fas fa-flask"></i> Modo de prueba</span>
+            {% endif %}
+        </div>
+
+        <div class="pay-layout">
+
+            <!-- === Columna izquierda: Resumen === -->
+            <div class="pay-card" style="position:sticky;top:90px;">
+                <div class="pay-card__head">
+                    <p class="pay-card__title"><i class="fas fa-receipt"></i> Resumen del pedido</p>
                 </div>
-                <p class="pay-header__sub">Transacción cifrada y protegida</p>
-                {% if wompi_env == 'sandbox' %}
-                <div class="pay-sandbox-badge">
-                    <i class="fas fa-flask"></i> Modo de prueba (sandbox)
-                </div>
-                {% endif %}
-            </div>
+                <div class="pay-card__body">
 
-            <!-- Card -->
-            <div class="pay-card">
+                    <!-- Meta chips -->
+                    <div class="pay-meta">
+                        <span class="pay-meta__chip"><i class="far fa-calendar-alt"></i> {{ order.created_at|date:"d/m/Y" }}</span>
+                        <span class="pay-meta__chip"><i class="far fa-envelope"></i> {{ order.billing_email }}</span>
+                        <span class="pay-status-badge pay-status-badge--{{ order.status }}">
+                            <i class="fas fa-circle" style="font-size:.38rem;"></i> {{ order.get_status_display }}
+                        </span>
+                    </div>
 
-                <!-- Resumen del pedido -->
-                <div class="pay-summary">
-                    <p class="pay-summary__title">
-                        <i class="fas fa-shopping-bag" style="margin-right:5px;"></i>
-                        Resumen · {{ order.order_number }}
-                    </p>
-
+                    <!-- Productos -->
                     <ul class="pay-items">
                         {% for item in order.items.all %}
                         <li class="pay-item">
                             <div class="pay-item__img-wrap">
                                 {% if item.product.images.first %}
-                                <img src="{{ item.product.images.first.image.url }}"
-                                     alt="{{ item.product_name }}" loading="lazy">
+                                <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product_name }}" loading="lazy">
                                 {% else %}
-                                <img src="{% static 'assets/images/products/product-1-1.png' %}"
-                                     alt="{{ item.product_name }}">
+                                <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ item.product_name }}">
                                 {% endif %}
                                 <span class="pay-item__qty">{{ item.quantity }}</span>
                             </div>
                             <div class="pay-item__name">
                                 {{ item.product_name }}
-                                {% if item.variant %}
-                                <span class="pay-item__variant">· {{ item.variant.attributes_display }}</span>
-                                {% endif %}
+                                {% if item.variant %}<span class="pay-item__variant">· {{ item.variant.attributes_display }}</span>{% endif %}
                             </div>
-                            <span class="pay-item__price">
-                                {{ site_settings.currency }}{{ item.total|floatformat:0|intcomma }}
-                            </span>
+                            <span class="pay-item__price">{{ site_settings.currency }}{{ item.total|floatformat:0|intcomma }}</span>
                         </li>
                         {% endfor %}
                     </ul>
@@ -232,89 +297,106 @@
                         </div>
                         {% if order.discount_total %}
                         <div class="pay-total-row pay-total-row--discount">
-                            <span><i class="fas fa-tag" style="font-size:.7rem;margin-right:4px;"></i>Descuento
-                                {% if order.coupon_code %}({{ order.coupon_code }}){% endif %}
-                            </span>
+                            <span><i class="fas fa-tag" style="font-size:.65rem;margin-right:3px;"></i>Descuento{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span>
                             <span>−{{ site_settings.currency }}{{ order.discount_total|floatformat:0|intcomma }}</span>
                         </div>
                         {% endif %}
+                        <div class="pay-total-row">
+                            <span>Envío</span>
+                            <span>{% if order.shipping_total > 0 %}{{ site_settings.currency }}{{ order.shipping_total|floatformat:0|intcomma }}{% else %}<span style="color:#4ade80;">Gratis</span>{% endif %}</span>
+                        </div>
                     </div>
                     <div class="pay-grand">
-                        <span class="pay-grand__label">Total a pagar</span>
-                        <span class="pay-grand__val">
-                            {{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}
-                        </span>
+                        <span class="pay-grand__label">Total</span>
+                        <span class="pay-grand__val">{{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}</span>
                     </div>
-                </div>
 
-                <!-- Botón de pago -->
-                <div class="pay-action">
-                    <p class="pay-action__title">
-                        <i class="fas fa-credit-card" style="margin-right:5px;"></i>
-                        Elige tu método de pago
-                    </p>
-
-                    <!-- Formulario que redirige a Wompi Hosted Checkout -->
-                    <form action="https://checkout.wompi.co/p/" method="GET" id="wompi-form">
-                        <input type="hidden" name="public-key"         value="{{ public_key }}">
-                        <input type="hidden" name="currency"           value="{{ currency }}">
-                        <input type="hidden" name="amount-in-cents"    value="{{ amount_cents }}">
-                        <input type="hidden" name="reference"          value="{{ reference }}">
-                        <input type="hidden" name="redirect-url"       value="{{ redirect_url }}">
-                        <input type="hidden" name="signature:integrity" value="{{ integrity_hash }}">
-                        <!-- Datos opcionales del cliente -->
-                        <input type="hidden" name="customer-data:email"
-                               value="{{ order.billing_email }}">
-                        <input type="hidden" name="customer-data:full-name"
-                               value="{{ order.billing_first_name }} {{ order.billing_last_name }}">
-                        <input type="hidden" name="customer-data:phone-number"
-                               value="{{ order.billing_phone }}">
-
-                        <button type="submit" class="pay-wompi-btn" id="pay-btn">
-                            <div class="pay-wompi-btn__logo">wompi</div>
-                            <div class="pay-wompi-btn__text">
-                                <span>Pagar con</span>
-                                <strong>{{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }} COP</strong>
-                            </div>
-                            <i class="fas fa-arrow-right"></i>
-                        </button>
-                    </form>
-
-                    <!-- Seguridad -->
-                    <p class="pay-security">
-                        <i class="fas fa-shield-alt"></i>
-                        Conexión segura SSL · Datos cifrados
-                    </p>
-
-                    <!-- Métodos aceptados -->
-                    <div class="pay-methods">
-                        <span class="pay-method-badge"><i class="fas fa-credit-card"></i> Crédito/Débito</span>
-                        <span class="pay-method-badge"><i class="fas fa-university"></i> PSE</span>
-                        <span class="pay-method-badge"><i class="fas fa-money-bill-wave"></i> Efectivo</span>
-                        <span class="pay-method-badge"><i class="fas fa-wallet"></i> Nequi</span>
-                        <span class="pay-method-badge"><i class="fas fa-mobile-alt"></i> Daviplata</span>
+                    <!-- Dirección -->
+                    {% if order.billing_address %}
+                    <div style="margin-top:14px;">
+                        <div class="pay-address">
+                            <strong><i class="fas fa-map-marker-alt" style="margin-right:4px;"></i>Dirección de envío</strong>
+                            {{ order.billing_address }}{% if order.billing_city %}, {{ order.billing_city }}{% endif %}{% if order.billing_state %}, {{ order.billing_state }}{% endif %}
+                        </div>
                     </div>
+                    {% endif %}
                 </div>
             </div>
 
-            <!-- Volver -->
-            <a href="{% url 'products:list' %}" class="pay-back">
-                <i class="fas fa-arrow-left"></i> Seguir comprando
-            </a>
+            <!-- === Columna derecha: Pago === -->
+            <div class="pay-card pay-card--light pay-card--sticky" style="position:sticky;top:90px;">
+                <div class="pay-card__head">
+                    <p class="pay-card__title" style="color:#9090a4;"><i class="fas fa-credit-card"></i> Completa tu pago</p>
+                </div>
+                <div class="pay-card__body">
 
+                    <div class="pay-action-wrap">
+                        <div class="pay-action__label"><i class="fas fa-shield-alt" style="color:#22c55e;"></i> Pago 100% seguro</div>
+
+                        {% if public_key and integrity_hash %}
+                        <form action="https://checkout.wompi.co/p/" method="GET" id="wompi-form">
+                            <input type="hidden" name="public-key"          value="{{ public_key }}">
+                            <input type="hidden" name="currency"            value="{{ currency }}">
+                            <input type="hidden" name="amount-in-cents"     value="{{ amount_cents }}">
+                            <input type="hidden" name="reference"           value="{{ reference }}">
+                            <input type="hidden" name="redirect-url"        value="{{ redirect_url }}">
+                            <input type="hidden" name="signature:integrity" value="{{ integrity_hash }}">
+                            <input type="hidden" name="customer-data:email"        value="{{ order.billing_email }}">
+                            <input type="hidden" name="customer-data:full-name"    value="{{ order.billing_first_name }} {{ order.billing_last_name }}">
+                            <input type="hidden" name="customer-data:phone-number" value="{{ order.billing_phone }}">
+
+                            <button type="submit" class="pay-wompi-btn" id="pay-btn">
+                                <div class="pay-wompi-btn__logo">wompi</div>
+                                <div class="pay-wompi-btn__text">
+                                    <span>Pagar ahora</span>
+                                    <strong>{{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }} COP</strong>
+                                </div>
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </form>
+                        {% else %}
+                        <div class="pay-alert"><i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>No se pudo inicializar Wompi. Verifica las credenciales en `.env`.</div>
+                        {% endif %}
+
+                        <div class="pay-divider">Métodos aceptados</div>
+
+                        <div class="pay-methods">
+                            <span class="pay-method-badge"><i class="fas fa-credit-card"></i> Crédito/Débito</span>
+                            <span class="pay-method-badge"><i class="fas fa-university"></i> PSE</span>
+                            <span class="pay-method-badge"><i class="fas fa-money-bill-wave"></i> Efectivo</span>
+                            <span class="pay-method-badge"><i class="fas fa-wallet"></i> Nequi</span>
+                            <span class="pay-method-badge"><i class="fas fa-mobile-alt"></i> Daviplata</span>
+                        </div>
+
+                        <p class="pay-security">
+                            <i class="fas fa-lock"></i> Conexión SSL cifrada
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-shield-alt"></i> Datos protegidos
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <!-- Volver -->
+        <a href="{% url 'products:list' %}" class="pay-back">
+            <i class="fas fa-arrow-left"></i> Volver a la tienda
+        </a>
+
     </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Prevenir doble envío
-document.getElementById('wompi-form').addEventListener('submit', function() {
-    const btn = document.getElementById('pay-btn');
-    btn.style.opacity = '.6';
-    btn.style.pointerEvents = 'none';
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirigiendo a Wompi…';
-});
+var wompiForm = document.getElementById('wompi-form');
+if (wompiForm) {
+    wompiForm.addEventListener('submit', function () {
+        var btn = document.getElementById('pay-btn');
+        btn.style.opacity = '.6';
+        btn.style.pointerEvents = 'none';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>&nbsp; Redirigiendo a Wompi…';
+    });
+}
 </script>
 {% endblock %}

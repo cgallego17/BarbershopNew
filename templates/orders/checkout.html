@@ -1,53 +1,60 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize l10n %}
 
 {% block title %}Pagar pedido{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block meta_description %}Finaliza tu compra de forma segura en {{ site_settings.site_name }}. Revisa tus datos, envío y método de pago.{% endblock %}
+{% block og_title %}Checkout seguro | {{ site_settings.site_name }}{% endblock %}
+{% block og_description %}Completa tu pedido en pocos pasos con total seguridad.{% endblock %}
+{% block twitter_title %}Checkout seguro | {{ site_settings.site_name }}{% endblock %}
+{% block twitter_description %}Finaliza tu compra de forma rápida y segura.{% endblock %}
 
 {% block extra_css %}
 <style>
 /* =====================================================================
-   CHECKOUT PAGE
+   CHECKOUT PAGE - Compact
    ===================================================================== */
-.co-section { background: #f2f3f5; padding: 56px 0 80px; }
+.co-section { background: #f2f3f5; padding: 24px 0 36px; }
 
 /* ---- Card base ---- */
 .co-card {
     background: #fff;
-    border-radius: 18px;
+    border-radius: 10px;
     border: 1px solid #e8e8ec;
-    box-shadow: 0 2px 14px rgba(0,0,0,.06);
-    padding: 32px 30px;
-    margin-bottom: 20px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.04);
+    padding: 14px 18px;
+    margin-bottom: 10px;
 }
 
 /* ---- Sección título ---- */
 .co-section-title {
-    font-size: .7rem; font-weight: 800;
-    letter-spacing: .13em; text-transform: uppercase;
+    font-size: .6rem; font-weight: 800;
+    letter-spacing: .1em; text-transform: uppercase;
     color: var(--boskery-base, #C56533);
-    margin-bottom: 22px;
-    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 5px;
 }
 .co-section-title::after { content: ''; flex: 1; height: 1px; background: #f0f0f4; }
-.co-section-title i { opacity: .8; }
+.co-section-title i { opacity: .8; font-size: .75rem; }
 
 /* ---- Campos ---- */
 .co-field {
-    display: flex; flex-direction: column; gap: 5px;
-    margin-bottom: 16px;
+    display: flex; flex-direction: column; gap: 2px;
+    margin-bottom: 8px;
 }
+.co-field:last-child { margin-bottom: 0; }
 .co-field label {
-    font-size: .72rem; font-weight: 700;
-    letter-spacing: .07em; text-transform: uppercase; color: #888;
+    font-size: .65rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; color: #888;
 }
 .co-field input,
 .co-field select,
 .co-field textarea {
     width: 100%;
-    padding: 11px 15px;
-    border: 1.5px solid #e4e4e8;
-    border-radius: 10px;
-    font-size: .9rem; color: #222;
+    padding: 6px 10px;
+    border: 1px solid #e4e4e8;
+    border-radius: 6px;
+    font-size: .82rem; color: #222;
     background: #fafafa; outline: none;
     transition: border-color .18s, background .18s;
     font-family: inherit;
@@ -57,10 +64,10 @@
 .co-field select:focus { border-color: var(--boskery-base, #C56533); background: #fff; }
 .co-field input::placeholder { color: #bbb; }
 .co-radio-option {
-    display: flex; align-items: center; gap: 8px;
-    padding: 12px 14px; border-radius: 10px;
-    border: 1.5px solid #e4e4e8; background: #fafafa;
-    cursor: pointer; font-size: .9rem; font-weight: 600; color: #333;
+    display: flex; align-items: center; gap: 5px;
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px solid #e4e4e8; background: #fafafa;
+    cursor: pointer; font-size: .8rem; font-weight: 600; color: #333;
     transition: border-color .18s, background .18s;
 }
 .co-radio-option input { margin: 0; }
@@ -68,222 +75,179 @@
 .co-person-only { transition: opacity .2s; }
 .co-person-only.co-hidden { display: none !important; }
 .co-field select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 14px center;
-    padding-right: 36px;
+    background-position: right 10px center;
+    padding-right: 32px;
 }
 
-/* ---- Cupón integrado en resumen ---- */
 .co-coupon-section {
     border-top: 1px dashed #e4e4e8;
-    margin: 6px 0 2px;
-    padding-top: 6px;
+    margin: 4px 0 2px;
+    padding-top: 4px;
 }
 .co-coupon-toggle {
     width: 100%; background: none; border: none; cursor: pointer;
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 2px; color: #666; font-size: .82rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 2px; color: #666; font-size: .78rem; font-weight: 600;
     font-family: inherit; text-align: left;
     transition: color .18s;
 }
 .co-coupon-toggle:hover { color: var(--boskery-base, #C56533); }
-.co-coupon-toggle i:first-child { color: var(--boskery-base, #C56533); font-size: .85rem; }
+.co-coupon-toggle i:first-child { color: var(--boskery-base, #C56533); font-size: .8rem; }
 .co-coupon-toggle span { flex: 1; }
-.co-coupon-chevron {
-    font-size: .65rem; transition: transform .22s;
-}
+.co-coupon-chevron { font-size: .6rem; transition: transform .22s; }
 .co-coupon-chevron.open { transform: rotate(180deg); }
-.co-coupon-body { padding: 10px 0 4px; }
+.co-coupon-body { padding: 6px 0 2px; }
 
-/* ---- Términos y política (checkboxes) ---- */
 .co-legal-checkboxes {
-    margin: 16px 0 20px;
-    padding: 14px 0;
+    margin: 10px 0 12px;
+    padding: 10px 0;
     border-top: 1px dashed #e4e4e8;
 }
 .co-checkbox-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    font-size: .85rem;
-    color: #444;
-    margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 8px;
+    cursor: pointer; font-size: .78rem; color: #444;
+    margin-bottom: 6px;
 }
 .co-checkbox-row:last-child { margin-bottom: 0; }
-.co-checkbox-row input {
-    margin: 3px 0 0;
-    flex-shrink: 0;
-}
+.co-checkbox-row input { margin: 2px 0 0; flex-shrink: 0; }
 .co-checkbox-row a {
     color: var(--boskery-base, #C56533);
     text-decoration: underline;
 }
 .co-checkbox-row a:hover { text-decoration: none; }
 
-/* ---- Cupón ---- */
-.co-coupon-row { display: flex; gap: 10px; }
-.co-coupon-input-wrap {
-    position: relative; flex: 1;
-}
+.co-coupon-row { display: flex; gap: 8px; }
+.co-coupon-input-wrap { position: relative; flex: 1; }
 .co-coupon-icon {
-    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
-    color: #ccc; font-size: .85rem; pointer-events: none;
-    transition: color .18s;
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    color: #ccc; font-size: .8rem; pointer-events: none;
 }
 .co-coupon-input-wrap input {
-    width: 100%; padding: 11px 15px 11px 38px;
-    border: 1.5px solid #e4e4e8; border-radius: 10px;
-    font-size: .9rem; color: #222; background: #fafafa;
-    outline: none; font-family: inherit; letter-spacing: .06em; font-weight: 700;
+    width: 100%; padding: 8px 12px 8px 34px;
+    border: 1px solid #e4e4e8; border-radius: 8px;
+    font-size: .85rem; color: #222; background: #fafafa;
+    outline: none; font-family: inherit; letter-spacing: .05em; font-weight: 600;
     transition: border-color .18s, background .18s;
 }
-.co-coupon-input-wrap input::placeholder { color: #c0c0c6; font-weight: 400; letter-spacing: .02em; }
+.co-coupon-input-wrap input::placeholder { color: #c0c0c6; font-weight: 400; }
 .co-coupon-input-wrap input:focus { border-color: var(--boskery-base,#C56533); background: #fff; }
-.co-coupon-input-wrap input:focus + .co-coupon-icon,
 .co-coupon-input-wrap:focus-within .co-coupon-icon { color: var(--boskery-base,#C56533); }
 .co-coupon-btn {
-    padding: 11px 20px; border-radius: 10px;
-    border: 1.5px solid var(--boskery-base, #C56533);
+    padding: 8px 16px; border-radius: 8px;
+    border: 1px solid var(--boskery-base, #C56533);
     background: transparent; color: var(--boskery-base, #C56533);
-    font-size: .85rem; font-weight: 700; cursor: pointer;
-    white-space: nowrap;
-    transition: background .18s, color .18s, opacity .18s;
-    flex-shrink: 0;
+    font-size: .8rem; font-weight: 700; cursor: pointer;
+    white-space: nowrap; flex-shrink: 0;
+    transition: background .18s, color .18s;
 }
 .co-coupon-btn:hover { background: var(--boskery-base, #C56533); color: #fff; }
 .co-coupon-btn:disabled { opacity: .5; cursor: default; }
 
-/* Feedback cupón */
 .co-coupon-msg {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 14px; border-radius: 10px;
-    font-size: .84rem; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: .8rem; font-weight: 600;
 }
-.co-coupon-msg--error {
-    background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
-}
-.co-coupon-msg--success {
-    background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0;
-}
-.co-coupon-msg i { font-size: .9rem; flex-shrink: 0; }
+.co-coupon-msg--error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.co-coupon-msg--success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 
-/* Tag cupón aplicado */
 .co-coupon-tag {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 8px 14px; border-radius: 20px;
-    background: rgba(34,197,94,.08);
-    border: 1px solid rgba(34,197,94,.3);
-    color: #16a34a; font-size: .84rem; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 16px;
+    background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3);
+    color: #16a34a; font-size: .8rem; font-weight: 700;
 }
-.co-coupon-tag button {
-    background: none; border: none; cursor: pointer;
-    color: #16a34a; font-size: .7rem; padding: 0;
-    opacity: .7; transition: opacity .15s;
-    display: flex; align-items: center;
-}
-.co-coupon-tag button:hover { opacity: 1; }
+.co-coupon-tag button { background: none; border: none; cursor: pointer; color: #16a34a; font-size: .65rem; padding: 0; opacity: .7; }
 
 /* Spinner en botón */
 .co-coupon-btn .fa-spinner { display: none; }
 .co-coupon-btn.loading .fa-spinner { display: inline-block; }
 .co-coupon-btn.loading .btn-text { display: none; }
 
-/* ---- Pasos / progreso ---- */
-.co-steps {
-    display: flex; align-items: center; gap: 0;
-    margin-bottom: 32px;
-}
-.co-step {
-    display: flex; align-items: center; gap: 8px;
-    font-size: .78rem; font-weight: 700; color: #bbb;
-}
+.co-steps { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
+.co-step { display: flex; align-items: center; gap: 6px; font-size: .72rem; font-weight: 700; color: #bbb; }
 .co-step__num {
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 24px; height: 24px; border-radius: 50%;
     background: #ebebeb; color: #aaa;
     display: flex; align-items: center; justify-content: center;
-    font-size: .72rem; font-weight: 800; flex-shrink: 0;
+    font-size: .65rem; font-weight: 800; flex-shrink: 0;
 }
 .co-step.active .co-step__num { background: var(--boskery-base, #C56533); color: #fff; }
 .co-step.active { color: #1a1a1a; }
 .co-step.done .co-step__num { background: #22c55e; color: #fff; }
-.co-step-line { flex: 1; height: 1px; background: #e8e8ec; margin: 0 10px; }
+.co-step-line { flex: 1; height: 1px; background: #e8e8ec; margin: 0 8px; }
 
-/* ---- Resumen del pedido ---- */
-.co-order-items { margin-bottom: 20px; }
+.co-order-items { margin-bottom: 12px; max-height: 180px; overflow-y: auto; }
 .co-order-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 12px 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0;
     border-bottom: 1px solid #f5f5f8;
 }
 .co-order-item:last-child { border-bottom: none; }
 .co-order-item__img {
     position: relative; flex-shrink: 0;
-    width: 56px; height: 56px; border-radius: 10px;
+    width: 42px; height: 42px; border-radius: 6px;
     border: 1px solid #f0f0f4;
 }
 .co-order-item__img img {
     width: 100%; height: 100%; object-fit: cover;
-    border-radius: 10px; display: block;
+    border-radius: 6px; display: block;
 }
 .co-order-item__qty-badge {
-    position: absolute; top: -6px; right: -6px;
-    width: 20px; height: 20px; border-radius: 50%;
+    position: absolute; top: -4px; right: -4px;
+    width: 14px; height: 14px; border-radius: 50%;
     background: var(--boskery-base, #C56533); color: #fff;
-    font-size: .62rem; font-weight: 800;
+    font-size: .55rem; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
     border: 2px solid #fff;
 }
 .co-order-item__name {
-    flex: 1; font-size: .86rem; font-weight: 700; color: #1a1a1a;
-    text-decoration: none;
+    flex: 1; font-size: .78rem; font-weight: 700; color: #1a1a1a;
+    text-decoration: none; line-height: 1.2;
 }
 .co-order-item__name:hover { color: var(--boskery-base, #C56533); }
-.co-order-item__price { font-size: .88rem; font-weight: 700; color: #555; flex-shrink: 0; }
+.co-order-item__price { font-size: .8rem; font-weight: 700; color: #555; flex-shrink: 0; }
 
-/* ---- Filas de totales ---- */
-.co-total-rows { border-top: 1px solid #f0f0f4; padding-top: 16px; }
+.co-total-rows { border-top: 1px solid #f0f0f4; padding-top: 10px; }
 .co-total-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; font-size: .88rem; color: #666;
+    padding: 5px 0; font-size: .82rem; color: #666;
     border-bottom: 1px dashed #f5f5f8;
 }
 .co-total-row:last-of-type { border-bottom: none; }
 .co-total-row span:last-child { font-weight: 700; color: #1a1a1a; }
 .co-grand-total {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 0 20px; border-top: 2px solid #f0f0f4; margin-top: 6px;
+    padding: 10px 0 14px; border-top: 2px solid #f0f0f4; margin-top: 4px;
 }
-.co-grand-total__label { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
-.co-grand-total__val { font-size: 1.4rem; font-weight: 900; color: var(--boskery-base, #C56533); }
+.co-grand-total__label { font-size: .95rem; font-weight: 700; color: #1a1a1a; }
+.co-grand-total__val { font-size: 1.2rem; font-weight: 900; color: var(--boskery-base, #C56533); }
 
-/* ---- Botón confirmar ---- */
 .co-btn-confirm {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; padding: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
     background: var(--boskery-base, #C56533); color: #fff;
-    border: none; border-radius: 12px;
-    font-size: 1rem; font-weight: 800; cursor: pointer;
-    box-shadow: 0 6px 22px rgba(197,101,51,.32);
+    border: none; border-radius: 10px;
+    font-size: .95rem; font-weight: 800; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(197,101,51,.28);
     transition: background .2s, box-shadow .2s, transform .15s;
-    letter-spacing: .02em;
 }
-.co-btn-confirm:hover { background: #a34120; box-shadow: 0 8px 28px rgba(197,101,51,.42); transform: translateY(-1px); }
+.co-btn-confirm:hover { background: #a34120; box-shadow: 0 6px 20px rgba(197,101,51,.38); transform: translateY(-1px); }
 
-.co-secure-note {
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    margin-top: 12px; font-size: .74rem; color: #bbb;
-}
+.co-secure-note { margin-top: 8px; font-size: .7rem; color: #bbb; text-align: center; }
 .co-back-link {
-    display: inline-flex; align-items: center; gap: 6px;
-    color: #aaa; font-size: .8rem; text-decoration: none;
-    margin-top: 12px; transition: color .18s;
+    display: inline-flex; align-items: center; gap: 5px;
+    color: #aaa; font-size: .75rem; text-decoration: none;
+    margin-top: 8px; transition: color .18s;
 }
 .co-back-link:hover { color: var(--boskery-base, #C56533); }
 
 @media (max-width: 575px) {
-    .co-card { padding: 22px 16px; }
+    .co-section { padding: 20px 0 28px; }
+    .co-card { padding: 14px 16px; margin-bottom: 8px; }
+    .co-steps { margin-bottom: 14px; }
 }
 </style>
 {% endblock %}
@@ -305,7 +269,7 @@
     <div class="container">
 
         <!-- Pasos -->
-        <div class="co-steps mb-4">
+        <div class="co-steps">
             <div class="co-step done">
                 <div class="co-step__num"><i class="fas fa-check" style="font-size:.6rem"></i></div>
                 <span>Carrito</span>
@@ -324,15 +288,15 @@
 
         <form method="post" id="checkout-form">
             {% csrf_token %}
-            <div class="row gutter-y-30">
+            <div class="row gutter-y-20">
 
                 <!-- ============ FORMULARIO ============ -->
                 <div class="col-lg-7 col-xl-8">
 
-                    <!-- Tipo de comprador -->
+                    <!-- Tipo de comprador y Datos personales -->
                     <div class="co-card">
-                        <p class="co-section-title"><i class="fas fa-id-card"></i> Tipo de comprador</p>
-                        <div class="row g-0 mb-3">
+                        <p class="co-section-title"><i class="fas fa-id-card"></i> Datos de facturación</p>
+                        <div class="row g-0 mb-2">
                             <div class="col-6 pe-2">
                                 <label class="co-radio-option">
                                     <input type="radio" name="billing_customer_type" value="person" {% if not user.is_authenticated or user.customer_type == 'person' %}checked{% endif %}>
@@ -349,11 +313,11 @@
                         <div class="row g-0">
                             <div class="col-md-6 pe-md-2">
                                 <div class="co-field">
-                                    <label for="co-doctype">Tipo de documento *</label>
-                                    <select id="co-doctype" name="billing_document_type" required data-initial-doctype="{{ user.document_type|default:'' }}">
+                                    <label for="co-doctype">Tipo doc *</label>
+                                    <select id="co-doctype" name="billing_document_type" required autocomplete="off" data-initial-doctype="{{ user.document_type|default:'' }}">
                                         <option value="">Seleccione…</option>
-                                        <option value="CC" {% if user.document_type == 'CC' %}selected{% endif %}>Cédula de ciudadanía</option>
-                                        <option value="CE" {% if user.document_type == 'CE' %}selected{% endif %}>Cédula de extranjería</option>
+                                        <option value="CC" {% if user.document_type == 'CC' %}selected{% endif %}>Cédula ciudadanía</option>
+                                        <option value="CE" {% if user.document_type == 'CE' %}selected{% endif %}>Cédula extranjería</option>
                                         <option value="PA" {% if user.document_type == 'PA' %}selected{% endif %}>Pasaporte</option>
                                         <option value="NIT" {% if user.customer_type == 'company' or user.document_type == 'NIT' %}selected{% endif %}>NIT</option>
                                     </select>
@@ -361,52 +325,45 @@
                             </div>
                             <div class="col-md-6 ps-md-2">
                                 <div class="co-field">
-                                    <label for="co-document">Número de identificación *</label>
-                                    <input type="text" id="co-document" name="billing_document_number" required
+                                    <label for="co-document">Nº identificación *</label>
+                                    <input type="text" id="co-document" name="billing_document_number" required autocomplete="off"
                                            value="{{ user.document_number|default:'' }}">
                                 </div>
                             </div>
-                        </div>
-                        <div class="row g-0">
                             <div id="co-person-birth-wrap" class="col-md-6 pe-md-2 co-person-only">
                                 <div class="co-field">
-                                    <label for="co-birth">Fecha de nacimiento</label>
-                                    <input type="date" id="co-birth" name="billing_date_of_birth"
+                                    <label for="co-birth">Nacimiento</label>
+                                    <input type="date" id="co-birth" name="billing_date_of_birth" autocomplete="bday"
                                            value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}" placeholder="dd/mm/aaaa">
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Datos personales -->
-                    <div class="co-card">
-                        <p class="co-section-title"><i class="fas fa-user"></i> Datos personales</p>
                         <div class="row g-0">
                             <div class="col-md-6 pe-md-2">
                                 <div class="co-field">
                                     <label for="co-fname">Nombre *</label>
-                                    <input type="text" id="co-fname" name="billing_first_name" required
+                                    <input type="text" id="co-fname" name="billing_first_name" required autocomplete="given-name"
                                            value="{{ user.first_name|default:'' }}" placeholder="Tu nombre">
                                 </div>
                             </div>
                             <div id="co-person-lname-wrap" class="col-md-6 ps-md-2 co-person-only">
                                 <div class="co-field">
                                     <label for="co-lname">Apellido *</label>
-                                    <input type="text" id="co-lname" name="billing_last_name"
+                                    <input type="text" id="co-lname" name="billing_last_name" autocomplete="family-name"
                                            value="{{ user.last_name|default:'' }}" placeholder="Tu apellido">
                                 </div>
                             </div>
                             <div class="col-md-7 pe-md-2">
                                 <div class="co-field">
                                     <label for="co-email">Email *</label>
-                                    <input type="email" id="co-email" name="billing_email" required
+                                    <input type="email" id="co-email" name="billing_email" required autocomplete="email"
                                            value="{{ user.email|default:'' }}" placeholder="tu@email.com">
                                 </div>
                             </div>
                             <div class="col-md-5 ps-md-2">
                                 <div class="co-field">
                                     <label for="co-phone">Teléfono</label>
-                                    <input type="tel" id="co-phone" name="billing_phone"
+                                    <input type="tel" id="co-phone" name="billing_phone" autocomplete="tel"
                                            value="{{ user.phone|default:'' }}" placeholder="(+57) 300 000 0000">
                                 </div>
                             </div>
@@ -418,8 +375,8 @@
                         <p class="co-section-title"><i class="fas fa-map-marker-alt"></i> Dirección de envío</p>
                         <div class="co-field">
                             <label for="co-address">Dirección *</label>
-                            <input type="text" id="co-address" name="billing_address" required
-                                   value="{{ user.address|default:'' }}" placeholder="Calle, número, barrio…">
+                            <input type="text" id="co-address" name="billing_address" required autocomplete="street-address"
+                                   value="{{ checkout_prefill.address|default:'' }}" placeholder="Calle, número, barrio…">
                         </div>
                         <div class="row g-0 js-geo-cascade"
                              data-country-name="billing_country"
@@ -428,11 +385,11 @@
                             <div class="col-md-4 pe-md-2">
                                 <div class="co-field">
                                     <label>País *</label>
-                                    <select name="billing_country" required>
+                                    <select name="billing_country" required autocomplete="country-name">
                                         <option value="">Selecciona país…</option>
                                         {% for c in countries %}
                                         <option value="{{ c.name }}"
-                                            {% if user.country|default:'' == c.name or not user.is_authenticated and c.name == 'Colombia' %}selected{% endif %}>
+                                            {% if checkout_prefill.country == c.name or not user.is_authenticated and c.name == 'Colombia' %}selected{% endif %}>
                                             {{ c.name }}
                                         </option>
                                         {% endfor %}
@@ -442,7 +399,7 @@
                             <div class="col-md-4 px-md-2">
                                 <div class="co-field">
                                     <label>Departamento</label>
-                                    <select name="billing_state">
+                                    <select name="billing_state" autocomplete="address-level1">
                                         <option value="">Selecciona…</option>
                                     </select>
                                 </div>
@@ -450,7 +407,7 @@
                             <div class="col-md-4 ps-md-2">
                                 <div class="co-field">
                                     <label>Ciudad *</label>
-                                    <select name="billing_city" required>
+                                    <select name="billing_city" required autocomplete="address-level2">
                                         <option value="">Selecciona…</option>
                                     </select>
                                 </div>
@@ -460,8 +417,8 @@
                             <div class="col-md-4">
                                 <div class="co-field">
                                     <label for="co-postal">Código postal</label>
-                                    <input type="text" id="co-postal" name="billing_postal_code"
-                                           value="{{ user.postal_code|default:'' }}" placeholder="000000">
+                                    <input type="text" id="co-postal" name="billing_postal_code" autocomplete="postal-code"
+                                           value="{{ checkout_prefill.postal_code|default:'' }}" placeholder="000000">
                                 </div>
                             </div>
                         </div>
@@ -504,9 +461,9 @@
                                 </span>
                                 <span id="co-discount-val" style="color:#16a34a;font-weight:700;"></span>
                             </div>
-                            <div class="co-total-row">
+                            <div class="co-total-row" id="co-shipping-row">
                                 <span>Envío</span>
-                                <span style="color:#22c55e;font-weight:700;">Por definir</span>
+                                <span id="co-shipping-val" style="color:#22c55e;font-weight:700;">Selecciona ciudad</span>
                             </div>
                         </div>
 
@@ -522,9 +479,8 @@
                                     <div class="co-coupon-input-wrap">
                                         <i class="fas fa-ticket-alt co-coupon-icon"></i>
                                         <input type="text" id="coupon-input" name="coupon_code"
-                                               placeholder="Ej: DESCUENTO10"
-                                               autocomplete="off" autocapitalize="characters"
-                                               style="text-transform:uppercase;">
+                                               placeholder="Ej: descuento10"
+                                               autocomplete="off" autocapitalize="off">
                                     </div>
                                     <button type="button" class="co-coupon-btn" id="coupon-apply-btn">
                                         <span class="btn-text">Aplicar</span>
@@ -558,7 +514,7 @@
                         </button>
                         
                         <!-- Logos de pago para seguridad -->
-                        <div class="co-payment-logos" style="margin-top: 20px; text-align: center;">
+                        <div class="co-payment-logos" style="margin-top: 12px; text-align: center;">
                             <img src="{% static 'wompi-logos (1).webp' %}" alt="Métodos de pago seguros Wompi" style="max-width: 100%; height: auto; border-radius: 8px; opacity: 0.9;">
                         </div>
 
@@ -580,8 +536,17 @@
 {% block extra_js %}
 <script>
 (function () {
+    var CART_SUBTOTAL = {{ cart_total|unlocalize }};
+    var FREE_SHIPPING_MIN = {{ free_shipping_min_amount|default:0|unlocalize }};
+    var CURRENCY = "{{ site_settings.currency|escapejs }}";
+    var SHIPPING_URL = "{% url 'core:geo_shipping_info' %}";
+
+    function formatMoney(val) {
+        return CURRENCY + Math.round(val).toLocaleString('es-CO');
+    }
+
     // Opciones del select tipo de documento: persona (CC, CE, PA) o solo NIT para empresa
-    var PERSON_DOCTYPE_OPTIONS = '<option value="">Seleccione…</option><option value="CC">Cédula de ciudadanía</option><option value="CE">Cédula de extranjería</option><option value="PA">Pasaporte</option>';
+    var PERSON_DOCTYPE_OPTIONS = '<option value="">Seleccione…</option><option value="CC">Cédula ciudadanía</option><option value="CE">Cédula extranjería</option><option value="PA">Pasaporte</option>';
     var COMPANY_DOCTYPE_OPTIONS = '<option value="NIT">NIT</option>';
 
     function toggleCheckoutPersonFields() {
@@ -629,10 +594,14 @@
     // Resumen totales
     const discountRow = document.getElementById('co-discount-row');
     const discountVal = document.getElementById('co-discount-val');
+    const shippingVal = document.getElementById('co-shipping-val');
     const totalVal    = document.getElementById('co-total-val');
+    const citySelect  = document.querySelector('select[name="billing_city"]');
 
-    // Estado activo del cupón
+    // Estado activo del cupón y envío
     let activeCoupon = null;
+    let shippingAmount = 0;
+    let shippingDays = '';
 
     function setFeedback(msg, type /* 'error' | 'success' */) {
         const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
@@ -659,18 +628,88 @@
         document.getElementById('coupon-remove-btn').addEventListener('click', removeCoupon);
     }
 
+    function getDiscountAmount() {
+        if (!activeCoupon) return 0;
+        if (typeof activeCoupon.discount_amount === 'number') return activeCoupon.discount_amount;
+        var m = (activeCoupon.discount || '').replace(/[^0-9]/g, '');
+        return m ? parseInt(m, 10) : 0;
+    }
+
+    function updateGrandTotal() {
+        var discount = getDiscountAmount();
+        var total = CART_SUBTOTAL - discount + shippingAmount;
+        totalVal.textContent = formatMoney(total);
+    }
+
     function applyToSummary(data) {
         discountVal.textContent = '−' + data.discount;
         discountRow.style.display = '';
-        totalVal.textContent = data.new_total;
+        updateGrandTotal();
     }
 
     function resetSummary() {
         discountRow.style.display = 'none';
         discountVal.textContent = '';
-        // Restaurar con subtotal original
-        const subtotalEl = document.getElementById('co-subtotal-val');
-        if (subtotalEl) totalVal.textContent = subtotalEl.textContent;
+        updateGrandTotal();
+    }
+
+    function updateShippingDisplay(price, daysMin, daysMax, notFound, isFreeShipping) {
+        if (isFreeShipping) {
+            var freeDaysStr = '';
+            if (daysMin != null && daysMax != null) {
+                freeDaysStr = daysMin === daysMax ? (daysMin + ' d\u00eda' + (daysMin !== 1 ? 's' : '')) : (daysMin + ' a ' + daysMax + ' d\u00edas');
+            }
+            shippingVal.textContent = 'Gratis' + (freeDaysStr ? ' (' + freeDaysStr + ')' : '');
+            return;
+        }
+        if (price === null && !notFound) {
+            shippingVal.textContent = 'Selecciona ciudad';
+            return;
+        }
+        if (notFound) {
+            shippingVal.textContent = 'No configurado';
+            return;
+        }
+        var daysStr = '';
+        if (daysMin != null && daysMax != null) {
+            daysStr = daysMin === daysMax ? (daysMin + ' d\u00eda' + (daysMin !== 1 ? 's' : '')) : (daysMin + ' a ' + daysMax + ' d\u00edas');
+        }
+        shippingVal.textContent = formatMoney(price) + (daysStr ? ' (' + daysStr + ')' : '');
+    }
+
+    function hasFreeShippingBySubtotal() {
+        return FREE_SHIPPING_MIN > 0 && CART_SUBTOTAL >= FREE_SHIPPING_MIN;
+    }
+
+    function fetchShipping(cityId) {
+        var freeShipping = hasFreeShippingBySubtotal();
+        if (!cityId) {
+            shippingAmount = 0;
+            updateShippingDisplay(null, null, null, false, freeShipping);
+            updateGrandTotal();
+            return;
+        }
+        shippingVal.textContent = 'Cargando…';
+        fetch(SHIPPING_URL + '?city_id=' + encodeURIComponent(cityId))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (freeShipping) {
+                    shippingAmount = 0;
+                    updateShippingDisplay(0, data.days_min, data.days_max, false, true);
+                } else if (data.found) {
+                    shippingAmount = parseFloat(data.price) || 0;
+                    updateShippingDisplay(shippingAmount, data.days_min, data.days_max, false, false);
+                } else {
+                    shippingAmount = 0;
+                    updateShippingDisplay(null, null, null, true, false);
+                }
+                updateGrandTotal();
+            })
+            .catch(function() {
+                shippingAmount = 0;
+                updateShippingDisplay(null, null, null, false, freeShipping);
+                updateGrandTotal();
+            });
     }
 
     function removeCoupon() {
@@ -752,14 +791,27 @@
         if (e.key === 'Enter') { e.preventDefault(); applyCoupon(); }
     });
 
-    // Auto-uppercase mientras escribe
-    inp.addEventListener('input', () => {
-        const pos = inp.selectionStart;
-        inp.value = inp.value.toUpperCase();
-        inp.setSelectionRange(pos, pos);
-        if (activeCoupon) removeCoupon();
-        clearFeedback();
-    });
+    // Envío: cargar precio al seleccionar ciudad
+    function getCityIdFromSelect() {
+        if (!citySelect) return null;
+        var opt = citySelect.options[citySelect.selectedIndex];
+        return opt ? opt.getAttribute('data-city-id') : null;
+    }
+    function onCityChange() {
+        var cityId = getCityIdFromSelect();
+        fetchShipping(cityId);
+    }
+    if (citySelect) {
+        citySelect.addEventListener('change', onCityChange);
+        // Cuando las ciudades se cargan (cascade), revisar si hay ciudad seleccionada
+        citySelect.addEventListener('citiesLoaded', function() {
+            if (citySelect.value) onCityChange();
+        });
+        // Fallback: después de cargar el DOM, si hay ciudad seleccionada
+        setTimeout(function() {
+            if (citySelect.value) onCityChange();
+        }, 600);
+    }
 })();
 </script>
 {% endblock %}

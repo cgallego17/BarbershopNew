@@ -24,6 +24,18 @@ env = environ.Env(
     WOMPI_PRIVATE_KEY=(str, ''),
     WOMPI_INTEGRITY_SECRET=(str, ''),
     WOMPI_EVENTS_SECRET=(str, ''),
+    WOMPI_REDIRECT_URL=(str, ''),
+    CSP_ALLOW_UNSAFE_EVAL=(bool, False),
+    CSP_STRICT_REPORT_ONLY=(bool, True),
+    # Email SMTP
+    EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
+    EMAIL_HOST=(str, 'smtp.gmail.com'),
+    EMAIL_PORT=(int, 587),
+    EMAIL_HOST_USER=(str, ''),
+    EMAIL_HOST_PASSWORD=(str, ''),
+    EMAIL_USE_TLS=(bool, True),
+    EMAIL_USE_SSL=(bool, False),
+    DEFAULT_FROM_EMAIL=(str, ''),
 )
 
 # Build paths
@@ -77,6 +89,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'config.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -167,12 +180,25 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-ACCOUNT_FORMS = {'signup': 'apps.accounts.forms.CustomSignupForm'}
+ACCOUNT_FORMS = {
+    'signup': 'apps.accounts.forms.CustomSignupForm',
+    'login': 'apps.accounts.forms.CustomLoginForm',
+    'reset_password': 'apps.accounts.forms.CustomResetPasswordForm',
+}
 ACCOUNT_ADAPTER = 'apps.accounts.adapters.CustomAccountAdapter'
+ACCOUNT_PREVENT_ENUMERATION = True
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_RATE_LIMITS = {
+    'login': '30/5m',
+    'login_failed': '10/5m',
+    'signup': '5/10m',
+    'reset_password': '5/30m',
+    'reset_password_from_key': '20/5m',
+}
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
@@ -181,10 +207,15 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    SECURE_SSL_REDIRECT = True
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_HTTPONLY = True
     CSRF_COOKIE_SECURE = True
 
 # API Integrations
@@ -200,6 +231,21 @@ WOMPI_PUBLIC_KEY       = env('WOMPI_PUBLIC_KEY')       # pub_test_xxx  / pub_pro
 WOMPI_PRIVATE_KEY      = env('WOMPI_PRIVATE_KEY')      # prv_test_xxx  / prv_prod_xxx
 WOMPI_INTEGRITY_SECRET = env('WOMPI_INTEGRITY_SECRET') # Llave de integridad (firma del formulario)
 WOMPI_EVENTS_SECRET    = env('WOMPI_EVENTS_SECRET')    # Llave de eventos (firma del webhook)
+WOMPI_REDIRECT_URL     = env('WOMPI_REDIRECT_URL')     # URL de retorno opcional (evita localhost/127 en checkout)
+CSP_ALLOW_UNSAFE_EVAL  = env.bool('CSP_ALLOW_UNSAFE_EVAL', default=DEBUG)
+CSP_STRICT_REPORT_ONLY = env.bool('CSP_STRICT_REPORT_ONLY', default=True)
+
+# ─── Email SMTP ────────────────────────────────────────────────────────────
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env.int('EMAIL_PORT')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS')
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL')
+_default_from = env('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER or 'no-reply@localhost'
+DEFAULT_FROM_EMAIL = _default_from
+SERVER_EMAIL = _default_from
 
 # Cart session key
 CART_SESSION_ID = 'cart'

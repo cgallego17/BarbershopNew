@@ -48,6 +48,7 @@ class SiteSettings(models.Model):
     instagram_url = models.URLField('Instagram', blank=True)
     twitter_url = models.URLField('Twitter/X', blank=True)
     youtube_url = models.URLField('YouTube', blank=True)
+    tiktok_url = models.URLField('TikTok', blank=True)
 
     # Tienda
     show_out_of_stock_products = models.BooleanField(
@@ -70,6 +71,13 @@ class SiteSettings(models.Model):
         blank=True,
         default='Por compras superiores a $120.000 el envío es gratis',
         help_text='Texto que se muestra en la barra superior en movimiento. Si está vacío, la barra no se muestra.'
+    )
+    free_shipping_min_amount = models.DecimalField(
+        'Envío gratis desde',
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Si el subtotal del pedido es mayor o igual a este valor, el envío será gratis.'
     )
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -190,6 +198,27 @@ class HomeMeatCategoryBlock(models.Model):
         return obj
 
 
+class HomeBrandBlock(models.Model):
+    """Configuración de la sección Marcas del home (imagen de fondo, etc.)."""
+    background_image = models.ImageField(
+        'Imagen de fondo',
+        upload_to='home/brands/',
+        blank=True,
+        null=True,
+        help_text='Imagen de fondo de la sección de marcas. Si está vacío se usa la imagen por defecto.'
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Sección marcas (config)'
+        verbose_name_plural = 'Sección marcas (config)'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+
 class HomeBrand(models.Model):
     """Logo de marca/cliente para el carrusel."""
     name = models.CharField('Nombre', max_length=100, blank=True)
@@ -301,3 +330,55 @@ class ShippingPrice(models.Model):
         if self.delivery_days_min == self.delivery_days_max:
             return f"{self.city} — ${self.price} ({self.delivery_days_min} días)"
         return f"{self.city} — ${self.price} ({self.delivery_days_min} a {self.delivery_days_max} días)"
+
+
+class NewsletterSubscriber(models.Model):
+    """Suscriptor del newsletter desde el formulario del sitio."""
+
+    email = models.EmailField('Email', unique=True)
+    is_active = models.BooleanField('Activo', default=True)
+    source = models.CharField('Origen', max_length=80, default='footer')
+    created_at = models.DateTimeField('Suscrito en', auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Suscriptor newsletter'
+        verbose_name_plural = 'Suscriptores newsletter'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.email
+
+
+class SecurityEvent(models.Model):
+    """Eventos de seguridad detectados en formularios públicos."""
+
+    EVENT_CHOICES = [
+        ('honeypot_trigger', 'Honeypot activado'),
+        ('rate_limit_block', 'Bloqueo por rate limit'),
+        ('auth_honeypot', 'Honeypot en autenticación'),
+    ]
+    event_type = models.CharField(
+        'Tipo de evento',
+        max_length=40,
+        choices=EVENT_CHOICES,
+    )
+    source = models.CharField('Origen', max_length=80)
+    ip_address = models.GenericIPAddressField('IP', null=True, blank=True)
+    path = models.CharField('Ruta', max_length=255, blank=True)
+    user_agent = models.CharField('User agent', max_length=255, blank=True)
+    details = models.JSONField('Detalles', default=dict, blank=True)
+    created_at = models.DateTimeField('Fecha', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Evento de seguridad'
+        verbose_name_plural = 'Eventos de seguridad'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['source', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.get_event_type_display()} ({self.source})'

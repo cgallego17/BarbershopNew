@@ -76,9 +76,9 @@
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
                 {% if customer %}
-                <a href="{% url 'admin_panel:customer_detail' customer.pk %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+                <a href="{% url 'core:admin_panel:customer_detail' customer.pk %}" class="admin-btn admin-btn--secondary">Cancelar</a>
                 {% endif %}
-                <a href="{% url 'admin_panel:customer_list' %}" class="admin-btn admin-btn--secondary">Volver a lista</a>
+                <a href="{% url 'core:admin_panel:customer_list' %}" class="admin-btn admin-btn--secondary">Volver a lista</a>
             </div>
         </form>
     </div>

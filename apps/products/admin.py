@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Category, Product, ProductImage, ProductAttribute, ProductVariant, ProductReview
+from .models import (
+    Category, Product, ProductImage, ProductAttribute,
+    ProductVariant, ProductReview, ProductView, ProductFavorite
+)
 
 
 class ProductImageInline(admin.TabularInline):
@@ -25,7 +28,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class ProductAdmin(admin.ModelAdmin):
     list_display = [
         'name', 'sku', 'product_type', 'source', 'price_display',
-        'stock_quantity', 'is_active', 'is_featured', 'created_at'
+        'stock_quantity', 'view_count', 'is_active', 'is_featured', 'created_at'
     ]
     list_filter = ['is_active', 'is_featured', 'product_type', 'source']
     search_fields = ['name', 'sku', 'description']
@@ -52,3 +55,19 @@ class ProductReviewAdmin(admin.ModelAdmin):
     list_display = ['product', 'author_name', 'rating', 'is_approved', 'created_at']
     list_filter = ['is_approved', 'rating']
     search_fields = ['author_name', 'comment']
+
+
+@admin.register(ProductView)
+class ProductViewAdmin(admin.ModelAdmin):
+    list_display = ['product', 'user', 'session_key', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['product__name', 'user__email', 'session_key']
+    readonly_fields = ['product', 'user', 'session_key', 'created_at']
+
+
+@admin.register(ProductFavorite)
+class ProductFavoriteAdmin(admin.ModelAdmin):
+    list_display = ['product', 'user', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['product__name', 'user__email']
+    readonly_fields = ['product', 'user', 'created_at']

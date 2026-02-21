@@ -6,8 +6,8 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <a href="{% url 'admin_panel:category_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a categorías</a>
-    <a href="{% url 'admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
+    <a href="{% url 'core:admin_panel:category_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a categorías</a>
+    <a href="{% url 'core:admin_panel:product_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo producto</a>
 </div>
 
 <div class="admin-card">
@@ -46,19 +46,19 @@
                         <td>{% if p.is_active %}<span class="admin-badge admin-badge--completed">Activo</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactivo</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
-                                <form method="post" action="{% url 'admin_panel:product_toggle_active' p.pk %}" class="d-inline">
+                                <a href="{% url 'core:admin_panel:product_edit' p.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <form method="post" action="{% url 'core:admin_panel:product_toggle_active' p.pk %}" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="admin-action {% if p.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
                                         {% if p.is_active %}Inactivar{% else %}Activar{% endif %}
                                     </button>
                                 </form>
-                                <a href="{% url 'admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                                <a href="{% url 'core:admin_panel:product_delete' p.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="admin-table__empty">No hay productos en esta categoría. <a href="{% url 'admin_panel:product_create' %}">Crear producto</a></td></tr>
+                    <tr><td colspan="8" class="admin-table__empty">No hay productos en esta categoría. <a href="{% url 'core:admin_panel:product_create' %}">Crear producto</a></td></tr>
                     {% endfor %}
                 </tbody>
             </table>

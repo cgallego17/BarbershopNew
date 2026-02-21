@@ -11,7 +11,8 @@ urlpatterns = [
     path('nosotros/', views.about_view, name='about'),
     path('api/geo/estados/', views.geo_states_view, name='geo_states'),
     path('api/geo/ciudades/', views.geo_cities_view, name='geo_cities'),
-    path('panel/', views.dashboard_view, name='dashboard'),
+    path('api/geo/shipping-info/', views.geo_shipping_info_view, name='geo_shipping_info'),
+    path('newsletter/suscribir/', views.newsletter_subscribe_view, name='newsletter_subscribe'),
     path('panel/', include('apps.core.urls_admin')),
     path('mayoristas/', include('apps.core.urls_wholesale')),
 ]

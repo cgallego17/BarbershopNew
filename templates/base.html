@@ -6,22 +6,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="{% block meta_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
     <meta name="keywords" content="{% block meta_keywords %}barbería, e-commerce, productos para el cabello, cuidado personal{% endblock %}">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
     <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:site_name" content="{{ site_settings.site_name }}">
+    <meta property="og:locale" content="es_CO">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <meta property="og:title" content="{% block og_title %}Tienda || {{ site_settings.site_name }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta property="og:image:alt" content="{% block og_image_alt %}{{ site_settings.site_name }}{% endblock %}">
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
-    <meta property="twitter:title" content="{% block twitter_title %}Tienda || {{ site_settings.site_name }}{% endblock %}">
-    <meta property="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
-    <meta property="twitter:image" content="{% block twitter_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{% block twitter_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}Tienda || {{ site_settings.site_name }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta name="twitter:image:alt" content="{% block twitter_image_alt %}{{ site_settings.site_name }}{% endblock %}">
 
     <title>{% block title %}Tienda{% endblock %} || {{ site_settings.site_name }}</title>
     <link rel="icon" type="image/png" href="{% static 'assets/images/favicons/favicon-32x32.png' %}" />
@@ -58,7 +62,20 @@
         display: block;
         overflow: hidden;
         background-color: #f5f5f8;
+        position: relative;
     }
+    .product__item__badge--featured {
+        position: absolute; top: 10px; left: 10px;
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        background: rgba(197, 101, 51, 0.95);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .9rem;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    .product__item__badge--featured i { color: #fff; }
     .shop-product-card__image,
     .pd-gallery { min-height: 400px; }
     .pd-gallery__main,
@@ -78,19 +95,103 @@
         height: 100%;
         object-fit: cover;
     }
-    /* Reservar espacio para el header sticky */
-    .main-header { min-height: 140px; }
-    @media (max-width: 991px) { .main-header { min-height: 110px; } }
-
     /* Estabilización Hero Slider para CLS */
-    .hero-slider-three { min-height: 100vh; position: relative; overflow: hidden; background: #1a1a1d; }
+    .hero-slider-three {
+        min-height: 100vh;
+        position: relative;
+        overflow: hidden;
+        background: #1a1a1d9c;
+    }
     .hero-slider-three__item { min-height: 100vh; display: flex; align-items: center; }
     @media (max-width: 767px) {
         .hero-slider-three, .hero-slider-three__item { min-height: 600px; }
     }
+    .main-footer { background-color: #1e1d1d63; }
+    .client-carousel--three .client-carousel__bg::after {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+    }
+    .client-carousel--three {
+        position: relative;
+        min-height: 220px;
+    }
+    .client-carousel--three .client-carousel__bg {
+        position: absolute;
+        inset: 0;
+        background-size: contain !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        min-height: 220px;
+    }
+    .client-carousel--three .container { position: relative; z-index: 1; }
+    .client-carousel--three .client-carousel__one { min-height: 120px; }
+    .client-carousel--three .client-carousel__one__item {
+        min-height: 96px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .client-carousel--three .client-carousel__one__item img {
+        width: 180px;
+        height: 72px;
+        object-fit: contain;
+        display: block;
+    }
+    .owl-theme .owl-nav.disabled + .owl-dots {
+        margin-top: -100px;
+    }
+    .page-header__bg {
+        background-image: url("{% static '1920-x-320-d.jpg' %}") !important;
+    }
+    .page-header__bg::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: 0;
+        background-color: rgb(28 28 28 / 68%);
+    }
+    .main-footer__newsletter input {
+        border: 1px solid var(--boskery-base, #C56533) !important;
+    }
+    .main-footer__newsletter button {
+        border: 1px solid var(--boskery-base, #C56533) !important;
+    }
+    .main-footer__newsletter .icon-paper-plane {
+        border: none !important;
+    }
 
     /* Estabilización Experience Badge */
     .about-three__experience { min-width: 180px; min-height: 180px; }
+    .about-three__image { min-height: 620px; }
+    .about-three__image__one {
+        width: 100%;
+        aspect-ratio: 5 / 5;
+        object-fit: cover;
+        display: block;
+    }
+    .about-three__image__inner { min-height: 200px; }
+    .about-three__image__two {
+        width: 100%;
+        height: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        display: block;
+    }
+    .about-three__bottom { min-height: 58px; }
+
+    /* Estabilización tarjetas de producto home */
+    .product__item__image {
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        background: #f5f5f8;
+    }
+    .product__item__image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
 
     /* Estabilización Header Icons para CLS */
     .main-header__top__right { display: flex; align-items: center; justify-content: space-between; min-height: 60px; }
@@ -283,6 +384,11 @@
         font-weight: 600;
     }
     .product-details .boskery-ratings .product-details__star--empty { opacity: 0.35; }
+    .meat-category__top__image img {
+        max-width: 50%;
+        height: auto;
+        border-radius: 86px;
+    }
     </style>
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
@@ -303,11 +409,37 @@
     {% include 'partials/password_reset_modal.html' %}
     {% include 'partials/floating_cart.html' %}
     {% include 'partials/cart_sidebar.html' %}
+    <div id="globalFormLoader" class="global-form-loader" aria-hidden="true">
+        <div class="global-form-loader__box" role="status" aria-live="polite">
+            <span class="global-form-loader__spinner" aria-hidden="true"></span>
+            <span class="global-form-loader__text">Cargando, por favor espera...</span>
+        </div>
+    </div>
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutConfirmModalLabel">Cerrar sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Seguro que deseas cerrar sesión?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post" action="{% url 'account_logout' %}" id="logoutConfirmForm" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sí, cerrar sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <a href="#" data-target="html" class="scroll-to-target scroll-to-top">
         <span class="scroll-to-top__text">subir</span>
         <span class="scroll-to-top__wrapper"><span class="scroll-to-top__inner"></span></span>
     </a>
-    <script src="{% static 'assets/vendors/jquery/jquery-3.7.0.min.js' %}"></script>
+    <script src="{% static 'assets/vendors/jquery/jquery-3.7.0.min.js' %}" defer></script>
     <script src="{% static 'assets/vendors/bootstrap/js/bootstrap.bundle.min.js' %}" defer></script>
     <script src="{% static 'assets/vendors/bootstrap-select/bootstrap-select.min.js' %}" defer></script>
     <script src="{% static 'assets/vendors/jarallax/jarallax.min.js' %}" defer></script>
@@ -329,11 +461,236 @@
     <script src="{% static 'assets/vendors/jquery-circleType/jquery.circleType.js' %}" defer></script>
     <script src="{% static 'assets/vendors/jquery-lettering/jquery.lettering.min.js' %}" defer></script>
     <script src="{% static 'assets/js/boskery.js' %}" defer></script>
+    <style>
+    .global-form-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 110000;
+        background: rgba(15, 15, 18, 0.56);
+        backdrop-filter: blur(2px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .global-form-loader.is-visible { display: flex; }
+    .global-form-loader__box {
+        min-width: 250px;
+        background: #ffffff;
+        border: 1px solid #ececf2;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+        padding: 16px 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .global-form-loader__spinner {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #e6e6ee;
+        border-top-color: var(--boskery-base, #C56533);
+        animation: global-loader-spin .7s linear infinite;
+        flex-shrink: 0;
+    }
+    .global-form-loader__text {
+        font-size: .86rem;
+        color: #2e2e3c;
+        font-weight: 600;
+    }
+    @keyframes global-loader-spin {
+        to { transform: rotate(360deg); }
+    }
+    </style>
     <script>
-    (function($) {
-      $(document).on('click', '.video-popup', function(e) {
+    (function() {
+        var loader = document.getElementById('globalFormLoader');
+        if (!loader) return;
+
+        function shouldSkipFormLoader(form, event) {
+            if (!form) return true;
+            if (event && event.defaultPrevented) return true;
+            if ((form.getAttribute('method') || '').toLowerCase() === 'dialog') return true;
+            if ((form.getAttribute('target') || '').toLowerCase() === '_blank') return true;
+            if (form.hasAttribute('data-no-loader')) return true;
+            if (form.classList.contains('js-newsletter-form')) return true;
+            if (form.closest('#cart-sidebar')) return true;
+            if (form.hasAttribute('hx-post') || form.hasAttribute('hx-get')) return true;
+            var action = form.getAttribute('action') || '';
+            if (action.indexOf('/carrito/agregar/') !== -1 || action.indexOf('/carrito/quitar/') !== -1) return true;
+            return false;
+        }
+
+        function showFormLoader() {
+            loader.classList.add('is-visible');
+            loader.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideFormLoader() {
+            loader.classList.remove('is-visible');
+            loader.setAttribute('aria-hidden', 'true');
+        }
+
+        document.addEventListener('submit', function(event) {
+            var form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            if (shouldSkipFormLoader(form, event)) return;
+            showFormLoader();
+        });
+
+        window.addEventListener('pageshow', hideFormLoader);
+    })();
+    </script>
+    <script>
+    (function() {
+        function getCookie(name) {
+            var value = '; ' + document.cookie;
+            var parts = value.split('; ' + name + '=');
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+
+        document.addEventListener('submit', function(event) {
+            var form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            if (!form.classList.contains('js-newsletter-form')) return;
+            var endpoint = form.getAttribute('data-url') || form.getAttribute('action');
+            if (!endpoint || endpoint === '#') return;
+
+            event.preventDefault();
+            var responseBox = form.parentElement
+                ? form.parentElement.querySelector('.mc-form__response')
+                : null;
+            var submitBtn = form.querySelector('button[type="submit"], button.icon-paper-plane');
+            if (submitBtn) submitBtn.disabled = true;
+
+            var formData = new FormData(form);
+            fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            })
+                .then(function(res) {
+                    return res.json().catch(function() {
+                        return {ok: false, message: 'No fue posible procesar la suscripción.'};
+                    });
+                })
+                .then(function(data) {
+                    var ok = !!(data && data.ok);
+                    var message = (data && data.message) || (ok
+                        ? 'Suscripción registrada.'
+                        : 'No fue posible suscribirte.');
+                    if (responseBox) {
+                        responseBox.textContent = message;
+                        responseBox.style.color = ok ? '#16a34a' : '#dc2626';
+                    }
+                    if (ok) form.reset();
+                    if (window.showToast) {
+                        window.showToast(message, ok ? 'success' : 'error');
+                    }
+                })
+                .catch(function() {
+                    var message = 'Error de conexión. Inténtalo nuevamente.';
+                    if (responseBox) {
+                        responseBox.textContent = message;
+                        responseBox.style.color = '#dc2626';
+                    }
+                    if (window.showToast) window.showToast(message, 'error');
+                })
+                .finally(function() {
+                    if (submitBtn) submitBtn.disabled = false;
+                });
+        });
+    })();
+    </script>
+    <script>
+    (function() {
+        var logoutForm = document.getElementById('logoutConfirmForm');
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('.js-logout-link');
+            if (!link) return;
+            e.preventDefault();
+            if (logoutForm) {
+                logoutForm.setAttribute('action', link.getAttribute('href') || "{% url 'account_logout' %}");
+            }
+            var modalEl = document.getElementById('logoutConfirmModal');
+            if (!modalEl || !window.bootstrap) {
+                if (logoutForm) {
+                    logoutForm.submit();
+                } else {
+                    window.location.href = link.getAttribute('href');
+                }
+                return;
+            }
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        });
+    })();
+    </script>
+    <script>
+    (function() {
+        function normalizePath(path) {
+            if (!path) return '/';
+            var normalized = path.replace(/\/+$/, '');
+            return normalized || '/';
+        }
+
+        function markActiveMenu() {
+            var currentPath = normalizePath(window.location.pathname);
+            var menus = document.querySelectorAll('.main-menu__list');
+            menus.forEach(function(menu) {
+                var items = menu.querySelectorAll(':scope > li');
+                var bestItem = null;
+                var bestLength = -1;
+
+                items.forEach(function(item) {
+                    item.classList.remove('current');
+                    var link = item.querySelector(':scope > a[href]');
+                    if (!link) return;
+
+                    var href = link.getAttribute('href') || '';
+                    if (!href || href === '#' || href.indexOf('javascript:') === 0) return;
+
+                    var linkPath = normalizePath(link.pathname);
+                    var isMatch = (
+                        (linkPath === '/' && currentPath === '/') ||
+                        (linkPath !== '/' && (currentPath === linkPath || currentPath.indexOf(linkPath + '/') === 0))
+                    );
+
+                    if (isMatch && linkPath.length > bestLength) {
+                        bestItem = item;
+                        bestLength = linkPath.length;
+                    }
+                });
+
+                if (bestItem) {
+                    bestItem.classList.add('current');
+                }
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                markActiveMenu();
+                setTimeout(markActiveMenu, 120);
+            });
+        } else {
+            markActiveMenu();
+            setTimeout(markActiveMenu, 120);
+        }
+    })();
+    </script>
+    <script>
+    (function() {
+      document.addEventListener('click', function(e) {
+        var trigger = e.target.closest('.video-popup');
+        if (!trigger) return;
         e.preventDefault();
-        var url = $(this).attr('href');
+        var url = trigger.getAttribute('href');
         if (!url) return;
         var embedUrl = url;
         var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
@@ -342,8 +699,13 @@
           var params = 'autoplay=1&mute=1&rel=0';
           embedUrl = 'https://www.youtube-nocookie.com/embed/' + vid + '?' + params;
         }
-        if (typeof $.magnificPopup !== 'undefined') {
-          $.magnificPopup.open({
+
+        if (
+          window.jQuery &&
+          window.jQuery.magnificPopup &&
+          typeof window.jQuery.magnificPopup.open === 'function'
+        ) {
+          window.jQuery.magnificPopup.open({
             items: [{ src: embedUrl }],
             type: 'iframe',
             mainClass: 'mfp-fade',
@@ -351,9 +713,12 @@
             preloader: true,
             fixedContentPos: false
           });
+          return;
         }
+
+        window.open(url, '_blank', 'noopener,noreferrer');
       });
-    })(jQuery);
+    })();
     </script>
     {% block extra_js %}{% endblock %}
 
@@ -593,11 +958,22 @@
     }
     .cs-head__title i { color: var(--boskery-base, #C56533); font-size: 1.1rem; }
     .cs-head__count {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
         background: var(--boskery-base, #C56533); color: #fff;
         font-size: .68rem; font-weight: 800;
-        min-width: 20px; height: 20px; padding: 0 6px;
+        min-width: 28px;
+        height: 20px;
+        padding: 0 6px;
         border-radius: 10px;
         display: inline-flex; align-items: center; justify-content: center;
+        font-variant-numeric: tabular-nums;
+    }
+    .cs-head__title {
+        position: relative;
+        padding-right: 34px;
     }
     .cs-close {
         width: 34px; height: 34px; border-radius: 50%;
@@ -693,6 +1069,20 @@
         border: 2px solid var(--boskery-base, #C56533);
     }
     .cs-btn--outline:hover { background: var(--boskery-base, #C56533); color: #fff; transform: translateY(-1px); }
+    .cs-btn--soft-danger {
+        background: #fff;
+        color: #7b7b86;
+        border: 1px solid #e7e7ee;
+        box-shadow: none;
+        font-weight: 600;
+        padding: 10px 12px;
+    }
+    .cs-btn--soft-danger:hover {
+        background: #fff5f5;
+        color: #b91c1c;
+        border-color: #fecaca;
+        transform: translateY(-1px);
+    }
 
     /* ---- Loading skeleton ---- */
     .cs-loading {
@@ -720,6 +1110,7 @@
         var overlay  = document.getElementById('cs-overlay');
         var closeBtn = document.getElementById('cs-close');
         var body     = document.getElementById('cs-body');
+        var foot     = document.getElementById('cs-foot');
         var countEl  = document.getElementById('cs-count');
 
         if (!sidebar) return;
@@ -758,9 +1149,13 @@
         /* ---- Update sidebar content (AJAX) ---- */
         function handleCartResponse(data) {
             body.innerHTML = data.html;
+            if (foot && data.foot_html) {
+                foot.innerHTML = data.foot_html;
+            }
             updateBadges(data.count);
             updateTotal(data.total);
             bindRemoveButtons();
+            bindClearButton();
             if (data.toast && window.showToast) {
                 window.showToast(data.toast.message, data.toast.type);
             }
@@ -816,7 +1211,23 @@
                 });
             });
         }
+        function bindClearButton() {
+            document.querySelectorAll('.cs-clear-form').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    var fd = new FormData(form);
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: fd
+                    })
+                    .then(function(r) { return r.json(); })
+                    .then(handleCartResponse);
+                });
+            });
+        }
         bindRemoveButtons();
+        bindClearButton();
 
         /* ---- Interceptar "Añadir al carrito" vía AJAX ---- */
         document.addEventListener('submit', function(e) {

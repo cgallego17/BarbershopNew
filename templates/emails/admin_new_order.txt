@@ -1,0 +1,24 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+[Admin] Nuevo pedido para gestionar
+
+  Pedido:   #{{ order.order_number }}
+  Fecha:    {{ order.created_at|date:"d/m/Y H:i" }}
+  Estado:   {{ order.get_status_display }}
+
+  Cliente:  {{ order.billing_first_name }} {{ order.billing_last_name }}
+  Email:    {{ order.billing_email }}
+{% if order.billing_phone %}  Tel:      {{ order.billing_phone }}
+{% endif %}  Ciudad:   {{ order.billing_city }}{% if order.billing_state %}, {{ order.billing_state }}{% endif %}
+
+Productos:
+{% for item in order.items.all %}  - {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}: ×{{ item.quantity }} = ${{ item.total|floatformat:0|intcomma }}
+{% endfor %}
+{% if order.discount_total %}  Descuento: -${{ order.discount_total|floatformat:0|intcomma }}
+{% endif %}{% if order.shipping_total %}  Envío:     ${{ order.shipping_total|floatformat:0|intcomma }}
+{% endif %}  TOTAL:     ${{ order.total|floatformat:0|intcomma }}
+
+Gestionar pedido:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/pedidos/
+{% endblock %}

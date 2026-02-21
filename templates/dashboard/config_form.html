@@ -117,6 +117,10 @@
                         <label class="form-label">YouTube</label>
                         {{ form.youtube_url }}
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">TikTok</label>
+                        {{ form.tiktok_url }}
+                    </div>
                 </div>
             </div>
 
@@ -162,7 +166,7 @@
 
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="admin-btn admin-btn--primary">Guardar configuración</button>
-                <a href="{% url 'dashboard' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+                <a href="{% url 'core:admin_panel:dashboard' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
             </div>
         </form>
     </div>

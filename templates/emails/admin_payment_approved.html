@@ -1,0 +1,70 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}Pago aprobado – #{{ order.order_number }}{% endblock %}
+{% block header_label %}Panel Admin – Pagos{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:20px;font-weight:800;color:#4ade80;">
+    ✓ Pago aprobado
+</h2>
+<p style="margin:0 0 22px 0;font-size:13px;color:#8892a4;">
+    El pedido <strong style="color:#e07a40;">#{{ order.order_number }}</strong>
+    ha sido pagado y entra en preparación.
+</p>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:16px 20px;background:#1a2d1a;border-radius:10px;border:1px solid #1e4620;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="font-size:12px;color:#6b9e6b;padding-bottom:8px;">Pedido</td>
+                    <td align="right" style="font-size:14px;font-weight:700;color:#e07a40;padding-bottom:8px;">
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b9e6b;padding-bottom:8px;">Cliente</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ order.billing_first_name }} {{ order.billing_last_name }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b9e6b;padding-bottom:8px;">Email cliente</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ order.billing_email }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b9e6b;padding-bottom:8px;">Estado pedido</td>
+                    <td align="right" style="padding-bottom:8px;">
+                        <span style="display:inline-block;padding:3px 10px;background:#1e3a1e;border-radius:20px;font-size:12px;font-weight:600;color:#4ade80;">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b9e6b;border-top:1px solid #1e4620;padding-top:10px;font-size:14px;font-weight:700;color:#ffffff;">
+                        Total pagado
+                    </td>
+                    <td align="right" style="border-top:1px solid #1e4620;padding-top:10px;font-size:22px;font-weight:800;color:#4ade80;">
+                        ${{ order.total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/panel/pedidos/"
+               style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver pedido en panel →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

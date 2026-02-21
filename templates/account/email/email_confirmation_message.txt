@@ -1,0 +1,14 @@
+{% extends "emails/base.txt" %}
+{% block content %}
+Confirma tu correo electrónico
+
+Hola {{ user.first_name|default:user.username }},
+
+Haz clic en el siguiente enlace para activar tu cuenta:
+
+  {{ activate_url }}
+
+Si el enlace no funciona, cópialo y pégalo en tu navegador.
+
+Si no creaste esta cuenta, ignora este mensaje.
+{% endblock %}

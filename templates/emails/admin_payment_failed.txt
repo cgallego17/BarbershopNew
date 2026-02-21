@@ -1,0 +1,17 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+[Admin] ⚠ Alerta de pago fallido
+
+El pedido #{{ order.order_number }} presentó un fallo en el proceso de pago.
+
+  Pedido:   #{{ order.order_number }}
+  Cliente:  {{ order.billing_first_name }} {{ order.billing_last_name }}
+  Email:    {{ order.billing_email }}
+{% if order.billing_phone %}  Tel:      {{ order.billing_phone }}
+{% endif %}  Pago:     {{ order.get_payment_status_display }}
+  Total:    ${{ order.total|floatformat:0|intcomma }}
+
+Ver pagos fallidos en panel:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/pedidos/?payment_status=failed
+{% endblock %}

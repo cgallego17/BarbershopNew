@@ -4,9 +4,9 @@
         <div class="row gutter-y-60">
             <div class="col-lg-6 wow fadeInLeft" data-wow-duration="1500ms">
                 <div class="about-three__image">
-                    {% if about_block.image1 %}<img src="{{ about_block.image1.url }}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy">{% else %}<img src="{% static 'assets/images/about/about-3-1.jpg' %}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy">{% endif %}
+                    {% if about_block.image1 %}<img src="{{ about_block.image1.url }}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy" decoding="async">{% else %}<img src="{% static 'assets/images/about/about-3-1.jpg' %}" alt="{{ about_block.title }}" class="about-three__image__one" loading="lazy" decoding="async">{% endif %}
                     {% if about_block.image2 %}
-                    <div class="about-three__image__inner"><img src="{{ about_block.image2.url }}" alt="Imagen secundaria sobre nosotros" class="about-three__image__two" loading="lazy"></div>
+                    <div class="about-three__image__inner"><img src="{{ about_block.image2.url }}" alt="Imagen secundaria sobre nosotros" class="about-three__image__two" loading="lazy" decoding="async"></div>
                     {% endif %}
                     {% if about_block.experience_years %}
                     <div class="about-three__experience">
@@ -40,4 +40,10 @@
             </div>
         </div>
     </div>
+    <div class="about-three__shape">
+        <img src="{% static '225-x-198.png' %}" alt="about shape" class="about-three__shape-one" width="225" height="198" loading="lazy" decoding="async">
+        <div class="about-three__shape__image wow fadeInLeft" data-wow-duration="1500ms">
+            <img src="{% static '225-x-198.png' %}" alt="Cera Vibrante CBD Styling Wax" width="225" height="198" loading="lazy" decoding="async">
+        </div><!-- /.about-three__shape__image -->
+    </div><!-- /.about-three__shape -->
 </section>

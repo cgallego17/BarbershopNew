@@ -2,7 +2,7 @@
     <div class="search-popup__overlay search-toggler"></div>
     <div class="search-popup__content">
         <form role="search" method="get" class="search-popup__form" action="{% url 'products:list' %}">
-            <input type="text" name="q" placeholder="Buscar productos..." />
+            <input type="text" name="q" placeholder="Buscar productos..." autocomplete="off" />
             <button type="submit" class="boskery-btn">
                 <span class="icon-search"></span>
             </button>

@@ -60,7 +60,7 @@
             <div class="admin-card">
                 <div class="admin-card__header">
                     <h3 class="admin-card__title">Últimos pedidos</h3>
-                    <a href="{% url 'admin_panel:order_list' %}" class="admin-card__action">Ver todos</a>
+                    <a href="{% url 'core:admin_panel:order_list' %}" class="admin-card__action">Ver todos</a>
                 </div>
                 <div class="admin-card__body p-0">
                     <div class="admin-table-wrapper">
@@ -81,7 +81,7 @@
                                     <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                                     <td>${{ order.total|floatformat:2|intcomma }}</td>
                                     <td><span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
-                                    <td class="text-end"><a href="{% url 'admin_panel:order_detail' order.pk %}" class="admin-link">Editar</a></td>
+                                    <td class="text-end"><a href="{% url 'core:admin_panel:order_detail' order.pk %}" class="admin-link">Editar</a></td>
                                 </tr>
                                 {% empty %}
                                 <tr>
@@ -98,14 +98,14 @@
             <div class="admin-card mb-4">
                 <div class="admin-card__header">
                     <h3 class="admin-card__title">Stock bajo</h3>
-                    <a href="{% url 'admin_panel:product_list' %}" class="admin-card__action">Ver productos</a>
+                    <a href="{% url 'core:admin_panel:product_list' %}" class="admin-card__action">Ver productos</a>
                 </div>
                 <div class="admin-card__body">
                     {% if low_stock %}
                     <ul class="admin-list">
                         {% for p in low_stock %}
                         <li class="admin-list__item">
-                            <a href="{% url 'admin_panel:product_edit' p.pk %}">{{ p.name }}</a>
+                            <a href="{% url 'core:admin_panel:product_edit' p.pk %}">{{ p.name }}</a>
                             <span class="admin-list__badge admin-list__badge--danger">{{ p.stock_quantity }} uds</span>
                         </li>
                         {% endfor %}
@@ -116,25 +116,68 @@
                 </div>
             </div>
 
+            <div class="admin-card mb-4">
+                <div class="admin-card__header">
+                    <h3 class="admin-card__title">Seguridad (24h)</h3>
+                </div>
+                <div class="admin-card__body">
+                    <div class="admin-security-grid">
+                        <div class="admin-security-stat">
+                            <span class="admin-security-stat__label">Eventos</span>
+                            <span class="admin-security-stat__value">{{ security_summary.total_24h }}</span>
+                        </div>
+                        <div class="admin-security-stat">
+                            <span class="admin-security-stat__label">Honeypot web</span>
+                            <span class="admin-security-stat__value">{{ security_summary.honeypot_24h }}</span>
+                        </div>
+                        <div class="admin-security-stat">
+                            <span class="admin-security-stat__label">Honeypot auth</span>
+                            <span class="admin-security-stat__value">{{ security_summary.auth_honeypot_24h }}</span>
+                        </div>
+                        <div class="admin-security-stat">
+                            <span class="admin-security-stat__label">Rate limit</span>
+                            <span class="admin-security-stat__value">{{ security_summary.rate_limit_24h }}</span>
+                        </div>
+                    </div>
+                    <div class="admin-security-events mt-3">
+                        {% if recent_security_events %}
+                        <ul class="admin-list">
+                            {% for evt in recent_security_events %}
+                            <li class="admin-list__item">
+                                <div>
+                                    <strong>{{ evt.get_event_type_display }}</strong><br>
+                                    <small class="text-muted">{{ evt.source }} · {{ evt.created_at|date:"d/m H:i" }}</small>
+                                </div>
+                                <span class="admin-list__badge admin-list__badge--danger">{{ evt.ip_address|default:"-" }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="admin-empty">No hay eventos recientes.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
             <div class="admin-card">
                 <div class="admin-card__header">
                     <h3 class="admin-card__title">Accesos rápidos</h3>
                 </div>
                 <div class="admin-card__body">
                     <div class="admin-quick-links">
-                        <a href="{% url 'admin_panel:product_create' %}" class="admin-quick-link">
+                        <a href="{% url 'core:admin_panel:product_create' %}" class="admin-quick-link">
                             <i class="fas fa-plus-circle"></i>
                             <span>Nuevo producto</span>
                         </a>
-                        <a href="{% url 'admin_panel:order_list' %}?status=pending" class="admin-quick-link">
+                        <a href="{% url 'core:admin_panel:order_list' %}?status=pending" class="admin-quick-link">
                             <i class="fas fa-clock"></i>
                             <span>Pedidos pendientes</span>
                         </a>
-                        <a href="{% url 'admin_panel:category_list' %}" class="admin-quick-link">
+                        <a href="{% url 'core:admin_panel:category_list' %}" class="admin-quick-link">
                             <i class="fas fa-tags"></i>
                             <span>Categorías</span>
                         </a>
-                        <a href="{% url 'admin_panel:coupon_create' %}" class="admin-quick-link">
+                        <a href="{% url 'core:admin_panel:coupon_create' %}" class="admin-quick-link">
                             <i class="fas fa-ticket-alt"></i>
                             <span>Nuevo cupón</span>
                         </a>
@@ -248,6 +291,32 @@
 .admin-list__badge--danger { background: #fee2e2; color: #991b1b; }
 
 .admin-empty { margin: 0; color: var(--admin-text-muted); font-size: .9rem; }
+
+.admin-security-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.admin-security-stat {
+    border: 1px solid var(--admin-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--admin-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.admin-security-stat__label {
+    font-size: .72rem;
+    color: var(--admin-text-muted);
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.admin-security-stat__value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--admin-text);
+}
 
 .admin-quick-links { display: flex; flex-direction: column; gap: 8px; }
 .admin-quick-link {

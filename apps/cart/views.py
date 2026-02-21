@@ -3,9 +3,23 @@ from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.urls import reverse
 
 from apps.products.models import Product
 from .cart import Cart
+
+
+def _safe_next_url(request, next_url, fallback):
+    if not next_url:
+        return fallback
+    if url_has_allowed_host_and_scheme(
+        url=next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return next_url
+    return fallback
 
 
 def cart_sidebar_json(request, toast_msg=None, toast_type='success'):
@@ -21,10 +35,18 @@ def cart_sidebar_json(request, toast_msg=None, toast_type='success'):
          'site_settings': settings},
         request=request
     )
+    foot_html = render_to_string(
+        'partials/cart_sidebar_footer.html',
+        {'cart': cart, 'cart_count': len(cart),
+         'cart_total': cart.get_total_price(),
+         'site_settings': settings},
+        request=request
+    )
     total = cart.get_total_price()
     currency = settings.currency or ''
     data = {
         'html': html,
+        'foot_html': foot_html,
         'count': len(cart),
         'total': f"{currency}{intcomma(int(total))}",
     }
@@ -37,7 +59,11 @@ def cart_sidebar_json(request, toast_msg=None, toast_type='success'):
 def cart_add(request, product_id):
     cart = Cart(request)
     product = get_object_or_404(Product, id=product_id, is_active=True)
-    quantity = int(request.POST.get('quantity', 1))
+    try:
+        quantity = int(request.POST.get('quantity', 1))
+    except (TypeError, ValueError):
+        quantity = 1
+    quantity = max(1, min(quantity, 99))
     variant_id = request.POST.get('variant_id') or None
     if variant_id:
         variant_id = int(variant_id)
@@ -55,7 +81,11 @@ def cart_add(request, product_id):
         return cart_sidebar_json(request, toast_msg=msg, toast_type='success')
     messages.success(request, msg)
     # Redirect normal con flag para abrir sidebar
-    next_url = request.POST.get('next') or 'cart:detail'
+    next_url = _safe_next_url(
+        request,
+        request.POST.get('next'),
+        reverse('cart:detail'),
+    )
     sep = '&' if '?' in next_url else '?'
     return redirect(f"{next_url}{sep}cart_open=1")
 
@@ -66,6 +96,17 @@ def cart_remove(request, product_id):
     variant_id = request.POST.get('variant_id') or None
     cart.remove(product_id, variant_id=variant_id)
     msg = 'Producto eliminado del carrito.'
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return cart_sidebar_json(request, toast_msg=msg, toast_type='info')
+    messages.success(request, msg)
+    return redirect('cart:detail')
+
+
+@require_POST
+def cart_clear(request):
+    cart = Cart(request)
+    cart.clear()
+    msg = 'Carrito limpiado correctamente.'
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return cart_sidebar_json(request, toast_msg=msg, toast_type='info')
     messages.success(request, msg)

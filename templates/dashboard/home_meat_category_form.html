@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="mb-4">
-    <a href="{% url 'admin_panel:home_sections' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a secciones</a>
+    <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a secciones</a>
 </div>
 
 <div class="admin-card">
@@ -37,10 +37,10 @@
             </div>
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
-                <a href="{% url 'admin_panel:home_sections' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+                <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
             </div>
         </form>
     </div>
 </div>
-<p class="text-muted small mt-3">Los ítems del grid (categorías) se generan automáticamente desde las categorías de productos activas. Gestiona categorías en <a href="{% url 'admin_panel:category_list' %}">Productos → Categorías</a>.</p>
+<p class="text-muted small mt-3">Los ítems del grid (categorías) se generan automáticamente desde las categorías de productos activas. Gestiona categorías en <a href="{% url 'core:admin_panel:category_list' %}">Productos → Categorías</a>.</p>
 {% endblock %}

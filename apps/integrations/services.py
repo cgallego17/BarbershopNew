@@ -20,22 +20,32 @@ logger = logging.getLogger(__name__)
 TERSA_API_URL = 'https://tersacosmeticos.com/prod/api/productos-publicos/'
 TERSA_BASE_URL = 'https://tersacosmeticos.com'
 TERSA_BRANDS = ['BARBERSHOP', 'BARBER UP']
+# IDs de la API a importar además de las marcas BARBERSHOP y BARBER UP
+TERSA_EXTRA_PRODUCT_IDS = [
+    '200233', '200691', '200692', '200693', '200694', '200699', '200068',
+]
 
 
-def fetch_tersa_products(brands=None):
+def fetch_tersa_products(brands=None, extra_ids=None):
     """
     Obtiene productos desde la API de Tersa Cosmeticos.
-    Filtra solo por nombre_marca en BARBERSHOP y BARBER UP por defecto.
+    Filtra por nombre_marca en BARBERSHOP y BARBER UP, más los IDs extra indicados.
     """
     brands = brands or TERSA_BRANDS
+    extra_ids = extra_ids if extra_ids is not None else TERSA_EXTRA_PRODUCT_IDS
+    extra_set = {str(i).strip() for i in extra_ids if i}
     try:
         response = requests.get(TERSA_API_URL, timeout=60)
         response.raise_for_status()
         data = response.json()
         if not isinstance(data, list):
             return []
-        # Filtrar solo marcas permitidas
-        return [p for p in data if (p.get('nombre_marca') or '').strip().upper() in [b.upper() for b in brands]]
+        brand_set = {b.upper() for b in brands}
+        return [
+            p for p in data
+            if (p.get('nombre_marca') or '').strip().upper() in brand_set
+            or str(p.get('id', '')).strip() in extra_set
+        ]
     except Exception as e:
         logger.exception("Error fetching Tersa products")
         raise Exception(f"Error fetching Tersa API: {e}")

@@ -1,32 +1,687 @@
 {% extends 'base.html' %}
 {% load static humanize %}
 
-{% block title %}Mis pedidos{% endblock %}
+{% block title %}Mi cuenta{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block meta_description %}Administra tu perfil, direcciones, pedidos, seguridad y favoritos en tu cuenta de {{ site_settings.site_name }}.{% endblock %}
+{% block og_title %}Mi cuenta | {{ site_settings.site_name }}{% endblock %}
+{% block og_description %}Consulta tus pedidos y gestiona tu información personal desde tu panel de cliente.{% endblock %}
+{% block twitter_title %}Mi cuenta | {{ site_settings.site_name }}{% endblock %}
+{% block twitter_description %}Panel de cliente para gestionar pedidos, direcciones y perfil.{% endblock %}
+
+{% block extra_css %}
+<style>
+.customer-panel { background: #f4f5f7; padding: 40px 0 60px; }
+.customer-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; }
+
+.account-card {
+    background: #fff; border: 1px solid #e8e8ee; border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.account-sidebar { padding: 16px; position: sticky; top: 90px; height: fit-content; }
+.account-user {
+    border: 1px solid #f0f0f4; border-radius: 12px; background: #fafbff;
+    padding: 14px; margin-bottom: 14px;
+}
+.account-user__name { font-size: .98rem; font-weight: 800; color: #1f1f2b; margin-bottom: 3px; }
+.account-user__email { font-size: .78rem; color: #8f8f99; margin-bottom: 8px; word-break: break-word; }
+.account-user__chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; border: 1px solid #ececf2;
+    background: #fff; color: #6d6d7a;
+    font-size: .68rem; font-weight: 700; padding: 4px 10px;
+}
+.account-nav { display: grid; gap: 8px; }
+.account-nav a {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 10px; text-decoration: none;
+    font-size: .82rem; font-weight: 700; color: #626273;
+    border: 1px solid #ededf2; background: #fff;
+}
+.account-nav a:hover { border-color: #dfdfe7; color: #373748; }
+.account-nav a.is-active {
+    color: var(--boskery-base, #C56533);
+    border-color: rgba(197,101,51,.4);
+    background: rgba(197,101,51,.08);
+}
+
+.account-main { padding: 16px; }
+.account-panel__title {
+    font-size: 1.15rem; font-weight: 900; color: #1f1f2b;
+    margin-bottom: 2px;
+}
+.account-panel__sub { font-size: .82rem; color: #8f8f99; margin-bottom: 14px; }
+
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.account-field { margin-bottom: 12px; }
+.account-field label {
+    display: block; font-size: .74rem; color: #747488;
+    font-weight: 700; margin-bottom: 4px;
+}
+.account-field input,
+.account-field textarea,
+.account-field select {
+    width: 100%; border: 1px solid #dfdfe7; border-radius: 10px;
+    padding: 10px 12px; font-size: .86rem; color: #222236;
+    background: #fff;
+}
+.account-field textarea { resize: vertical; min-height: 86px; }
+.account-field input:focus,
+.account-field textarea:focus,
+.account-field select:focus {
+    border-color: rgba(197,101,51,.6);
+    box-shadow: 0 0 0 3px rgba(197,101,51,.12);
+    outline: none;
+}
+.account-help { font-size: .72rem; color: #9696a4; margin-top: 5px; }
+.account-error {
+    margin-top: 5px; color: #b91c1c; font-size: .72rem; font-weight: 600;
+}
+.account-form-errors {
+    margin-bottom: 12px; border-radius: 10px; border: 1px solid #fecaca;
+    background: #fff1f2; color: #b91c1c; padding: 10px 12px; font-size: .8rem;
+}
+
+.account-section-card {
+    border: 1px solid #ededf2; border-radius: 12px; background: #fff; padding: 14px;
+}
+.account-actions { margin-top: 4px; }
+.account-actions .boskery-btn { min-width: 170px; }
+.address-book-list { display: grid; gap: 10px; margin-bottom: 12px; }
+.address-book-card {
+    border: 1px solid #ececf2;
+    border-radius: 12px;
+    padding: 12px;
+    background: #fcfcff;
+}
+.address-book-card__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+.address-book-card__alias { font-size: .86rem; font-weight: 800; color: #222236; }
+.address-book-card__badge {
+    display: inline-flex; align-items: center;
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: .64rem;
+    font-weight: 700;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    background: #ecfdf3;
+}
+.address-book-card__text { font-size: .78rem; color: #66667a; margin-bottom: 9px; }
+.address-book-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.address-book-btn {
+    border: 1px solid #dfe0e8;
+    border-radius: 8px;
+    background: #fff;
+    color: #55556b;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 6px 9px;
+}
+.address-book-btn:hover { border-color: var(--boskery-base, #C56533); color: var(--boskery-base, #C56533); }
+.address-book-btn--default {
+    border-color: rgba(197,101,51,.45);
+    color: var(--boskery-base, #C56533);
+    background: rgba(197,101,51,.08);
+}
+.address-book-btn--default:hover {
+    border-color: var(--boskery-base, #C56533);
+    color: #fff;
+    background: var(--boskery-base, #C56533);
+}
+.address-book-btn--danger:hover { border-color: #ef4444; color: #ef4444; }
+.address-form-title {
+    font-size: .84rem;
+    font-weight: 800;
+    color: #2b2b3b;
+    margin: 2px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.address-submit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 15px;
+    font-size: .82rem;
+    font-weight: 800;
+    background: var(--boskery-base, #C56533);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(197,101,51,.25);
+}
+.address-submit-btn:hover {
+    background: #a74d27;
+    color: #fff;
+}
+
+.orders-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-bottom: 18px; }
+.orders-summary__card {
+    background: #fff; border: 1px solid #e9e9ee; border-radius: 14px;
+    padding: 14px 16px; box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.orders-summary__label {
+    display: block; font-size: .72rem; text-transform: uppercase;
+    letter-spacing: .08em; color: #9a9aa4; font-weight: 700; margin-bottom: 5px;
+}
+.orders-summary__value { font-size: 1.2rem; font-weight: 900; color: #1f1f2b; }
+.orders-list { display: grid; gap: 12px; }
+.order-card {
+    background: #fff; border: 1px solid #e9e9ee; border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04); overflow: hidden;
+}
+.order-card__head {
+    padding: 13px 16px;
+    border-bottom: 1px solid #f0f0f4;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.order-card__number a { font-size: .95rem; font-weight: 800; color: #1a1a1a; text-decoration: none; }
+.order-card__number a:hover { color: var(--boskery-base, #C56533); }
+.order-card__date { font-size: .76rem; color: #9898a2; margin-top: 2px; }
+.order-card__body { padding: 14px 16px; display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; }
+.order-meta__label {
+    display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .08em; color: #9c9ca6; margin-bottom: 4px;
+}
+.order-meta__value { font-size: .88rem; color: #1f1f2b; font-weight: 700; }
+.order-meta__value--total { color: var(--boskery-base, #C56533); font-size: .98rem; }
+.order-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 999px; padding: 5px 10px; font-size: .72rem; font-weight: 800;
+}
+.order-badge--pending { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.order-badge--processing { background: #ecfeff; color: #0e7490; border: 1px solid #bae6fd; }
+.order-badge--completed { background: #ecfdf3; color: #15803d; border: 1px solid #bbf7d0; }
+.order-badge--cancelled, .order-badge--refunded, .order-badge--failed { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+.order-badge--on_hold { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.orders-empty {
+    background: #fff; border: 1px solid #e9e9ee; border-radius: 14px;
+    text-align: center; padding: 38px 20px;
+}
+.orders-empty i { font-size: 1.8rem; color: #c7c7cf; margin-bottom: 10px; }
+.orders-empty h5 { font-weight: 800; margin-bottom: 6px; }
+.orders-empty p { color: #8f8f99; margin-bottom: 14px; }
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.favorite-card {
+    border: 1px solid #e9e9ee;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+.favorite-card__image {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #f5f5f8;
+}
+.favorite-card__image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.favorite-card__body { padding: 10px; }
+.favorite-card__name {
+    display: block;
+    color: #242437;
+    font-size: .84rem;
+    font-weight: 800;
+    text-decoration: none;
+    line-height: 1.3;
+    margin-bottom: 8px;
+}
+.favorite-card__name:hover { color: var(--boskery-base, #C56533); }
+.favorite-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.favorite-card__price {
+    font-size: .86rem;
+    font-weight: 800;
+    color: var(--boskery-base, #C56533);
+}
+.favorite-card__actions { display: flex; gap: 6px; margin-top: 8px; }
+.favorite-btn {
+    border: 1px solid #dfdfe7;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: .72rem;
+    font-weight: 700;
+    text-decoration: none;
+    background: #fff;
+    color: #5d5d73;
+}
+.favorite-btn:hover { color: var(--boskery-base, #C56533); border-color: var(--boskery-base, #C56533); }
+.favorite-btn--danger:hover { color: #b91c1c; border-color: #fecaca; background: #fff1f2; }
+
+@media (max-width: 991px) {
+    .customer-layout { grid-template-columns: 1fr; }
+    .account-sidebar { position: static; }
+    .account-grid { grid-template-columns: 1fr; }
+    .orders-summary { grid-template-columns: 1fr 1fr; }
+    .order-card__body { grid-template-columns: 1fr 1fr; }
+    .favorites-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 575px) {
+    .customer-panel { padding: 24px 0 34px; }
+    .account-sidebar, .account-main { padding: 12px; }
+    .orders-summary { grid-template-columns: 1fr; }
+    .order-card__body { grid-template-columns: 1fr; gap: 10px; }
+    .favorites-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
     <div class="container">
-        <h2 class="page-header__title">Mis pedidos</h2>
+        <h2 class="page-header__title">Mi cuenta</h2>
         <ul class="boskery-breadcrumb list-unstyled">
             <li><a href="{% url 'core:home' %}">Inicio</a></li>
-            <li><span>Mis pedidos</span></li>
+            <li><span>Mi cuenta</span></li>
         </ul>
     </div>
 </section>
 
-<section class="section-space">
+<section class="customer-panel">
     <div class="container">
-        {% for order in orders %}
-        <div class="card mb-3">
-            <div class="card-body">
-                <h5><a href="{% url 'orders:detail' order.order_number %}">{{ order.order_number }}</a></h5>
-                <p>Fecha: {{ order.created_at|date:"d/m/Y" }} | Total: ${{ order.total|floatformat:2 }} | Estado: {{ order.get_status_display }}</p>
+        <div class="customer-layout">
+            <aside class="account-card account-sidebar">
+                <div class="account-user">
+                    <div class="account-user__name">{{ user.first_name }} {{ user.last_name }}</div>
+                    <div class="account-user__email">{{ user.email }}</div>
+                    <span class="account-user__chip">
+                        <i class="fas fa-user-circle"></i>
+                        {% if user.is_wholesale %}Cliente mayorista{% else %}Cliente{% endif %}
+                    </span>
+                </div>
+                <nav class="account-nav">
+                    <a href="?tab=profile" class="{% if active_tab == 'profile' %}is-active{% endif %}">
+                        <i class="fas fa-user"></i> Perfil
+                    </a>
+                    <a href="?tab=addresses" class="{% if active_tab == 'addresses' %}is-active{% endif %}">
+                        <i class="fas fa-map-marker-alt"></i> Direcciones
+                    </a>
+                    <a href="?tab=orders" class="{% if active_tab == 'orders' %}is-active{% endif %}">
+                        <i class="fas fa-box"></i> Pedidos
+                    </a>
+                    <a href="?tab=favorites" class="{% if active_tab == 'favorites' %}is-active{% endif %}">
+                        <i class="fas fa-heart"></i> Mis favoritos
+                    </a>
+                    <a href="?tab=security" class="{% if active_tab == 'security' %}is-active{% endif %}">
+                        <i class="fas fa-shield-alt"></i> Seguridad
+                    </a>
+                    <a href="{% url 'account_logout' %}" class="js-logout-link">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+                    </a>
+                </nav>
+            </aside>
+
+            <div class="account-card account-main">
+                {% if active_tab == 'profile' %}
+                <h3 class="account-panel__title">Datos del perfil</h3>
+                <p class="account-panel__sub">Actualiza tu información personal y de identificación.</p>
+
+                <div class="account-section-card">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="profile">
+                        {% if profile_form.non_field_errors %}
+                        <div class="account-form-errors">{{ profile_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="account-grid">
+                            <div class="account-field">
+                                <label for="{{ profile_form.first_name.id_for_label }}">Nombre</label>
+                                {{ profile_form.first_name }}
+                                {% for error in profile_form.first_name.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.last_name.id_for_label }}">Apellido</label>
+                                {{ profile_form.last_name }}
+                                {% for error in profile_form.last_name.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.email.id_for_label }}">Email</label>
+                                {{ profile_form.email }}
+                                {% for error in profile_form.email.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.phone.id_for_label }}">Teléfono</label>
+                                {{ profile_form.phone }}
+                                {% for error in profile_form.phone.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.customer_type.id_for_label }}">Tipo de cliente</label>
+                                {{ profile_form.customer_type }}
+                                {% for error in profile_form.customer_type.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.document_type.id_for_label }}">Tipo de documento</label>
+                                {{ profile_form.document_type }}
+                                {% for error in profile_form.document_type.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.document_number.id_for_label }}">Número de documento</label>
+                                {{ profile_form.document_number }}
+                                {% for error in profile_form.document_number.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ profile_form.date_of_birth.id_for_label }}">Fecha de nacimiento</label>
+                                {{ profile_form.date_of_birth }}
+                                {% for error in profile_form.date_of_birth.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="account-actions">
+                            <button class="boskery-btn" type="submit">
+                                <span class="boskery-btn__text">Guardar perfil</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {% elif active_tab == 'addresses' %}
+                <h3 class="account-panel__title">Direcciones</h3>
+                <p class="account-panel__sub">Guarda varias direcciones con alias (Casa, Oficina, etc.).</p>
+
+                <div class="account-section-card">
+                    {% if addresses %}
+                    <div class="address-book-list">
+                        {% for addr in addresses %}
+                        <article class="address-book-card">
+                            <div class="address-book-card__head">
+                                <div class="address-book-card__alias">{{ addr.alias }}</div>
+                                {% if addr.is_default %}
+                                <span class="address-book-card__badge">Predeterminada</span>
+                                {% endif %}
+                            </div>
+                            <div class="address-book-card__text">
+                                {{ addr.address }}{% if addr.city %}, {{ addr.city }}{% endif %}{% if addr.state %}, {{ addr.state }}{% endif %}{% if addr.country %}, {{ addr.country }}{% endif %}{% if addr.postal_code %} · CP {{ addr.postal_code }}{% endif %}
+                            </div>
+                            <div class="address-book-actions">
+                                {% if not addr.is_default %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="address_set_default">
+                                    <input type="hidden" name="address_id" value="{{ addr.id }}">
+                                    <button type="submit" class="address-book-btn address-book-btn--default">
+                                        <i class="fas fa-star" style="font-size:.62rem;"></i> Predeterminada
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <a href="?tab=addresses&edit_address={{ addr.id }}" class="address-book-btn">Editar</a>
+                                <form method="post" onsubmit="return confirm('¿Eliminar esta dirección?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="address_delete">
+                                    <input type="hidden" name="address_id" value="{{ addr.id }}">
+                                    <button type="submit" class="address-book-btn address-book-btn--danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="{% if editing_address %}address_edit{% else %}address_add{% endif %}">
+                        {% if editing_address %}
+                        <input type="hidden" name="address_id" value="{{ editing_address.id }}">
+                        {% endif %}
+                        <p class="address-form-title">
+                            <i class="fas fa-map-marked-alt"></i>
+                            {% if editing_address %}Editar dirección{% else %}Agregar nueva dirección{% endif %}
+                        </p>
+                        {% if address_book_form.non_field_errors %}
+                        <div class="account-form-errors">{{ address_book_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="account-grid js-geo-cascade"
+                             data-country-name="country"
+                             data-state-name="state"
+                             data-city-name="city">
+                            <div class="account-field">
+                                <label for="{{ address_book_form.alias.id_for_label }}">Alias</label>
+                                {{ address_book_form.alias }}
+                                {% for error in address_book_form.alias.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field" style="grid-column: 1 / -1;">
+                                <label for="{{ address_book_form.address.id_for_label }}">Dirección</label>
+                                {{ address_book_form.address }}
+                                {% for error in address_book_form.address.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="id_country">País</label>
+                                <select name="country" id="id_country">
+                                    <option value="">Selecciona país...</option>
+                                    {% for c in countries %}
+                                    <option value="{{ c.name }}"
+                                        {% if initial_country == c.name %}selected{% endif %}>
+                                        {{ c.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                {% for error in address_book_form.country.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="id_state">Departamento / Estado</label>
+                                <select name="state" id="id_state">
+                                    <option value="">Selecciona...</option>
+                                </select>
+                                {% for error in address_book_form.state.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="id_city">Ciudad</label>
+                                <select name="city" id="id_city">
+                                    <option value="">Selecciona...</option>
+                                </select>
+                                {% for error in address_book_form.city.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field">
+                                <label for="{{ address_book_form.postal_code.id_for_label }}">Código postal</label>
+                                {{ address_book_form.postal_code }}
+                                {% for error in address_book_form.postal_code.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                            </div>
+                            <div class="account-field" style="display:flex;align-items:center;gap:8px;margin-top:28px;">
+                                {{ address_book_form.is_default }}
+                                <label for="{{ address_book_form.is_default.id_for_label }}" style="margin:0;">Marcar como predeterminada</label>
+                            </div>
+                        </div>
+
+                        <div class="account-actions">
+                            <button class="address-submit-btn" type="submit">
+                                <i class="fas fa-save"></i>
+                                {% if editing_address %}Actualizar dirección{% else %}Agregar dirección{% endif %}
+                            </button>
+                            {% if editing_address %}
+                            <a href="?tab=addresses" class="address-book-btn" style="margin-left:8px;">Cancelar edición</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                {% elif active_tab == 'favorites' %}
+                <h3 class="account-panel__title">Mis favoritos</h3>
+                <p class="account-panel__sub">Productos que guardaste para comprar después.</p>
+
+                {% if favorites %}
+                <div class="favorites-grid">
+                    {% for fav in favorites %}
+                    <article class="favorite-card">
+                        <a href="{{ fav.product.get_absolute_url }}" class="favorite-card__image">
+                            {% with img=fav.product.get_main_image %}
+                            {% if img %}
+                            <img src="{{ img.image.url }}" alt="{{ fav.product.name }}" loading="lazy">
+                            {% else %}
+                            <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ fav.product.name }}" loading="lazy">
+                            {% endif %}
+                            {% endwith %}
+                        </a>
+                        <div class="favorite-card__body">
+                            <a href="{{ fav.product.get_absolute_url }}" class="favorite-card__name">{{ fav.product.name }}</a>
+                            <div class="favorite-card__meta">
+                                <span class="favorite-card__price">{{ site_settings.currency }}{{ fav.product.price|floatformat:0|intcomma }}</span>
+                                <small class="text-muted">{{ fav.created_at|date:"d/m/Y" }}</small>
+                            </div>
+                            <div class="favorite-card__actions">
+                                <a href="{{ fav.product.get_absolute_url }}" class="favorite-btn">Ver producto</a>
+                                <form method="post" action="{% url 'products:toggle_favorite' fav.product.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="favorite-btn favorite-btn--danger">Quitar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="orders-empty">
+                    <i class="fas fa-heart-broken"></i>
+                    <h5>Aún no tienes favoritos</h5>
+                    <p>Guarda productos con el corazón para verlos aquí.</p>
+                    <a href="{% url 'products:list' %}" class="boskery-btn">
+                        <span class="boskery-btn__text">Ir a la tienda</span>
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% endif %}
+
+                {% elif active_tab == 'security' %}
+                <h3 class="account-panel__title">Seguridad</h3>
+                <p class="account-panel__sub">Cambia tu contraseña y mantén protegida tu cuenta.</p>
+
+                <div class="account-section-card">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="password">
+                        {% if password_form.non_field_errors %}
+                        <div class="account-form-errors">{{ password_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="account-field">
+                            <label for="{{ password_form.old_password.id_for_label }}">Contraseña actual</label>
+                            {{ password_form.old_password }}
+                            {% for error in password_form.old_password.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="account-field">
+                            <label for="{{ password_form.new_password1.id_for_label }}">Nueva contraseña</label>
+                            {{ password_form.new_password1 }}
+                            {% for error in password_form.new_password1.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="account-field">
+                            <label for="{{ password_form.new_password2.id_for_label }}">Confirmar nueva contraseña</label>
+                            {{ password_form.new_password2 }}
+                            {% for error in password_form.new_password2.errors %}<div class="account-error">{{ error }}</div>{% endfor %}
+                        </div>
+                        <p class="account-help">Usa una contraseña segura de mínimo 10 caracteres.</p>
+
+                        <div class="account-actions">
+                            <button class="boskery-btn" type="submit">
+                                <span class="boskery-btn__text">Cambiar contraseña</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {% else %}
+                <h3 class="account-panel__title">Mis pedidos</h3>
+                <p class="account-panel__sub">Consulta el estado, pago y detalle de tus compras.</p>
+
+                {% if orders %}
+                <div class="orders-summary">
+                    <div class="orders-summary__card">
+                        <span class="orders-summary__label">Pedidos totales</span>
+                        <span class="orders-summary__value">{{ orders|length }}</span>
+                    </div>
+                    <div class="orders-summary__card">
+                        <span class="orders-summary__label">Último pedido</span>
+                        <span class="orders-summary__value">{{ orders.0.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                    <div class="orders-summary__card">
+                        <span class="orders-summary__label">Estado reciente</span>
+                        <span class="orders-summary__value">{{ orders.0.get_status_display }}</span>
+                    </div>
+                </div>
+
+                <div class="orders-list">
+                {% for order in orders %}
+                <article class="order-card">
+                    <header class="order-card__head">
+                        <div>
+                            <div class="order-card__number">
+                                <a href="{% url 'orders:detail' order.order_number %}">{{ order.order_number }}</a>
+                            </div>
+                            <div class="order-card__date">Creado el {{ order.created_at|date:"d/m/Y H:i" }}</div>
+                        </div>
+                        <a href="{% url 'orders:detail' order.order_number %}" class="boskery-btn" style="padding:10px 14px;font-size:.75rem;">
+                            <span class="boskery-btn__text">Ver detalle</span>
+                            <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </a>
+                    </header>
+                    <div class="order-card__body">
+                        <div class="order-meta">
+                            <span class="order-meta__label">Estado pedido</span>
+                            <span class="order-badge order-badge--{{ order.status }}">{{ order.get_status_display }}</span>
+                        </div>
+                        <div class="order-meta">
+                            <span class="order-meta__label">Estado pago</span>
+                            <span class="order-badge order-badge--{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+                        </div>
+                        <div class="order-meta">
+                            <span class="order-meta__label">Productos</span>
+                            <span class="order-meta__value">{{ order.items_count }}</span>
+                        </div>
+                        <div class="order-meta">
+                            <span class="order-meta__label">Total</span>
+                            <span class="order-meta__value order-meta__value--total">{{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}</span>
+                        </div>
+                    </div>
+                </article>
+                {% empty %}
+                <div class="orders-empty">
+                    <i class="fas fa-box-open"></i>
+                    <h5>No tienes pedidos aún</h5>
+                    <p>Cuando realices una compra, tus pedidos aparecerán aquí.</p>
+                    <a href="{% url 'products:list' %}" class="boskery-btn">
+                        <span class="boskery-btn__text">Ir a la tienda</span>
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% endfor %}
+                </div>
+                {% else %}
+                <div class="orders-empty">
+                    <i class="fas fa-box-open"></i>
+                    <h5>No tienes pedidos aún</h5>
+                    <p>Cuando realices una compra, tus pedidos aparecerán aquí.</p>
+                    <a href="{% url 'products:list' %}" class="boskery-btn">
+                        <span class="boskery-btn__text">Ir a la tienda</span>
+                        <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+                    </a>
+                </div>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
-        {% empty %}
-        <p>No tienes pedidos.</p>
-        {% endfor %}
     </div>
 </section>
+{% include 'dashboard/_geo_cascade_script.html' %}
 {% endblock %}

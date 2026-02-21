@@ -1,12 +1,12 @@
 {% load static %}
 <section class="client-carousel client-carousel--three">
-    <div class="client-carousel__bg boskery-jarallax" data-jarallax data-speed="0.3" style="background-image: url({% static 'assets/images/backgrounds/client-carousel-3-bg.jpg' %});"></div>
+    <div class="client-carousel__bg" style="background-image: url({% if brand_block.background_image %}{{ brand_block.background_image.url }}{% else %}{% static 'assets/images/backgrounds/client-carousel-3-bg.jpg' %}{% endif %});"></div>
     <div class="container">
-        <div class="client-carousel__one boskery-owl__carousel owl-carousel owl-theme" data-owl-options='{"items": 1, "loop": true, "autoplay": true, "responsive": {"0":{"items": 2}, "500":{"items": 3}, "768":{"items": 4}, "992":{"items": 5}}}'>
+        <div class="client-carousel__one boskery-owl__carousel owl-carousel owl-theme" data-owl-options='{"items": 1, "loop": true, "autoplay": true, "autoplayTimeout": 2200, "autoplayHoverPause": true, "smartSpeed": 700, "responsive": {"0":{"items": 2}, "500":{"items": 2}, "768":{"items": 3}, "992":{"items": 3}}}'>
             {% for brand in home_brands %}
             <div class="client-carousel__one__item">
                 {% if brand.url %}<a href="{{ brand.url }}" target="_blank" rel="noopener">{% endif %}
-                <img src="{{ brand.logo.url }}" alt="{{ brand.name }}">
+                <img src="{{ brand.logo.url }}" alt="{{ brand.name }}" width="180" height="72" loading="lazy" decoding="async">
                 {% if brand.url %}</a>{% endif %}
             </div>
             {% endfor %}

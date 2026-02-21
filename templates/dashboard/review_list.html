@@ -1,0 +1,131 @@
+{% extends 'dashboard/base.html' %}
+{% load static humanize %}
+{% block title %}Reseñas{% endblock %}
+{% block topbar_title %}Autorizar reseñas{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
+        {% if request.GET.q or request.GET.status or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:review_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Autor, email, comentario o producto">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendientes</option>
+                        <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Aprobados</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ordenar</label>
+                    <select name="sort" class="form-select">
+                        <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Más antiguos</option>
+                        <option value="rating" {% if request.GET.sort == 'rating' %}selected{% endif %}>Puntuación ↑</option>
+                        <option value="-rating" {% if request.GET.sort == '-rating' %}selected{% endif %}>Puntuación ↓</option>
+                        <option value="author" {% if request.GET.sort == 'author' %}selected{% endif %}>Autor A-Z</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Autor</th>
+                        <th>Puntuación</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in reviews %}
+                    <tr>
+                        <td>
+                            <a href="{{ r.product.get_absolute_url }}" target="_blank" class="admin-link">{{ r.product.name|truncatewords:6 }}</a>
+                        </td>
+                        <td>
+                            <div><strong>{{ r.author_name }}</strong></div>
+                            <div class="text-muted small">{{ r.author_email }}</div>
+                        </td>
+                        <td>
+                            <span class="text-warning">{% for i in "12345" %}{% if forloop.counter <= r.rating %}★{% else %}☆{% endif %}{% endfor %}</span> {{ r.rating }}/5
+                        </td>
+                        <td style="max-width: 240px;"><span class="text-muted">{{ r.comment|truncatewords:20 }}</span></td>
+                        <td>{{ r.created_at|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if r.is_approved %}
+                            <span class="admin-badge admin-badge--completed">Aprobado</span>
+                            {% else %}
+                            <span class="admin-badge admin-badge--pending">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                {% if not r.is_approved %}
+                                <form method="post" action="{% url 'core:admin_panel:review_approve' r.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="admin-action admin-action--success">Autorizar</button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'core:admin_panel:review_reject' r.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <button type="submit" class="admin-action admin-action--warning">Rechazar</button>
+                                </form>
+                                {% endif %}
+                                <form method="post" action="{% url 'core:admin_panel:review_delete' r.pk %}" style="display:inline;" onsubmit="return confirm('¿Eliminar esta reseña?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="admin-action admin-action--danger">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="admin-table__empty">
+                            {% if request.GET.q or request.GET.status %}
+                            No se encontraron reseñas. <a href="{% url 'core:admin_panel:review_list' %}">Ver todas</a>
+                            {% else %}
+                            No hay reseñas pendientes de autorizar.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

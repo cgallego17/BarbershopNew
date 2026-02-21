@@ -31,12 +31,15 @@
     }
     function setCityOptions(cities) {
         clearOptions(citySelect, true);
-        cities.forEach(function(c) {
+        (cities || []).forEach(function(c) {
             var opt = document.createElement('option');
-            opt.value = c.name;
-            opt.textContent = c.name;
+            opt.value = (c && c.name) || '';
+            var cid = c && (c.id !== undefined && c.id !== null) ? String(c.id) : '';
+            if (cid) opt.setAttribute('data-city-id', cid);
+            opt.textContent = (c && c.name) || '';
             citySelect.appendChild(opt);
         });
+        citySelect.dispatchEvent(new CustomEvent('citiesLoaded', { detail: { cities: cities || [] } }));
     }
 
     countrySelect.addEventListener('change', function() {
@@ -63,15 +66,36 @@
     var initialState = '{{ initial_state|escapejs }}';
     var initialCity = '{{ initial_city|escapejs }}';
 
+    function loadInitial() {
+        if (!initialCountry) return;
+        var c = countries.find(function(x) { return x.name === initialCountry; });
+        if (!c) return;
+        fetch(statesUrl + '?country_id=' + c.id)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var states = data.states || [];
+                setStateOptions(states);
+                if (!initialState) return;
+                var stateOpt = Array.prototype.find.call(stateSelect.options, function(o) {
+                    return o.value === initialState && o.getAttribute('data-state-id');
+                });
+                if (!stateOpt) return;
+                stateSelect.value = initialState;
+                var stateId = stateOpt.getAttribute('data-state-id');
+                return fetch(citiesUrl + '?state_id=' + stateId)
+                    .then(function(r2) { return r2.json(); })
+                    .then(function(data2) {
+                        setCityOptions(data2.cities || []);
+                        if (initialCity) {
+                            citySelect.value = initialCity;
+                            citySelect.dispatchEvent(new Event('change'));
+                        }
+                    });
+            })
+            .catch(function() {});
+    }
     if (initialCountry) {
-        countrySelect.dispatchEvent(new Event('change'));
-        setTimeout(function() {
-            if (initialState) stateSelect.value = initialState;
-            if (initialState) stateSelect.dispatchEvent(new Event('change'));
-            setTimeout(function() {
-                if (initialCity) citySelect.value = initialCity;
-            }, 100);
-        }, 100);
+        loadInitial();
     }
 })();
 </script>

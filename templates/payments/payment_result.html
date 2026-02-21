@@ -10,112 +10,186 @@
 
 {% block extra_css %}
 <style>
-/* ===== PAYMENT RESULT ===== */
+/* ==============================
+   PAYMENT RESULT — Premium dark
+   ============================== */
 .pr-section {
-    background: #f2f3f5; min-height: 82vh;
-    display: flex; align-items: center; padding: 60px 0;
+    background: #0f0f12;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 64px 0;
+    position: relative;
+    overflow: hidden;
 }
-.pr-wrap { max-width: 520px; margin: 0 auto; width: 100%; text-align: center; }
+/* Aura de fondo según estado */
+.pr-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    pointer-events: none;
+    transition: background .4s;
+}
+.pr-section--success::before {
+    background: radial-gradient(ellipse at 50% 0%, rgba(34,197,94,.14) 0%, transparent 55%);
+}
+.pr-section--warning::before {
+    background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,.14) 0%, transparent 55%);
+}
+.pr-section--error::before {
+    background: radial-gradient(ellipse at 50% 0%, rgba(239,68,68,.12) 0%, transparent 55%);
+}
+
+.pr-wrap {
+    max-width: 500px; margin: 0 auto; width: 100%; text-align: center;
+    position: relative; z-index: 1;
+}
 
 /* Icono animado */
 .pr-icon-wrap {
-    width: 90px; height: 90px; border-radius: 50%;
+    width: 96px; height: 96px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 24px; font-size: 2.2rem;
-    animation: pr-pop .5s cubic-bezier(.34,1.56,.64,1);
+    margin: 0 auto 28px; font-size: 2.4rem;
+    animation: pr-pop .55s cubic-bezier(.34,1.56,.64,1) both;
+    position: relative;
+}
+.pr-icon-wrap::after {
+    content: '';
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: .2;
+    animation: pr-ring 1.2s ease-out .5s both;
 }
 @keyframes pr-pop {
     from { transform: scale(0); opacity: 0; }
     to   { transform: scale(1); opacity: 1; }
 }
+@keyframes pr-ring {
+    from { opacity: .4; transform: scale(.9); }
+    to   { opacity: 0;  transform: scale(1.4); }
+}
 .pr-icon-wrap--success {
     background: linear-gradient(135deg, #22c55e, #16a34a);
-    color: #fff; box-shadow: 0 8px 30px rgba(34,197,94,.35);
+    color: #fff; box-shadow: 0 12px 40px rgba(34,197,94,.4);
 }
 .pr-icon-wrap--warning {
     background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: #fff; box-shadow: 0 8px 30px rgba(245,158,11,.35);
+    color: #fff; box-shadow: 0 12px 40px rgba(245,158,11,.4);
 }
 .pr-icon-wrap--error {
     background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: #fff; box-shadow: 0 8px 30px rgba(239,68,68,.3);
+    color: #fff; box-shadow: 0 12px 40px rgba(239,68,68,.35);
 }
 
+/* Título */
 .pr-title {
-    font-size: 1.7rem; font-weight: 900; color: #1a1a2e;
+    font-size: 1.9rem; font-weight: 900; color: #f0f0f8;
     margin-bottom: 8px; letter-spacing: -.02em;
 }
 .pr-subtitle {
-    font-size: .95rem; color: #666; margin-bottom: 30px; line-height: 1.6;
+    font-size: .9rem; color: #5a5a70; margin-bottom: 28px; line-height: 1.65;
 }
 
-/* Card con detalles */
+/* Spinner pending */
+.pr-pending-spinner {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: .8rem; color: #f59e0b; font-weight: 700;
+    margin-bottom: 18px;
+    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.2);
+    padding: 7px 16px; border-radius: 999px;
+}
+
+/* Card de detalles */
 .pr-card {
-    background: #fff; border-radius: 18px;
-    border: 1px solid #e8e8ec;
-    box-shadow: 0 4px 24px rgba(0,0,0,.07);
-    padding: 26px 28px; margin-bottom: 24px; text-align: left;
+    background: #1a1a22;
+    border: 1px solid #2a2a36;
+    border-radius: 18px;
+    padding: 22px 24px;
+    margin-bottom: 20px;
+    text-align: left;
 }
 .pr-card__title {
-    font-size: .65rem; font-weight: 800; letter-spacing: .15em;
-    text-transform: uppercase; color: #aaa; margin-bottom: 16px;
-    display: flex; align-items: center; gap: 7px;
+    font-size: .62rem; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: #4a4a5e;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
 }
+.pr-card__title i { color: var(--boskery-base, #C56533); }
+
 .pr-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid #f5f5f7;
-    font-size: .88rem;
+    padding: 9px 0; border-bottom: 1px solid #23232f;
+    font-size: .85rem;
 }
 .pr-row:last-child { border-bottom: none; }
-.pr-row__label { color: #888; }
-.pr-row__val { font-weight: 700; color: #1a1a2e; }
-.pr-row__val--success { color: #16a34a; }
-.pr-row__val--warning { color: #d97706; }
-.pr-row__val--error   { color: #dc2626; }
-
-/* Status badge */
-.pr-status-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 12px; border-radius: 20px;
-    font-size: .75rem; font-weight: 800;
+.pr-row__label { color: #4e4e62; font-weight: 600; }
+.pr-row__val { font-weight: 700; color: #b0b0c8; }
+.pr-row__val--mono { font-family: 'Courier New', monospace; font-size: .75rem; }
+.pr-row__val--success { color: #4ade80 !important; }
+.pr-row__val--warning { color: #fbbf24 !important; }
+.pr-row__val--error   { color: #f87171 !important; }
+.pr-row__val--big {
+    font-size: 1.25rem; font-weight: 900;
+    color: var(--boskery-base, #C56533) !important;
+    letter-spacing: -.01em;
 }
-.pr-status-badge--success { background:#dcfce7; color:#16a34a; }
-.pr-status-badge--warning { background:#fef3c7; color:#d97706; }
-.pr-status-badge--error   { background:#fee2e2; color:#dc2626; }
+
+/* Badge estado */
+.pr-status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: .72rem; font-weight: 800; border: 1px solid transparent;
+}
+.pr-status-badge--success { background: #0a2d14; color: #4ade80; border-color: #14532d; }
+.pr-status-badge--warning { background: #2d1e0a; color: #fbbf24; border-color: #78350f; }
+.pr-status-badge--error   { background: #2d0a0a; color: #f87171; border-color: #7f1d1d; }
 
 /* Acciones */
-.pr-actions { display: flex; flex-direction: column; gap: 12px; }
+.pr-actions { display: flex; flex-direction: column; gap: 10px; }
 .pr-btn {
     display: flex; align-items: center; justify-content: center; gap: 10px;
-    padding: 15px 24px; border-radius: 14px; font-size: .9rem; font-weight: 800;
+    padding: 15px 22px; border-radius: 14px; font-size: .88rem; font-weight: 800;
     border: none; cursor: pointer; text-decoration: none;
-    transition: transform .15s, box-shadow .15s;
+    transition: transform .15s, box-shadow .15s, color .15s, border-color .15s;
 }
 .pr-btn:hover { transform: translateY(-2px); text-decoration: none; }
 .pr-btn--primary {
     background: linear-gradient(135deg, var(--boskery-base,#C56533), #e07a45);
-    color: #fff; box-shadow: 0 6px 20px rgba(197,101,51,.3);
+    color: #fff; box-shadow: 0 6px 24px rgba(197,101,51,.35);
 }
-.pr-btn--primary:hover { box-shadow: 0 10px 28px rgba(197,101,51,.4); color: #fff; }
+.pr-btn--primary:hover { box-shadow: 0 12px 32px rgba(197,101,51,.5); color: #fff; }
 .pr-btn--outline {
-    background: #fff; color: #555; border: 1.5px solid #e4e4e8;
+    background: transparent; color: #7070a0; border: 1.5px solid #2a2a36;
 }
 .pr-btn--outline:hover { border-color: var(--boskery-base,#C56533); color: var(--boskery-base,#C56533); }
+.pr-btn--retry {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: #fff; box-shadow: 0 6px 24px rgba(124,58,237,.35);
+}
+.pr-btn--retry:hover { box-shadow: 0 12px 32px rgba(124,58,237,.5); color: #fff; }
 
-/* Spinner para estado pending */
-.pr-pending-spinner {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: .82rem; color: #d97706; font-weight: 600; margin-bottom: 20px;
+/* Nota */
+.pr-note {
+    margin-top: 18px;
+    font-size: .75rem; color: #3a3a4e; line-height: 1.5;
+}
+.pr-note a { color: var(--boskery-base, #C56533); }
+
+@media (max-width: 575px) {
+    .pr-section { padding: 40px 0; }
+    .pr-icon-wrap { width: 78px; height: 78px; font-size: 1.9rem; }
+    .pr-title { font-size: 1.5rem; }
+    .pr-card { padding: 18px; }
+    .pr-btn { padding: 13px 18px; font-size: .82rem; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="pr-section">
+<section class="pr-section pr-section--{{ kind }}">
     <div class="container">
         <div class="pr-wrap">
 
-            <!-- Icono principal -->
+            <!-- Icono -->
             <div class="pr-icon-wrap pr-icon-wrap--{{ kind }}">
                 {% if kind == 'success' %}
                     <i class="fas fa-check"></i>
@@ -132,40 +206,38 @@
             {% if kind == 'warning' %}
             <p class="pr-pending-spinner">
                 <i class="fas fa-spinner fa-spin"></i>
-                Verificando tu pago…
+                Verificando tu pago automáticamente…
             </p>
             {% endif %}
 
-            <!-- Detalle de la transacción -->
+            <!-- Detalles del pedido -->
             {% if order %}
             <div class="pr-card">
                 <p class="pr-card__title"><i class="fas fa-receipt"></i> Detalles del pedido</p>
 
                 <div class="pr-row">
-                    <span class="pr-row__label">Número de pedido</span>
-                    <span class="pr-row__val">{{ order.order_number }}</span>
+                    <span class="pr-row__label">Pedido</span>
+                    <span class="pr-row__val"># {{ order.order_number }}</span>
                 </div>
                 <div class="pr-row">
                     <span class="pr-row__label">Estado del pago</span>
-                    <span>
-                        <span class="pr-status-badge pr-status-badge--{{ kind }}">
-                            {% if kind == 'success' %}<i class="fas fa-check-circle"></i> Aprobado
-                            {% elif kind == 'warning' %}<i class="fas fa-clock"></i> En proceso
-                            {% else %}<i class="fas fa-times-circle"></i> No completado
-                            {% endif %}
-                        </span>
+                    <span class="pr-status-badge pr-status-badge--{{ kind }}">
+                        {% if kind == 'success' %}<i class="fas fa-check-circle"></i> Aprobado
+                        {% elif kind == 'warning' %}<i class="fas fa-clock"></i> En proceso
+                        {% else %}<i class="fas fa-times-circle"></i> No completado
+                        {% endif %}
                     </span>
                 </div>
                 <div class="pr-row">
-                    <span class="pr-row__label">Total pagado</span>
-                    <span class="pr-row__val pr-row__val--{{ kind }}">
+                    <span class="pr-row__label">Total</span>
+                    <span class="pr-row__val pr-row__val--big">
                         {{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}
                     </span>
                 </div>
-                {% if order.coupon_code %}
+                {% if order.discount_total %}
                 <div class="pr-row">
-                    <span class="pr-row__label">Cupón aplicado</span>
-                    <span class="pr-row__val pr-row__val--success">{{ order.coupon_code }}</span>
+                    <span class="pr-row__label">Descuento{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span>
+                    <span class="pr-row__val pr-row__val--success">−{{ site_settings.currency }}{{ order.discount_total|floatformat:0|intcomma }}</span>
                 </div>
                 {% endif %}
                 <div class="pr-row">
@@ -174,12 +246,12 @@
                 </div>
                 <div class="pr-row">
                     <span class="pr-row__label">Email</span>
-                    <span class="pr-row__val">{{ order.billing_email }}</span>
+                    <span class="pr-row__val" style="font-size:.8rem;">{{ order.billing_email }}</span>
                 </div>
                 {% if transaction_id %}
                 <div class="pr-row">
                     <span class="pr-row__label">ID Transacción</span>
-                    <span class="pr-row__val" style="font-size:.78rem;font-family:monospace;">{{ transaction_id }}</span>
+                    <span class="pr-row__val pr-row__val--mono">{{ transaction_id }}</span>
                 </div>
                 {% endif %}
             </div>
@@ -197,14 +269,14 @@
                 {% elif kind == 'warning' and order %}
                     <a href="{% url 'payments:payment_status' order_number=order.order_number %}"
                        class="pr-btn pr-btn--outline" id="pr-check-btn">
-                        <i class="fas fa-sync-alt"></i> Verificar estado
+                        <i class="fas fa-sync-alt"></i> Verificar estado ahora
                     </a>
                     <a href="{% url 'orders:detail' order_number=order.order_number %}" class="pr-btn pr-btn--outline">
                         <i class="fas fa-receipt"></i> Ver pedido
                     </a>
                 {% elif order %}
-                    <a href="{% url 'payments:payment_page' order_number=order.order_number %}" class="pr-btn pr-btn--primary">
-                        <i class="fas fa-redo"></i> Intentar de nuevo
+                    <a href="{% url 'payments:payment_page' order_number=order.order_number %}" class="pr-btn pr-btn--retry">
+                        <i class="fas fa-redo"></i> Intentar pagar de nuevo
                     </a>
                     <a href="{% url 'products:list' %}" class="pr-btn pr-btn--outline">
                         <i class="fas fa-store"></i> Volver a la tienda
@@ -216,6 +288,12 @@
                 {% endif %}
             </div>
 
+            <p class="pr-note">
+                ¿Tienes dudas? Escríbenos a
+                <a href="mailto:{{ site_settings.contact_email|default:'soporte@thebarbershop.com' }}">{{ site_settings.contact_email|default:'soporte@thebarbershop.com' }}</a>
+                con el número de pedido.
+            </p>
+
         </div>
     </div>
 </section>
@@ -224,14 +302,13 @@
 {% block extra_js %}
 {% if kind == 'warning' and order %}
 <script>
-// Polling para pedidos en estado pending (verificación bancaria)
 (function () {
     const STATUS_URL = "{% url 'payments:payment_status' order_number=order.order_number %}";
     const ORDER_URL  = "{% url 'orders:detail' order_number=order.order_number %}";
     let tries = 0;
 
     async function checkStatus() {
-        if (tries >= 10) return;  // máximo 10 intentos (50 seg)
+        if (tries >= 10) return;
         tries++;
         try {
             const res  = await fetch(STATUS_URL);
@@ -243,8 +320,6 @@
             }
         } catch (_) {}
     }
-
-    // Verificar cada 5 segundos
     setInterval(checkStatus, 5000);
 })();
 </script>

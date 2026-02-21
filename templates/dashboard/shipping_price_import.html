@@ -1,0 +1,26 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Importar precios de envío desde Excel{% endblock %}
+{% block topbar_title %}Importar precios de envío{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <p class="text-muted mb-4">
+            Sube un archivo Excel (.xlsx) con las columnas: <strong>Ciudad</strong>, <strong>Departamento</strong>, <strong>País</strong>, <strong>Precio</strong>, <strong>Días mín</strong>, <strong>Días máx</strong>, <strong>Estado</strong> (Activo/Inactivo).
+        </p>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="excel_file" class="form-label">Archivo Excel</label>
+                <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx,.xls" required />
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary"><i class="fas fa-upload"></i> Importar</button>
+                <a href="{% url 'core:admin_panel:shipping_price_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

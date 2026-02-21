@@ -5,11 +5,51 @@
 {% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <p class="text-muted mb-0">Gestiona las categorías de productos</p>
-    <a href="{% url 'admin_panel:category_create' %}" class="admin-btn admin-btn--primary">
+<div class="d-flex justify-content-end align-items-center mb-4">
+    <a href="{% url 'core:admin_panel:category_create' %}" class="admin-btn admin-btn--primary">
         <i class="fas fa-plus"></i> Nueva categoría
     </a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
+        {% if request.GET.q or request.GET.status or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:category_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre o slug">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activas</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivas</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="order" {% if request.GET.sort == 'order' or not request.GET.sort %}selected{% endif %}>Orden</option>
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre A-Z</option>
+                        <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Nombre Z-A</option>
+                        <option value="-products" {% if request.GET.sort == '-products' %}selected{% endif %}>Más productos</option>
+                        <option value="products" {% if request.GET.sort == 'products' %}selected{% endif %}>Menos productos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
+    </div>
 </div>
 
 <div class="admin-card">
@@ -31,24 +71,24 @@
                     <tr>
                         <td><strong>{{ cat.name }}</strong></td>
                         <td><code>{{ cat.slug }}</code></td>
-                        <td>{% if cat.product_count %}<a href="{% url 'admin_panel:category_products' cat.pk %}" class="admin-link" title="Ver productos">{{ cat.product_count }}</a>{% else %}0{% endif %}</td>
+                        <td>{% if cat.product_count %}<a href="{% url 'core:admin_panel:category_products' cat.pk %}" class="admin-link" title="Ver productos">{{ cat.product_count }}</a>{% else %}0{% endif %}</td>
                         <td>{{ cat.order }}</td>
                         <td>{% if cat.is_active %}<span class="admin-badge admin-badge--completed">Activa</span>{% else %}<span class="admin-badge admin-badge--cancelled">Inactiva</span>{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <form method="post" action="{% url 'admin_panel:category_toggle_active' cat.pk %}" class="d-inline">
+                                <form method="post" action="{% url 'core:admin_panel:category_toggle_active' cat.pk %}" class="d-inline">
                                     {% csrf_token %}
                                     <button type="submit" class="admin-action {% if cat.is_active %}admin-action--warning{% else %}admin-action--success{% endif %}">
                                         {% if cat.is_active %}Inactivar{% else %}Activar{% endif %}
                                     </button>
                                 </form>
-                                <a href="{% url 'admin_panel:category_edit' cat.pk %}" class="admin-action admin-action--primary">Editar</a>
-                                <a href="{% url 'admin_panel:category_delete' cat.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                                <a href="{% url 'core:admin_panel:category_edit' cat.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'core:admin_panel:category_delete' cat.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="admin-table__empty">No hay categorías. <a href="{% url 'admin_panel:category_create' %}">Crear primera categoría</a></td></tr>
+                    <tr><td colspan="6" class="admin-table__empty">{% if request.GET.q or request.GET.status %}No se encontraron categorías con los filtros aplicados. <a href="{% url 'core:admin_panel:category_list' %}">Ver todas</a>{% else %}No hay categorías. <a href="{% url 'core:admin_panel:category_create' %}">Crear primera categoría</a>{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -57,9 +97,9 @@
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
 <nav class="mt-4 pagination">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">« Anterior</a>{% endif %}
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
     <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente »</a>{% endif %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
 </nav>
 {% endif %}
 {% endblock %}

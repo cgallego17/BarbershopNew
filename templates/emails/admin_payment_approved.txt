@@ -1,0 +1,16 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+[Admin] ✓ Pago aprobado
+
+El pedido #{{ order.order_number }} ha sido pagado.
+
+  Pedido:   #{{ order.order_number }}
+  Cliente:  {{ order.billing_first_name }} {{ order.billing_last_name }}
+  Email:    {{ order.billing_email }}
+  Estado:   {{ order.get_status_display }}
+  Total:    ${{ order.total|floatformat:0|intcomma }}
+
+Ver pedido en panel:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/pedidos/
+{% endblock %}

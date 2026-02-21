@@ -12,7 +12,7 @@
             {% csrf_token %}
             <button type="submit" class="admin-btn admin-btn--danger">Sí, eliminar</button>
         </form>
-        <a href="{% url 'admin_panel:coupon_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+        <a href="{% url 'core:admin_panel:coupon_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
     </div>
 </div>
 {% endblock %}

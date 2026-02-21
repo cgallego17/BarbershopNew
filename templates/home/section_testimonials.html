@@ -1,32 +1,155 @@
 {% load static %}
+<style>
+.t3-modern-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+}
+.t3-modern-card-wrap {
+    grid-column: span 4;
+}
+.t3-modern-card {
+    position: relative;
+    height: 100%;
+    border: 1px solid #ece8e4;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 12px 30px rgba(20, 15, 10, 0.08);
+    overflow: hidden;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.t3-modern-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, #c56533 0%, #e29a73 100%);
+}
+.t3-modern-card:hover {
+    transform: translateY(-4px);
+    border-color: #dfc4b4;
+    box-shadow: 0 16px 40px rgba(20, 15, 10, 0.12);
+}
+.t3-modern-card__body {
+    padding: 22px 20px 16px;
+}
+.t3-modern-card__quote {
+    color: #c56533;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+.t3-modern-card__text {
+    color: #4f4b49;
+    font-size: .92rem;
+    line-height: 1.72;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.t3-modern-card__foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px 18px;
+    border-top: 1px solid #f1ece8;
+}
+.t3-modern-card__avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #f2e7e0;
+    background: #f7f4f1;
+    flex-shrink: 0;
+}
+.t3-modern-card__avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+.t3-modern-card__avatar--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8d7d72;
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+.t3-modern-card__name {
+    margin: 0;
+    font-size: .92rem;
+    font-weight: 800;
+    color: #2e2a28;
+    line-height: 1.2;
+}
+.t3-modern-card__designation {
+    display: block;
+    margin-top: 2px;
+    font-size: .74rem;
+    color: #8f8178;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+}
+.t3-modern-card__stars {
+    margin-top: 4px;
+    color: #f59e0b;
+    font-size: .72rem;
+    letter-spacing: .08em;
+}
+@media (max-width: 1199px) {
+    .t3-modern-card-wrap { grid-column: span 6; }
+}
+@media (max-width: 767px) {
+    .t3-modern-card-wrap { grid-column: span 12; }
+}
+</style>
 <section class="testimonials-three section-space-two" id="testimonials">
     <div class="container">
         <div class="sec-title sec-title--center">
             <h6 class="sec-title__tagline">testimonios</h6>
             <h2 class="sec-title__title">Lo que dicen nuestros clientes</h2>
         </div>
-        <div class="testimonials-three__carousel boskery-owl__carousel owl-carousel owl-theme" data-owl-options='{"items": 1, "loop": true, "autoplay": true}'>
+        {% if home_testimonials %}
+        <div class="t3-modern-grid">
             {% for t in home_testimonials %}
-            <div class="testimonials-three__card">
-                <div class="testimonials-three__card__bg" style="background-image: url({% static 'assets/images/shapes/testimonial-card-bg-3-1.png' %});"></div>
-                <div class="testimonials-three__card__inner">
-                    <div class="testimonials-three__card__content">
-                        <div class="testimonials-three__card__top"></div>
-                        <div class="testimonials-three__card__text">{{ t.text|safe }}</div>
-                        <div class="testimonials-three__card__identity">
-                            <div class="testimonials-three__card__identity__bg" style="background-image: url({% static 'assets/images/shapes/testimonial-card-bg-3-2.png' %});"></div>
-                            <div class="testimonials-three__card__identity__inner">
-                                {% if t.image %}<div class="testimonials-three__card__image"><img src="{{ t.image.url }}" alt="{{ t.name }}"></div>{% endif %}
-                                <div class="testimonials-three__card__info">
-                                    <h4 class="testimonials-three__card__name">{{ t.name }}</h4>
-                                    {% if t.designation %}<span class="testimonials-three__card__designation">{{ t.designation }}</span>{% endif %}
-                                </div>
-                            </div>
+            <div class="t3-modern-card-wrap">
+                <article class="t3-modern-card">
+                    <div class="t3-modern-card__body">
+                        <i class="fas fa-quote-left t3-modern-card__quote"></i>
+                        <p class="t3-modern-card__text">{{ t.text|striptags }}</p>
+                    </div>
+                    <div class="t3-modern-card__foot">
+                        {% if t.image %}
+                        <div class="t3-modern-card__avatar">
+                            <img src="{{ t.image.url }}" alt="{{ t.name }}" loading="lazy">
+                        </div>
+                        {% else %}
+                        <div class="t3-modern-card__avatar t3-modern-card__avatar--fallback">
+                            {{ t.name|slice:":1"|upper }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h4 class="t3-modern-card__name">{{ t.name }}</h4>
+                            {% if t.designation %}
+                            <span class="t3-modern-card__designation">{{ t.designation }}</span>
+                            {% endif %}
+                            <div class="t3-modern-card__stars">★★★★★</div>
                         </div>
                     </div>
-                </div>
+                </article>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <div class="orders-empty" style="max-width:720px;margin:0 auto;">
+            <i class="fas fa-comment-slash"></i>
+            <h5>Aún no hay testimonios publicados</h5>
+            <p>Cuando agregues testimonios desde el panel, aparecerán aquí.</p>
+        </div>
+        {% endif %}
     </div>
 </section>

@@ -6,8 +6,8 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <a href="{% url 'admin_panel:home_sections' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a secciones</a>
-    <a href="{% url 'admin_panel:home_hero_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo slide</a>
+    <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a secciones</a>
+    <a href="{% url 'core:admin_panel:home_hero_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo slide</a>
 </div>
 
 <div class="admin-card">
@@ -32,13 +32,13 @@
                         <td>{% if slide.image %}<img src="{{ slide.image.url }}" alt="" style="max-height:40px">{% else %}—{% endif %}</td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:home_hero_edit' slide.pk %}" class="admin-action admin-action--primary">Editar</a>
-                                <a href="{% url 'admin_panel:home_hero_delete' slide.pk %}" class="admin-action admin-action--danger">Eliminar</a>
+                                <a href="{% url 'core:admin_panel:home_hero_edit' slide.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'core:admin_panel:home_hero_delete' slide.pk %}" class="admin-action admin-action--danger">Eliminar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="admin-table__empty">No hay slides. <a href="{% url 'admin_panel:home_hero_create' %}">Crear primer slide</a></td></tr>
+                    <tr><td colspan="5" class="admin-table__empty">No hay slides. <a href="{% url 'core:admin_panel:home_hero_create' %}">Crear primer slide</a></td></tr>
                     {% endfor %}
                 </tbody>
             </table>

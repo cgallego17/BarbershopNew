@@ -112,6 +112,7 @@
         <form method="post" action="{% url 'account_login' %}" class="login-page__form" novalidate>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true">
 
           <div class="login-page__form__input-box">
             <label class="sr-only" for="modal_login">{% trans "Email" %}</label>

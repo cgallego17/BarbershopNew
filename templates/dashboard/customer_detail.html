@@ -10,7 +10,7 @@
         <div class="admin-card mb-4">
             <div class="admin-card__header">
                 <h3 class="admin-card__title">Información</h3>
-                <a href="{% url 'admin_panel:customer_edit' customer.pk %}" class="admin-card__action">Editar</a>
+                <a href="{% url 'core:admin_panel:customer_edit' customer.pk %}" class="admin-card__action">Editar</a>
             </div>
             <div class="admin-card__body">
                 <p class="mb-1"><strong>{{ customer.get_full_name|default:customer.email }}</strong></p>
@@ -34,7 +34,7 @@
         <div class="admin-card">
             <div class="admin-card__header">
                 <h3 class="admin-card__title">Pedidos ({{ customer.orders.count }})</h3>
-                <a href="{% url 'admin_panel:order_list' %}?q={{ customer.email }}" class="admin-card__action">Ver todos</a>
+                <a href="{% url 'core:admin_panel:order_list' %}?q={{ customer.email }}" class="admin-card__action">Ver todos</a>
             </div>
             <div class="admin-card__body p-0">
                 <div class="admin-table-wrapper">
@@ -55,7 +55,7 @@
                                 <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                                 <td>${{ order.total|floatformat:2|intcomma }}</td>
                                 <td><span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
-                                <td class="text-end"><div class="admin-actions"><a href="{% url 'admin_panel:order_detail' order.pk %}" class="admin-action admin-action--primary">Ver</a></div></td>
+                                <td class="text-end"><div class="admin-actions"><a href="{% url 'core:admin_panel:order_detail' order.pk %}" class="admin-action admin-action--primary">Ver</a></div></td>
                             </tr>
                             {% empty %}
                             <tr><td colspan="5" class="admin-table__empty">Sin pedidos</td></tr>
@@ -68,6 +68,6 @@
     </div>
 </div>
 <div class="mt-3">
-    <a href="{% url 'admin_panel:customer_list' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-arrow-left"></i> Volver a clientes</a>
+    <a href="{% url 'core:admin_panel:customer_list' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-arrow-left"></i> Volver a clientes</a>
 </div>
 {% endblock %}

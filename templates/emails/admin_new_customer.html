@@ -1,0 +1,86 @@
+{% extends "emails/base.html" %}
+{% block title %}Nuevo cliente registrado{% endblock %}
+{% block header_label %}Panel Admin{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:20px;font-weight:800;color:#ffffff;">
+    Nuevo cliente registrado
+</h2>
+<p style="margin:0 0 22px 0;font-size:13px;color:#8892a4;">
+    Un nuevo usuario se ha registrado en la plataforma.
+</p>
+
+<!-- CUSTOMER INFO -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:16px 20px;background:#1e2330;border-radius:10px;border:1px solid #272c38;">
+            <!-- Avatar + Name -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                   style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #272c38;">
+                <tr>
+                    <td style="width:44px;vertical-align:middle;">
+                        <div style="width:40px;height:40px;background:linear-gradient(135deg,#c56533,#e07a40);border-radius:50%;text-align:center;line-height:40px;font-size:18px;font-weight:700;color:#fff;">
+                            {{ user.first_name|slice:":1"|upper|default:"U" }}
+                        </div>
+                    </td>
+                    <td style="padding-left:12px;vertical-align:middle;">
+                        <p style="margin:0;font-size:16px;font-weight:700;color:#ffffff;">
+                            {{ user.get_full_name|default:user.username }}
+                        </p>
+                        <p style="margin:2px 0 0 0;font-size:12px;color:#8892a4;">
+                            {{ user.get_role_display|default:"Cliente" }}
+                        </p>
+                    </td>
+                </tr>
+            </table>
+            <!-- Details -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:8px;">Email</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ user.email }}
+                    </td>
+                </tr>
+                {% if user.phone %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:8px;">Teléfono</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ user.phone }}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if user.document_number %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:8px;">
+                        Doc. {{ user.document_type }}
+                    </td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:8px;">
+                        {{ user.document_number }}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;">Registrado</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;">
+                        {{ user.date_joined|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/panel/clientes/"
+               style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver en el panel →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

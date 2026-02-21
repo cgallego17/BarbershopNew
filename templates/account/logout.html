@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}{% trans "Cerrar sesión" %}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+  <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+  <div class="container">
+    <h2 class="page-header__title">{% trans "Cerrar sesión" %}</h2>
+    <ul class="boskery-breadcrumb list-unstyled">
+      <li><a href="{% url 'core:home' %}">{% trans "Inicio" %}</a></li>
+      <li><span>{% trans "Cerrar sesión" %}</span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section-space">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-6">
+        <div class="account-logout-card text-center">
+          <h3 class="mb-3">{% trans "¿Quieres cerrar tu sesión?" %}</h3>
+          <p class="mb-4 text-muted">
+            {% trans "Por seguridad, confirma esta acción para salir de tu cuenta." %}
+          </p>
+
+          <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            {% if redirect_field_value %}
+            <input
+              type="hidden"
+              name="{{ redirect_field_name }}"
+              value="{{ redirect_field_value }}"
+            >
+            {% endif %}
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+              <button type="submit" class="boskery-btn">
+                <span class="boskery-btn__text">{% trans "Sí, cerrar sesión" %}</span>
+                <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+              </button>
+              <a href="{% url 'core:home' %}" class="boskery-btn boskery-btn--base">
+                <span class="boskery-btn__text">{% trans "Cancelar" %}</span>
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.account-logout-card {
+  background: #fff;
+  border: 1px solid #e8e8ee;
+  border-radius: 14px;
+  padding: 30px 26px;
+  box-shadow: 0 8px 24px rgba(16, 24, 40, .06);
+}
+</style>
+{% endblock %}

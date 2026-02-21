@@ -1,0 +1,11 @@
+{% extends "emails/base.txt" %}
+{% block content %}
+[Admin] 📦 Alerta de stock bajo
+
+Los siguientes productos tienen inventario crítico:
+
+{% for row in items %}  ⚠  {{ row }}
+{% endfor %}
+Actualiza el inventario desde el panel:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/productos/
+{% endblock %}

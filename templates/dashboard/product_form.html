@@ -76,7 +76,7 @@
                 <div id="product-variable-fields" class="col-12" style="display:none">
                     <label class="form-label">Atributos de variación</label>
                     {{ form.used_attributes }}
-                    <small class="text-muted d-block mb-3">Selecciona los atributos (ej: Talla, Color). Créalos en <a href="{% url 'admin_panel:attribute_list' %}">Atributos</a> si no existen.</small>
+                    <small class="text-muted d-block mb-3">Selecciona los atributos (ej: Talla, Color). Créalos en <a href="{% url 'core:admin_panel:attribute_list' %}">Atributos</a> si no existen.</small>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Marca</label>
@@ -144,7 +144,7 @@
 
             <div class="mt-4 d-flex gap-2">
                 <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
-                <a href="{% url 'admin_panel:product_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+                <a href="{% url 'core:admin_panel:product_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
             </div>
         </form>
     </div>

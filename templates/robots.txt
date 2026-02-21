@@ -6,5 +6,6 @@ Disallow: /carrito/
 Disallow: /pedidos/
 Disallow: /pagos/
 Disallow: /panel/
+Disallow: /__debug__/
 
 Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml

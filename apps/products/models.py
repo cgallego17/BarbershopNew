@@ -119,6 +119,7 @@ class Product(models.Model):
     manage_stock = models.BooleanField(default=False)
     stock_quantity = models.PositiveIntegerField(default=0)
     low_stock_threshold = models.PositiveIntegerField(null=True, blank=True)
+    view_count = models.PositiveIntegerField(default=0, db_index=True, verbose_name='Vistas')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -363,3 +364,62 @@ class ProductReview(models.Model):
         verbose_name = 'Reseña'
         verbose_name_plural = 'Reseñas'
         ordering = ['-created_at']
+
+
+class ProductView(models.Model):
+    """Registro de vistas únicas por usuario o sesión."""
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='views'
+    )
+    user = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE, null=True, blank=True,
+        related_name='product_views'
+    )
+    session_key = models.CharField(max_length=40, blank=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Vista de producto'
+        verbose_name_plural = 'Vistas de productos'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'user'],
+                condition=Q(user__isnull=False),
+                name='products_unique_product_user_view',
+            ),
+            models.UniqueConstraint(
+                fields=['product', 'session_key'],
+                condition=Q(user__isnull=True),
+                name='products_unique_product_session_view',
+            ),
+        ]
+
+    def __str__(self):
+        target = self.user.email if self.user else self.session_key
+        return f"{self.product.name} - {target}"
+
+
+class ProductFavorite(models.Model):
+    """Productos marcados como favoritos por usuario."""
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='favorites'
+    )
+    user = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE, related_name='favorite_products'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Favorito'
+        verbose_name_plural = 'Favoritos'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'user'],
+                name='products_unique_product_favorite_user',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} ♥ {self.product.name}"

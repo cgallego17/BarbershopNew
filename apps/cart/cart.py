@@ -56,7 +56,9 @@ class Cart:
         product_ids = set(item['product_id'] for item in self.cart.values())
         products = {str(p.id): p for p in Product.objects.filter(id__in=product_ids)}
         
-        for key, item in self.cart.items():
+        for key, raw_item in self.cart.items():
+            # No mutar self.cart aquí: si guardamos Decimal en sesión rompe serialización JSON.
+            item = raw_item.copy()
             product = products.get(item['product_id'])
             if product:
                 item['product'] = product
@@ -86,4 +88,8 @@ class Cart:
         self.save()
 
     def save(self):
+        # Blindaje: asegurar tipos serializables en sesión.
+        for item in self.cart.values():
+            if 'price' in item:
+                item['price'] = str(item['price'])
         self.session.modified = True

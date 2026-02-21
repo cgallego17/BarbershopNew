@@ -1,0 +1,18 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+✕  Pago no completado
+
+Hola {{ order.billing_first_name }}, hubo un inconveniente al procesar tu pago.
+No se realizó ningún cargo a tu cuenta.
+
+  Pedido:  #{{ order.order_number }}
+  Pago:    {{ order.get_payment_status_display }}
+  Total:   ${{ order.total|floatformat:0|intcomma }}
+
+Puedes intentar nuevamente con otro método de pago.
+Si el problema persiste, contáctanos y te ayudamos.
+
+Reintentar pago:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/mis-pedidos/
+{% endblock %}

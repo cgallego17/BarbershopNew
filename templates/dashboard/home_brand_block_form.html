@@ -1,0 +1,34 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Configurar sección Marcas{% endblock %}
+{% block topbar_title %}Imagen de fondo - Marcas{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'core:admin_panel:home_brand_list' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a marcas</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Imagen de fondo de la sección</label>
+                    {{ form.background_image }}
+                    {% if block.background_image %}
+                    <p class="mt-2 small">Actual: <img src="{{ block.background_image.url }}" alt="" style="max-height:80px; border-radius:8px;"></p>
+                    {% else %}
+                    <p class="form-text small text-muted mt-1">Si está vacío se usa la imagen por defecto del tema.</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'core:admin_panel:home_brand_list' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

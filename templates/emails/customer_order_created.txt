@@ -1,0 +1,28 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+¡Pedido recibido!
+
+Hola {{ order.billing_first_name }}, confirmamos la recepción de tu pedido.
+
+  Pedido:    #{{ order.order_number }}
+  Fecha:     {{ order.created_at|date:"d/m/Y H:i" }}
+  Estado:    {{ order.get_status_display }}
+  Pago:      {{ order.get_payment_status_display }}
+  Envío a:   {{ order.billing_city }}{% if order.billing_state %}, {{ order.billing_state }}{% endif %}
+
+──────────────── Productos ────────────────
+{% for item in order.items.all %}
+  {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+    Cant.: {{ item.quantity }}   Total: ${{ item.total|floatformat:0|intcomma }}
+{% endfor %}
+───────────────────────────────────────────
+  Subtotal:   ${{ order.subtotal|floatformat:0|intcomma }}
+{% if order.shipping_total %}  Envío:      ${{ order.shipping_total|floatformat:0|intcomma }}
+{% endif %}{% if order.discount_total %}  Descuento:  -${{ order.discount_total|floatformat:0|intcomma }}
+{% endif %}  TOTAL:      ${{ order.total|floatformat:0|intcomma }}
+───────────────────────────────────────────
+
+Ver mis pedidos:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/mis-pedidos/
+{% endblock %}

@@ -12,7 +12,11 @@
                 </div>
                 <div class="col-lg-6 wow fadeInRight" data-wow-duration="1500ms">
                     <div class="meat-category__top__image">
-                        {% if meat_category_block.top_image %}<img src="{{ meat_category_block.top_image.url }}" alt="{{ meat_category_block.title }}" loading="lazy">{% else %}<img src="{% static 'assets/images/meat-category/meat-category-top-1-1.jpg' %}" alt="Categorías destacadas" loading="lazy">{% endif %}
+                        {% if meat_category_block.top_image %}
+                            <img src="{{ meat_category_block.top_image.url }}" alt="{{ meat_category_block.title }}" loading="lazy" decoding="async">
+                        {% else %}
+                            <img src="{% static 'PAGINA WEB NUEVA 3-20.png' %}" alt="Categorías destacadas" loading="lazy" decoding="async">
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -22,10 +26,11 @@
             <div class="col-xl-3 col-lg-4 col-sm-6 wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="{% cycle '00' '200' '400' '600' %}ms">
                 <div class="product__item">
                     <div class="product__item__image">
+                        {% if product.is_featured %}<span class="product__item__badge product__item__badge--featured" title="Destacado"><i class="fas fa-star"></i></span>{% endif %}
                         {% if product.images.first %}
-                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                         {% else %}
-                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy">
+                        <img src="{% static 'assets/images/products/product-1-1.png' %}" alt="{{ product.name }}" loading="lazy" decoding="async" width="480" height="480">
                         {% endif %}
                     </div>
                     <div class="product__item__content">

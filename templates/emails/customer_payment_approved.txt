@@ -1,0 +1,19 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+✓  ¡Pago aprobado!
+
+Hola {{ order.billing_first_name }}, tu pago fue procesado exitosamente.
+Tu pedido entra en preparación.
+
+  Pedido:       #{{ order.order_number }}
+  Estado:       {{ order.get_status_display }}
+  Pago:         {{ order.get_payment_status_display }}
+  Total pagado: ${{ order.total|floatformat:0|intcomma }}
+
+Nuestro equipo comenzará a preparar tu pedido.
+Te notificaremos cuando esté en camino.
+
+Ver mi pedido:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/mis-pedidos/
+{% endblock %}

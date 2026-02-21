@@ -5,7 +5,7 @@
 
 {% block content %}
 <section class="hero-slider-three hero-main-slider">
-    <div class="hero-slider-three__bg" style="background-image: url({% static 'assets/images/shapes/hero-slider-bg-3-1-dark.png' %});"></div>
+    <div class="hero-slider-three__bg" style="background-image: url({% static '1970-x-670-d.jpg' %});"></div>
     <a href="#featured" class="hero-slider-three__scroll-btn">
         <span class="icon-down-arrow"></span>
     </a>
@@ -75,6 +75,7 @@
             <div class="col-xl-3 col-lg-4 col-sm-6">
                 <div class="product__item wow fadeInUp" data-wow-duration="1500ms" data-wow-delay="00ms">
                     <div class="product__item__image">
+                        {% if product.is_featured %}<span class="product__item__badge product__item__badge--featured" title="Destacado"><i class="fas fa-star"></i></span>{% endif %}
                         {% if product.images.first %}
                         <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
                         {% else %}

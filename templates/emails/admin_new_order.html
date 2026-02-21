@@ -1,0 +1,158 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}Nuevo pedido #{{ order.order_number }}{% endblock %}
+{% block header_label %}Panel Admin – Pedidos{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:20px;font-weight:800;color:#ffffff;">
+    Nuevo pedido para gestionar
+</h2>
+<p style="margin:0 0 22px 0;font-size:13px;color:#8892a4;">
+    Se ha creado un nuevo pedido en la plataforma.
+</p>
+
+<!-- ORDER INFO -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:16px 20px;background:#1e2330;border-radius:10px;border:1px solid #272c38;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                   style="margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #272c38;">
+                <tr>
+                    <td>
+                        <p style="margin:0;font-size:11px;color:#6b7686;text-transform:uppercase;letter-spacing:.7px;">
+                            Número de pedido
+                        </p>
+                        <p style="margin:4px 0 0 0;font-size:18px;font-weight:700;color:#e07a40;">
+                            #{{ order.order_number }}
+                        </p>
+                    </td>
+                    <td align="right">
+                        <span style="display:inline-block;padding:4px 12px;background:#2a3040;border-radius:20px;font-size:12px;font-weight:600;color:#d1d9eb;">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+            </table>
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:7px;">Cliente</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:7px;font-weight:600;">
+                        {{ order.billing_first_name }} {{ order.billing_last_name }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:7px;">Email</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:7px;">
+                        {{ order.billing_email }}
+                    </td>
+                </tr>
+                {% if order.billing_phone %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:7px;">Teléfono</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:7px;">
+                        {{ order.billing_phone }}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:7px;">Ciudad</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;padding-bottom:7px;">
+                        {{ order.billing_city }}{% if order.billing_state %}, {{ order.billing_state }}{% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;">Fecha</td>
+                    <td align="right" style="font-size:13px;color:#d1d9eb;">
+                        {{ order.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- PRODUCTS TABLE -->
+{% if order.items.all %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:18px;">
+    <tr>
+        <td>
+            <p style="margin:0 0 10px 0;font-size:12px;font-weight:700;color:#e07a40;text-transform:uppercase;letter-spacing:.5px;">
+                Productos del pedido
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <table class="order-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+                   style="border-collapse:collapse;border:1px solid #272c38;border-radius:8px;overflow:hidden;">
+                {% for item in order.items.all %}
+                <tr style="{% if forloop.last %}{% else %}border-bottom:1px solid #272c38;{% endif %}">
+                    <td style="padding:10px 14px;font-size:13px;color:#d1d9eb;background:#1e2330;">
+                        {{ item.product_name }}
+                        {% if item.variant %}
+                        <br><span style="font-size:11px;color:#6b7686;">{{ item.variant }}</span>
+                        {% endif %}
+                    </td>
+                    <td align="center" style="padding:10px 14px;font-size:13px;color:#adb5c9;background:#1e2330;white-space:nowrap;">
+                        × {{ item.quantity }}
+                    </td>
+                    <td align="right" style="padding:10px 14px;font-size:13px;color:#d1d9eb;font-weight:600;background:#1e2330;white-space:nowrap;">
+                        ${{ item.total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+</table>
+{% endif %}
+
+<!-- TOTAL -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:10px;">
+    <tr>
+        <td align="right"
+            style="padding:14px 16px;background:#1e2330;border-radius:8px;border:1px solid #272c38;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="right">
+                {% if order.discount_total %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-right:16px;padding-bottom:4px;">Descuento</td>
+                    <td style="font-size:13px;color:#4ade80;font-weight:600;padding-bottom:4px;">
+                        -${{ order.discount_total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+                {% endif %}
+                {% if order.shipping_total %}
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-right:16px;padding-bottom:4px;">Envío</td>
+                    <td style="font-size:13px;color:#d1d9eb;padding-bottom:4px;">
+                        ${{ order.shipping_total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="font-size:14px;font-weight:700;color:#ffffff;padding-right:16px;border-top:1px solid #272c38;padding-top:8px;">
+                        TOTAL
+                    </td>
+                    <td style="font-size:20px;font-weight:800;color:#e07a40;border-top:1px solid #272c38;padding-top:8px;">
+                        ${{ order.total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- CTA -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:24px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/panel/pedidos/"
+               style="display:inline-block;padding:12px 28px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Gestionar pedido →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

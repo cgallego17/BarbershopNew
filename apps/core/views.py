@@ -1,8 +1,11 @@
 from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 
 
 def dashboard_required(view):
@@ -24,10 +27,9 @@ class HomeView(TemplateView):
     def get_context_data(self, **kwargs):
         from django.db.models import Sum
         from apps.orders.models import OrderItem
-        from apps.products.models import Product
-        from apps.products.models import Category
+        from apps.products.models import Product, Category, Brand
 
-        from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrand, HomeTestimonial
+        from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeTestimonial
 
         context = super().get_context_data(**kwargs)
         site_settings = SiteSettings.get()
@@ -59,7 +61,14 @@ class HomeView(TemplateView):
         context['active_sections'] = HomeSection.get_active_sections()
         context['hero_slides'] = HomeHeroSlide.objects.all()[:10]
         context['about_block'] = HomeAboutBlock.get()
-        context['home_brands'] = HomeBrand.objects.all()[:20]
+        context['brand_block'] = HomeBrandBlock.get()
+        context['home_brands'] = Brand.objects.filter(
+            is_active=True
+        ).exclude(
+            logo__isnull=True
+        ).exclude(
+            logo=''
+        ).order_by('order', 'name')[:20]
         context['home_testimonials'] = HomeTestimonial.objects.all()[:10]
         context['home_categories'] = Category.objects.filter(is_active=True, parent__isnull=True)[:8]
         context['meat_category_block'] = HomeMeatCategoryBlock.get()
@@ -105,11 +114,108 @@ def geo_cities_view(request):
     return JsonResponse({'cities': list(cities)})
 
 
+@require_GET
+def geo_shipping_info_view(request):
+    """API: precio y días de envío por city_id (JSON)."""
+    from .models import City, ShippingPrice
+    city_id = request.GET.get('city_id')
+    if not city_id:
+        return JsonResponse({'found': False})
+    try:
+        sp = ShippingPrice.objects.select_related('city').get(
+            city_id=city_id, is_active=True
+        )
+        return JsonResponse({
+            'found': True,
+            'price': str(sp.price),
+            'days_min': sp.delivery_days_min,
+            'days_max': sp.delivery_days_max,
+        })
+    except ShippingPrice.DoesNotExist:
+        return JsonResponse({'found': False})
+
+
+@require_POST
+def newsletter_subscribe_view(request):
+    """Recibe suscripciones del formulario newsletter del sitio."""
+    from .models import NewsletterSubscriber
+    from .security import log_security_event
+
+    if (request.POST.get('website') or '').strip():
+        log_security_event(
+            request,
+            event_type='honeypot_trigger',
+            source='newsletter',
+            details={'reason': 'honeypot_field_filled'},
+        )
+        return JsonResponse({'ok': True, 'message': 'Solicitud recibida.'})
+
+    email = (request.POST.get('EMAIL') or request.POST.get('email') or '').strip().lower()
+    if not email:
+        return JsonResponse(
+            {'ok': False, 'message': 'Ingresa un correo válido.'},
+            status=400,
+        )
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse(
+            {'ok': False, 'message': 'Ingresa un correo válido.'},
+            status=400,
+        )
+    client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+    client_ip = client_ip or request.META.get('REMOTE_ADDR', '') or 'unknown'
+    throttle_key = f"newsletter:ip:{client_ip}"
+    current_attempts = cache.get(throttle_key, 0)
+    if current_attempts >= 10:
+        log_security_event(
+            request,
+            event_type='rate_limit_block',
+            source='newsletter',
+            details={'window_seconds': 300, 'limit': 10},
+        )
+        return JsonResponse(
+            {'ok': False, 'message': 'Demasiados intentos. Intenta de nuevo en unos minutos.'},
+            status=429,
+        )
+    cache.set(throttle_key, current_attempts + 1, timeout=300)
+
+    subscriber, created = NewsletterSubscriber.objects.get_or_create(
+        email=email,
+        defaults={'is_active': True, 'source': 'footer'},
+    )
+    if not created and not subscriber.is_active:
+        subscriber.is_active = True
+        subscriber.save(update_fields=['is_active', 'updated_at'])
+        return JsonResponse(
+            {
+                'ok': True,
+                'message': 'Suscripción reactivada. ¡Bienvenido de nuevo!',
+            }
+        )
+    if not created:
+        return JsonResponse(
+            {
+                'ok': True,
+                'message': 'Este correo ya estaba suscrito.',
+            }
+        )
+    return JsonResponse(
+        {
+            'ok': True,
+            'message': 'Gracias por suscribirte al newsletter.',
+        }
+    )
+
+
 @dashboard_required
 def dashboard_view(request):
+    from datetime import timedelta
     from django.db.models import Sum
+    from django.utils import timezone
     from apps.orders.models import Order
     from apps.products.models import Product
+    from .models import SecurityEvent
 
     total_orders = Order.objects.count()
     total_products = Product.objects.filter(is_active=True).count()
@@ -121,6 +227,15 @@ def dashboard_view(request):
     low_stock = list(Product.objects.filter(
         manage_stock=True, stock_quantity__lte=5, stock_quantity__gt=0
     )[:5])
+    since_24h = timezone.now() - timedelta(hours=24)
+    security_24h = SecurityEvent.objects.filter(created_at__gte=since_24h)
+    recent_security_events = SecurityEvent.objects.order_by('-created_at')[:10]
+    security_summary = {
+        'total_24h': security_24h.count(),
+        'honeypot_24h': security_24h.filter(event_type='honeypot_trigger').count(),
+        'rate_limit_24h': security_24h.filter(event_type='rate_limit_block').count(),
+        'auth_honeypot_24h': security_24h.filter(event_type='auth_honeypot').count(),
+    }
 
     return render(request, 'core/dashboard.html', {
         'total_orders': total_orders,
@@ -129,4 +244,6 @@ def dashboard_view(request):
         'pending_orders': pending_orders,
         'recent_orders': recent_orders,
         'low_stock': low_stock,
+        'security_summary': security_summary,
+        'recent_security_events': recent_security_events,
     })

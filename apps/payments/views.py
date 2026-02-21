@@ -10,6 +10,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
+from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
 from django.db import models, transaction
@@ -19,9 +20,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from apps.orders.models import Order, OrderItem
+from apps.core.emails import (
+    notify_low_stock,
+    notify_payment_approved,
+    notify_payment_failed,
+)
 from .models import WompiTransaction
 
 logger = logging.getLogger(__name__)
+GUEST_ORDER_SESSION_KEY = 'guest_order_numbers'
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,6 +60,9 @@ def _verify_webhook_signature(body: dict) -> bool:
     """
     events_secret = getattr(settings, 'WOMPI_EVENTS_SECRET', '')
     if not events_secret:
+        # En producción nunca debemos aceptar webhooks sin secreto.
+        if not getattr(settings, 'DEBUG', False):
+            return False
         return True
 
     signature   = body.get('signature', {})
@@ -87,6 +97,28 @@ def _fetch_transaction_from_wompi(transaction_id: str) -> dict:
     except Exception as exc:
         logger.error("Error consultando transacción Wompi %s: %s", transaction_id, exc)
         return {}
+
+
+def _is_transaction_consistent(order: Order, tx_data: dict) -> bool:
+    """Valida referencia, moneda y monto contra el pedido."""
+    if str(tx_data.get('reference', '')) != order.order_number:
+        return False
+    currency = (tx_data.get('currency') or '').strip().upper()
+    if currency != 'COP':
+        return False
+    try:
+        tx_amount = int(tx_data.get('amount_in_cents', 0))
+        expected = int((Decimal(order.total) * 100).quantize(Decimal('1')))
+    except (TypeError, ValueError, InvalidOperation):
+        return False
+    return tx_amount == expected
+
+
+def _can_access_order(request, order: Order) -> bool:
+    if order.user_id:
+        return request.user.is_authenticated and request.user.id == order.user_id
+    guest_orders = request.session.get(GUEST_ORDER_SESSION_KEY, [])
+    return order.order_number in guest_orders
 
 
 def _save_transaction(order: Order, tx_data: dict) -> WompiTransaction:
@@ -130,6 +162,7 @@ def _fulfill_order(order: Order, tx_data: dict):
     order.save(update_fields=['payment_status', 'status', 'updated_at'])
 
     # 2. Descontar inventario
+    low_stock_alerts = []
     for item in order.items.select_related('product', 'variant').all():
         qty = item.quantity
 
@@ -144,6 +177,11 @@ def _fulfill_order(order: Order, tx_data: dict):
                 ProductVariant.objects.filter(id=item.variant.id).update(
                     stock_quantity=0
                 )
+            current_variant = ProductVariant.objects.filter(id=item.variant.id).first()
+            if current_variant and current_variant.stock_quantity <= 5:
+                low_stock_alerts.append(
+                    f"Variante {current_variant} con stock {current_variant.stock_quantity}"
+                )
         else:
             product = item.product
             if product.manage_stock:
@@ -155,6 +193,11 @@ def _fulfill_order(order: Order, tx_data: dict):
                 if not updated:
                     Product.objects.filter(id=product.id).update(
                         stock_quantity=0
+                    )
+                current_product = Product.objects.filter(id=product.id).first()
+                if current_product and current_product.stock_quantity <= 5:
+                    low_stock_alerts.append(
+                        f"Producto {current_product.name} con stock {current_product.stock_quantity}"
                     )
 
     # 3. Incrementar uso de cupón
@@ -169,6 +212,8 @@ def _fulfill_order(order: Order, tx_data: dict):
         order.order_number,
         tx_data.get('id', ''),
     )
+    notify_payment_approved(order)
+    notify_low_stock(low_stock_alerts)
 
 
 # ---------------------------------------------------------------------------
@@ -179,8 +224,8 @@ def payment_page(request, order_number):
     """Página de pago: muestra el formulario con redirect a Wompi."""
     order = get_object_or_404(Order, order_number=order_number)
 
-    # Seguridad: sólo el dueño del pedido (o invitados que lo crearon en sesión)
-    if request.user.is_authenticated and order.user and order.user != request.user:
+    # Seguridad: sólo el dueño del pedido o el invitado que lo creó.
+    if not _can_access_order(request, order):
         return redirect('core:home')
 
     # Si ya fue pagado, ir directo al detalle
@@ -189,7 +234,10 @@ def payment_page(request, order_number):
 
     currency       = 'COP'
     amount_cents   = int(order.total * 100)
-    redirect_url   = request.build_absolute_uri('/pagos/confirmacion/')
+    redirect_url = (
+        getattr(settings, 'WOMPI_REDIRECT_URL', '').strip()
+        or request.build_absolute_uri('/pagos/confirmacion/')
+    )
     integrity      = _integrity_hash(order_number, amount_cents, currency)
 
     context = {
@@ -220,14 +268,24 @@ def payment_return(request):
 
     order = Order.objects.filter(order_number=reference).first()
 
+    if order and not _can_access_order(request, order):
+        order = None
+
     if order and tx_data.get('id'):
         _save_transaction(order, tx_data)
-        if status == 'APPROVED':
+        if status == 'APPROVED' and _is_transaction_consistent(order, tx_data):
             _fulfill_order(order, tx_data)
+        elif status == 'APPROVED':
+            logger.warning(
+                "Wompi return inconsistente para %s: amount/currency/reference no coincide.",
+                order.order_number,
+            )
+            status = 'ERROR'
         elif status in ('DECLINED', 'VOIDED', 'ERROR'):
-            if order.payment_status != 'paid':
+            if order.payment_status not in ('paid', 'failed'):
                 order.payment_status = 'failed'
                 order.save(update_fields=['payment_status', 'updated_at'])
+                notify_payment_failed(order)
 
     STATUS_LABELS = {
         'APPROVED': ('success', '¡Pago aprobado!',      'Tu pedido está en proceso.'),
@@ -275,12 +333,18 @@ def wompi_webhook(request):
         order = Order.objects.filter(order_number=reference).first()
         if order:
             _save_transaction(order, tx_data)
-            if status == 'APPROVED':
+            if status == 'APPROVED' and _is_transaction_consistent(order, tx_data):
                 _fulfill_order(order, tx_data)
+            elif status == 'APPROVED':
+                logger.warning(
+                    "Webhook Wompi inconsistente para %s: amount/currency/reference no coincide.",
+                    order.order_number,
+                )
             elif status in ('DECLINED', 'VOIDED', 'ERROR'):
-                if order.payment_status != 'paid':
+                if order.payment_status not in ('paid', 'failed'):
                     order.payment_status = 'failed'
                     order.save(update_fields=['payment_status', 'updated_at'])
+                    notify_payment_failed(order)
         else:
             logger.warning("Webhook Wompi: pedido %s no encontrado.", reference)
 
@@ -293,10 +357,12 @@ def payment_status_api(request, order_number):
     Útil para actualizar la página de resultado sin recargar.
     """
     order = Order.objects.filter(order_number=order_number).only(
-        'payment_status', 'status'
+        'payment_status', 'status', 'user_id', 'order_number'
     ).first()
     if not order:
         return JsonResponse({'error': 'not found'}, status=404)
+    if not _can_access_order(request, order):
+        return JsonResponse({'error': 'forbidden'}, status=403)
     return JsonResponse({
         'payment_status': order.payment_status,
         'order_status':   order.status,

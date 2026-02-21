@@ -5,19 +5,78 @@
 {% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-    <form method="get" class="d-flex gap-2 flex-wrap">
-        <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" style="max-width:220px" placeholder="Buscar por nombre, email...">
-        <select name="role" class="form-select" style="max-width:160px">
-            <option value="">Todos</option>
-            <option value="client" {% if request.GET.role == 'client' %}selected{% endif %}>Clientes</option>
-            <option value="wholesale" {% if request.GET.role == 'wholesale' %}selected{% endif %}>Mayoristas</option>
-            <option value="staff" {% if request.GET.role == 'staff' %}selected{% endif %}>Staff</option>
-            <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Administradores</option>
-        </select>
-        <button type="submit" class="admin-btn admin-btn--secondary"><i class="fas fa-search"></i></button>
-    </form>
-    <a href="{% url 'admin_panel:customer_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo cliente</a>
+<div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    <a href="{% url 'core:admin_panel:customer_create' %}" class="admin-btn admin-btn--primary"><i class="fas fa-plus"></i> Nuevo cliente</a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
+        {% if request.GET.q or request.GET.role or request.GET.status or request.GET.customer_type or request.GET.has_orders or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:customer_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre, email, teléfono, documento">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Rol</label>
+                    <select name="role" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="client" {% if request.GET.role == 'client' %}selected{% endif %}>Clientes</option>
+                        <option value="wholesale" {% if request.GET.role == 'wholesale' %}selected{% endif %}>Mayoristas</option>
+                        <option value="staff" {% if request.GET.role == 'staff' %}selected{% endif %}>Staff</option>
+                        <option value="admin" {% if request.GET.role == 'admin' %}selected{% endif %}>Administradores</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Activos</option>
+                        <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tipo</label>
+                    <select name="customer_type" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="person" {% if request.GET.customer_type == 'person' %}selected{% endif %}>Persona</option>
+                        <option value="company" {% if request.GET.customer_type == 'company' %}selected{% endif %}>Empresa</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Pedidos</label>
+                    <select name="has_orders" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="yes" {% if request.GET.has_orders == 'yes' %}selected{% endif %}>Con pedidos</option>
+                        <option value="no" {% if request.GET.has_orders == 'no' %}selected{% endif %}>Sin pedidos</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="-date_joined" {% if request.GET.sort == '-date_joined' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                        <option value="date_joined" {% if request.GET.sort == 'date_joined' %}selected{% endif %}>Más antiguos</option>
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre A-Z</option>
+                        <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Nombre Z-A</option>
+                        <option value="email" {% if request.GET.sort == 'email' %}selected{% endif %}>Email A-Z</option>
+                        <option value="-email" {% if request.GET.sort == '-email' %}selected{% endif %}>Email Z-A</option>
+                        <option value="-orders" {% if request.GET.sort == '-orders' %}selected{% endif %}>Más pedidos</option>
+                        <option value="orders" {% if request.GET.sort == 'orders' %}selected{% endif %}>Menos pedidos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-lg-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i> Buscar</button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
+    </div>
 </div>
 
 <div class="admin-card">
@@ -45,7 +104,7 @@
                         <td>{{ c.email|default:"—" }}</td>
                         <td>{{ c.phone|default:"—" }}</td>
                         <td>{{ c.date_joined|date:"d/m/Y" }}</td>
-                        <td>{{ c.orders.count }}</td>
+                        <td>{{ c.orders_count|default:c.orders.count }}</td>
                         <td>
                             {% if c.role == 'admin' %}<span class="admin-badge admin-badge--refunded">Admin</span>
                             {% elif c.role == 'staff' %}<span class="admin-badge admin-badge--processing">Staff</span>
@@ -54,13 +113,13 @@
                         </td>
                         <td class="text-end">
                             <div class="admin-actions">
-                                <a href="{% url 'admin_panel:customer_detail' c.pk %}" class="admin-action admin-action--primary">Ver</a>
-                                <a href="{% url 'admin_panel:customer_edit' c.pk %}" class="admin-action admin-action--primary">Editar</a>
+                                <a href="{% url 'core:admin_panel:customer_detail' c.pk %}" class="admin-action admin-action--primary">Ver</a>
+                                <a href="{% url 'core:admin_panel:customer_edit' c.pk %}" class="admin-action admin-action--primary">Editar</a>
                             </div>
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="7" class="admin-table__empty">No hay clientes registrados</td></tr>
+                    <tr><td colspan="7" class="admin-table__empty">{% if request.GET.q or request.GET.role or request.GET.status or request.GET.customer_type or request.GET.has_orders %}No se encontraron clientes con los filtros aplicados. <a href="{% url 'core:admin_panel:customer_list' %}">Ver todos</a>{% else %}No hay clientes registrados. <a href="{% url 'core:admin_panel:customer_create' %}">Crear primer cliente</a>{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -69,9 +128,9 @@
 </div>
 {% if page_obj.paginator.num_pages > 1 %}
 <nav class="mt-4 pagination">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}">« Anterior</a>{% endif %}
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
     <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.role %}&role={{ request.GET.role }}{% endif %}">Siguiente »</a>{% endif %}
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
 </nav>
 {% endif %}
 {% endblock %}

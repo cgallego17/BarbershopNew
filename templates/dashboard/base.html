@@ -61,6 +61,8 @@
         .admin-sidebar__item:hover { background: var(--admin-sidebar-hover); color: #fff; }
         .admin-sidebar__item.active { background: var(--admin-sidebar-active); color: #fff; }
         .admin-sidebar__item i { width: 20px; text-align: center; opacity: .9; }
+        .admin-sidebar__item { flex-wrap: wrap; }
+        .admin-sidebar__badge { margin-left: auto; background: var(--admin-accent); color: #fff; font-size: .7rem; font-weight: 700; min-width: 20px; height: 18px; padding: 0 6px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; }
         .admin-sidebar__section { font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.4); padding: 16px 14px 8px; }
         .admin-sidebar__footer {
             padding: 16px;
@@ -92,6 +94,44 @@
             align-items: center;
             gap: 12px;
         }
+        .admin-notify-btn {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--admin-border);
+            border-radius: 10px;
+            background: #fff;
+            color: var(--admin-text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        .admin-notify-btn:hover {
+            color: var(--admin-accent);
+            border-color: rgba(197,101,51,.35);
+            background: #fff8f4;
+        }
+        .admin-notify-btn__count {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #c56533;
+            color: #fff !important;
+            font-size: .7rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, .22), 0 3px 8px rgba(0, 0, 0, .25);
+            line-height: 1;
+        }
         .admin-topbar__user span { color: var(--admin-text-muted); font-size: .9rem; }
         .admin-topbar__user a {
             color: var(--admin-text-muted);
@@ -120,11 +160,130 @@
             cursor: pointer;
         }
         .admin-sidebar-toggle:hover { background: var(--admin-bg); }
+        .admin-notify-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 18, .45);
+            z-index: 1090;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+        }
+        .admin-notify-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .admin-notify-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 390px;
+            max-width: 96vw;
+            height: 100vh;
+            z-index: 1091;
+            background: #fff;
+            border-left: 1px solid var(--admin-border);
+            box-shadow: -8px 0 30px rgba(0,0,0,.12);
+            transform: translateX(105%);
+            transition: transform .22s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-notify-drawer.open { transform: translateX(0); }
+        .admin-notify-drawer__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--admin-border);
+        }
+        .admin-notify-drawer__title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .admin-notify-drawer__count {
+            min-width: 20px;
+            height: 20px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #3730a3;
+            font-size: .7rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-notify-close {
+            width: 34px;
+            height: 34px;
+            border: 1px solid var(--admin-border);
+            border-radius: 8px;
+            background: #fff;
+            color: var(--admin-text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .admin-notify-close:hover { color: var(--admin-accent); }
+        .admin-notify-drawer__body {
+            padding: 14px;
+            overflow-y: auto;
+        }
+        .admin-notify-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 10px;
+        }
+        .admin-notify-item {
+            border: 1px solid var(--admin-border);
+            border-radius: 10px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 30px 1fr auto;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+        }
+        .admin-notify-item__icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+        }
+        .admin-notify-item__text { font-size: .84rem; color: var(--admin-text); }
+        .admin-notify-item__go {
+            font-size: .78rem;
+            font-weight: 700;
+            color: var(--admin-accent);
+            text-decoration: none;
+        }
+        .admin-notify-item__go:hover { color: var(--admin-accent-hover); }
+        .admin-notify-item--danger .admin-notify-item__icon { background: #fee2e2; color: #b91c1c; }
+        .admin-notify-item--warning .admin-notify-item__icon { background: #fef3c7; color: #a16207; }
+        .admin-notify-item--info .admin-notify-item__icon { background: #dbeafe; color: #1d4ed8; }
+        .admin-notify-item--success .admin-notify-item__icon { background: #dcfce7; color: #15803d; }
     </style>
     {% block extra_css %}{% endblock %}
     {% block form_media %}{% endblock %}
 </head>
 <body>
+    <div id="globalFormLoader" class="global-form-loader" aria-hidden="true">
+        <div class="global-form-loader__box" role="status" aria-live="polite">
+            <span class="global-form-loader__spinner" aria-hidden="true"></span>
+            <span class="global-form-loader__text">Procesando, por favor espera...</span>
+        </div>
+    </div>
     <div class="admin-sidebar-overlay" id="sidebarOverlay"></div>
     <div class="admin-layout">
         <aside class="admin-sidebar" id="adminSidebar">
@@ -134,7 +293,7 @@
             </div>
             <nav class="admin-sidebar__nav">
                 <div class="admin-sidebar__section">Principal</div>
-                <a href="{% url 'dashboard' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:dashboard' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
@@ -149,45 +308,54 @@
                 </a>
                 {% endif %}
                 <div class="admin-sidebar__section">Catálogo</div>
-                <a href="{% url 'admin_panel:product_list' %}" class="admin-sidebar__item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:product_list' %}" class="admin-sidebar__item {% if 'product' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-box"></i>
                     <span>Productos</span>
                 </a>
-                <a href="{% url 'admin_panel:attribute_list' %}" class="admin-sidebar__item {% if 'attribute' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:attribute_list' %}" class="admin-sidebar__item {% if 'attribute' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-palette"></i>
                     <span>Atributos</span>
                 </a>
-                <a href="{% url 'admin_panel:category_list' %}" class="admin-sidebar__item {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:category_list' %}" class="admin-sidebar__item {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-tags"></i>
                     <span>Categorías</span>
                 </a>
-                <a href="{% url 'admin_panel:brand_list' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'brand_list' or request.resolver_match.url_name == 'brand_create' or request.resolver_match.url_name == 'brand_edit' or request.resolver_match.url_name == 'brand_delete' %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:brand_list' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'brand_list' or request.resolver_match.url_name == 'brand_create' or request.resolver_match.url_name == 'brand_edit' or request.resolver_match.url_name == 'brand_delete' %}active{% endif %}">
                     <i class="fas fa-copyright"></i>
                     <span>Marcas</span>
                 </a>
+                <a href="{% url 'core:admin_panel:review_list' %}{% if pending_reviews_count %}?status=pending{% endif %}" class="admin-sidebar__item {% if 'review' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-star"></i>
+                    <span>Reseñas</span>
+                    {% if pending_reviews_count %}<span class="admin-sidebar__badge">{{ pending_reviews_count }}</span>{% endif %}
+                </a>
                 <div class="admin-sidebar__section">Ventas</div>
-                <a href="{% url 'admin_panel:customer_list' %}" class="admin-sidebar__item {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:customer_list' %}" class="admin-sidebar__item {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-users"></i>
                     <span>Clientes</span>
                 </a>
-                <a href="{% url 'admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:newsletter_list' %}" class="admin-sidebar__item {% if 'newsletter' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-envelope-open-text"></i>
+                    <span>Newsletter</span>
+                </a>
+                <a href="{% url 'core:admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Pedidos</span>
                 </a>
-                <a href="{% url 'admin_panel:coupon_list' %}" class="admin-sidebar__item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:coupon_list' %}" class="admin-sidebar__item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-ticket-alt"></i>
                     <span>Cupones</span>
                 </a>
                 <div class="admin-sidebar__section">Sistema</div>
-                <a href="{% url 'admin_panel:shipping_price_list' %}" class="admin-sidebar__item {% if 'shipping_price' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:shipping_price_list' %}" class="admin-sidebar__item {% if 'shipping_price' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-truck"></i>
                     <span>Precios de envío</span>
                 </a>
-                <a href="{% url 'admin_panel:home_sections' %}" class="admin-sidebar__item {% if 'home_' in request.resolver_match.url_name %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-sidebar__item {% if 'home_' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-home"></i>
                     <span>Secciones Home</span>
                 </a>
-                <a href="{% url 'admin_panel:config' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'config' %}active{% endif %}">
+                <a href="{% url 'core:admin_panel:config' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'config' %}active{% endif %}">
                     <i class="fas fa-cogs"></i>
                     <span>Configuración</span>
                 </a>
@@ -196,7 +364,7 @@
                         <i class="fas fa-external-link-alt"></i>
                         <span>Ver tienda</span>
                     </a>
-                    <a href="{% url 'account_logout' %}">
+                    <a href="{% url 'account_logout' %}" class="js-logout-link">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Cerrar sesión</span>
                     </a>
@@ -210,8 +378,14 @@
                     <h1 class="admin-topbar__title mb-0">{% block topbar_title %}Dashboard{% endblock %}</h1>
                 </div>
                 <div class="admin-topbar__user">
+                    <button type="button" class="admin-notify-btn" id="notifyToggle" title="Notificaciones" aria-label="Abrir notificaciones">
+                        <i class="fas fa-bell"></i>
+                        {% if admin_notifications_count %}
+                        <span class="admin-notify-btn__count">{{ admin_notifications_count }}</span>
+                        {% endif %}
+                    </button>
                     <span>{{ user.get_full_name|default:user.username }}</span>
-                    <a href="{% url 'account_logout' %}"><i class="fas fa-sign-out-alt"></i> Salir</a>
+                    <a href="{% url 'account_logout' %}" class="js-logout-link"><i class="fas fa-sign-out-alt"></i> Salir</a>
                 </div>
             </header>
             <div class="admin-content">
@@ -226,9 +400,134 @@
             </div>
         </main>
     </div>
+    <div class="admin-notify-overlay" id="notifyOverlay"></div>
+    <aside class="admin-notify-drawer" id="notifyDrawer" aria-label="Notificaciones">
+        <div class="admin-notify-drawer__head">
+            <h3 class="admin-notify-drawer__title">
+                <i class="fas fa-bell"></i> Notificaciones
+                {% if admin_notifications_count %}
+                <span class="admin-notify-drawer__count">{{ admin_notifications_count }}</span>
+                {% endif %}
+            </h3>
+            <button type="button" class="admin-notify-close" id="notifyClose" aria-label="Cerrar notificaciones">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="admin-notify-drawer__body">
+            {% if admin_notifications %}
+            <ul class="admin-notify-list">
+                {% for n in admin_notifications %}
+                <li class="admin-notify-item admin-notify-item--{{ n.level }}">
+                    <span class="admin-notify-item__icon"><i class="{{ n.icon }}"></i></span>
+                    <span class="admin-notify-item__text">{{ n.text }}</span>
+                    <a href="{{ n.url }}" class="admin-notify-item__go">Ver</a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-muted mb-0">No hay notificaciones nuevas.</p>
+            {% endif %}
+        </div>
+    </aside>
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutConfirmModalLabel">Cerrar sesión</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Seguro que deseas cerrar sesión?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="post" action="{% url 'account_logout' %}" id="logoutConfirmForm" class="m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Sí, cerrar sesión</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="{% static 'assets/vendors/jquery/jquery-3.7.0.min.js' %}"></script>
     <script src="{% static 'assets/vendors/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <style>
+        .global-form-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 120000;
+            background: rgba(15, 15, 18, 0.56);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .global-form-loader.is-visible { display: flex; }
+        .global-form-loader__box {
+            min-width: 260px;
+            background: #ffffff;
+            border: 1px solid #ececf2;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+            padding: 16px 18px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .global-form-loader__spinner {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #e6e6ee;
+            border-top-color: var(--admin-accent, #C56533);
+            animation: global-loader-spin .7s linear infinite;
+            flex-shrink: 0;
+        }
+        .global-form-loader__text {
+            font-size: .86rem;
+            color: #2e2e3c;
+            font-weight: 600;
+        }
+        @keyframes global-loader-spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
     <script>
+        (function() {
+            var loader = document.getElementById('globalFormLoader');
+            if (!loader) return;
+
+            function shouldSkipFormLoader(form, event) {
+                if (!form) return true;
+                if (event && event.defaultPrevented) return true;
+                if ((form.getAttribute('method') || '').toLowerCase() === 'dialog') return true;
+                if ((form.getAttribute('target') || '').toLowerCase() === '_blank') return true;
+                if (form.hasAttribute('data-no-loader')) return true;
+                if (form.hasAttribute('hx-post') || form.hasAttribute('hx-get')) return true;
+                return false;
+            }
+
+            function showFormLoader() {
+                loader.classList.add('is-visible');
+                loader.setAttribute('aria-hidden', 'false');
+            }
+
+            function hideFormLoader() {
+                loader.classList.remove('is-visible');
+                loader.setAttribute('aria-hidden', 'true');
+            }
+
+            document.addEventListener('submit', function(event) {
+                var form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                if (shouldSkipFormLoader(form, event)) return;
+                showFormLoader();
+            });
+
+            window.addEventListener('pageshow', hideFormLoader);
+        })();
+
         (function() {
             var sidebar = document.getElementById('adminSidebar');
             var overlay = document.getElementById('sidebarOverlay');
@@ -237,6 +536,56 @@
                 toggle.addEventListener('click', function() { sidebar.classList.add('open'); overlay.classList.add('open'); });
                 overlay.addEventListener('click', function() { sidebar.classList.remove('open'); overlay.classList.remove('open'); });
             }
+        })();
+
+        (function() {
+            var notifyDrawer = document.getElementById('notifyDrawer');
+            var notifyOverlay = document.getElementById('notifyOverlay');
+            var notifyToggle = document.getElementById('notifyToggle');
+            var notifyClose = document.getElementById('notifyClose');
+            if (!notifyDrawer || !notifyOverlay || !notifyToggle) return;
+
+            function openNotify() {
+                notifyDrawer.classList.add('open');
+                notifyOverlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeNotify() {
+                notifyDrawer.classList.remove('open');
+                notifyOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+
+            notifyToggle.addEventListener('click', openNotify);
+            notifyOverlay.addEventListener('click', closeNotify);
+            if (notifyClose) notifyClose.addEventListener('click', closeNotify);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeNotify();
+            });
+        })();
+
+        (function() {
+            var logoutForm = document.getElementById('logoutConfirmForm');
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('.js-logout-link');
+                if (!link) return;
+                e.preventDefault();
+                if (logoutForm) {
+                    logoutForm.setAttribute('action', link.getAttribute('href') || "{% url 'account_logout' %}");
+                }
+                var modalEl = document.getElementById('logoutConfirmModal');
+                if (!modalEl || !window.bootstrap) {
+                    if (logoutForm) {
+                        logoutForm.submit();
+                    } else {
+                        window.location.href = link.getAttribute('href');
+                    }
+                    return;
+                }
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+            });
         })();
     </script>
     {% block extra_js %}{% endblock %}
