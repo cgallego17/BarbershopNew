@@ -122,6 +122,10 @@ def about_view(request):
     return render(request, 'core/about.html')
 
 
+def maintenance_view(request):
+    return render(request, 'core/maintenance.html')
+
+
 def robots_txt(request):
     return render(request, 'robots.txt', content_type='text/plain')
 

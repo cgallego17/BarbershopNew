@@ -134,6 +134,13 @@
                         </div>
                         <p class="form-text small text-muted mt-1">Si está desactivado, los productos agotados no se listarán en la tienda ni en la portada.</p>
                     </div>
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            {{ form.maintenance_mode }}
+                            <label class="form-check-label" for="id_maintenance_mode">Modo mantenimiento</label>
+                        </div>
+                        <p class="form-text small text-muted mt-1">Si está activo, el sitio público mostrará la página de mantenimiento. El panel (/panel/) seguirá funcionando.</p>
+                    </div>
                 </div>
             </div>
 

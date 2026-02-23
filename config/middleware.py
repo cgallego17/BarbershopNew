@@ -1,6 +1,30 @@
 from django.conf import settings
 
 
+class MaintenanceModeMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        path = request.path or '/'
+        if path.startswith('/panel/'):
+            return self.get_response(request)
+        if path.startswith('/static/') or path.startswith('/media/') or path.startswith('/assets/'):
+            return self.get_response(request)
+        if path.startswith('/mantenimiento/'):
+            return self.get_response(request)
+
+        try:
+            from apps.core.models import SiteSettings
+            if SiteSettings.get().maintenance_mode:
+                from django.shortcuts import redirect
+                return redirect('core:maintenance')
+        except Exception:
+            return self.get_response(request)
+
+        return self.get_response(request)
+
+
 class ContentSecurityPolicyMiddleware:
     """
     Adds a baseline CSP header and optionally allows unsafe-eval.

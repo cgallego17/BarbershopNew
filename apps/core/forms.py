@@ -304,6 +304,7 @@ class SiteSettingsForm(forms.ModelForm):
             'business_hours',
             'facebook_url', 'instagram_url', 'twitter_url', 'youtube_url', 'tiktok_url',
             'show_out_of_stock_products',
+            'maintenance_mode',
             'about_text', 'currency',
             'terms_url', 'privacy_url',
             'meta_description',
@@ -313,6 +314,7 @@ class SiteSettingsForm(forms.ModelForm):
             'meta_description': forms.Textarea(attrs={'rows': 2}),
             'topbar_marquee_text': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ej: Envíos a todo el país • Ofertas esta semana • Contáctanos por WhatsApp'}),
             'show_out_of_stock_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'maintenance_mode': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):

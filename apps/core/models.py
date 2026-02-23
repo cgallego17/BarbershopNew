@@ -57,6 +57,12 @@ class SiteSettings(models.Model):
         help_text='Si está desactivado, los productos sin stock no se mostrarán en la tienda ni en el home.'
     )
 
+    maintenance_mode = models.BooleanField(
+        'Modo mantenimiento',
+        default=False,
+        help_text='Si está activo, el sitio público mostrará la página de mantenimiento (excepto /panel/).'
+    )
+
     # Información adicional
     about_text = models.TextField('Texto sobre nosotros', blank=True)
     currency = models.CharField('Moneda', max_length=10, default='$')
