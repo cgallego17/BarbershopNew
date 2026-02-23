@@ -3,9 +3,10 @@ from django.core.cache import cache
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.views.decorators.http import require_GET, require_POST
+from django.contrib import messages
 
 
 def dashboard_required(view):
@@ -29,7 +30,7 @@ class HomeView(TemplateView):
         from apps.orders.models import OrderItem
         from apps.products.models import Product, Category, Brand
 
-        from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeTestimonial
+        from .models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeTestimonial, HomePopupAnnouncement
 
         context = super().get_context_data(**kwargs)
         site_settings = SiteSettings.get()
@@ -72,6 +73,7 @@ class HomeView(TemplateView):
         context['home_testimonials'] = HomeTestimonial.objects.all()[:10]
         context['home_categories'] = Category.objects.filter(is_active=True, parent__isnull=True)[:8]
         context['meat_category_block'] = HomeMeatCategoryBlock.get()
+        context['home_popup'] = HomePopupAnnouncement.get()
         # Productos de la categoría Kits (id=8) para la sección meat-category
         context['meat_category_products'] = list(
             base_product_qs.filter(categories__id=8).distinct()[:8]
@@ -81,6 +83,38 @@ class HomeView(TemplateView):
 
 
 def contact_view(request):
+    from .models import ContactSubmission
+
+    if request.method == 'POST':
+        name = (request.POST.get('name') or '').strip()
+        email = (request.POST.get('email') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()
+        message = (request.POST.get('message') or '').strip()
+
+        if not (name and email and phone and message):
+            messages.error(request, 'Completa todos los campos.')
+            return render(request, 'core/contact.html')
+
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, 'Ingresa un correo válido.')
+            return render(request, 'core/contact.html')
+
+        ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+        ip = ip or request.META.get('REMOTE_ADDR')
+        ua = (request.META.get('HTTP_USER_AGENT') or '')[:300]
+        ContactSubmission.objects.create(
+            name=name,
+            email=email,
+            phone=phone,
+            message=message,
+            ip_address=ip or None,
+            user_agent=ua,
+        )
+        messages.success(request, 'Mensaje enviado. Te contactaremos pronto.')
+        return redirect('core:contact')
+
     return render(request, 'core/contact.html')
 
 

@@ -1,0 +1,106 @@
+{% extends 'dashboard/base.html' %}
+{% load humanize %}
+{% block title %}Contactos{% endblock %}
+{% block topbar_title %}Contactos{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+    <a href="{% url 'core:admin_panel:contact_submission_export_excel' %}" class="admin-btn admin-btn--primary">
+        <i class="fas fa-file-excel"></i> Exportar Excel
+    </a>
+</div>
+
+<div class="admin-card mb-4">
+    <div class="admin-card__header">
+        <h3 class="admin-card__title mb-0"><i class="fas fa-inbox me-2"></i>Mensajes de contacto</h3>
+        {% if request.GET.q or request.GET.status or request.GET.sort %}
+        <a href="{% url 'core:admin_panel:contact_submission_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% endif %}
+    </div>
+    <div class="admin-card__body">
+        <form method="get" class="admin-form">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label">Buscar</label>
+                    <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Nombre, email, teléfono o mensaje">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado</label>
+                    <select name="status" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="unread" {% if request.GET.status == 'unread' %}selected{% endif %}>Sin leer</option>
+                        <option value="read" {% if request.GET.status == 'read' %}selected{% endif %}>Leídos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Ordenar por</label>
+                    <select name="sort" class="form-select">
+                        <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Más antiguos</option>
+                        <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre A-Z</option>
+                        <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Nombre Z-A</option>
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="admin-btn admin-btn--primary w-100"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+        </form>
+        {% if page_obj %}<p class="text-muted small mb-0 mt-2">{{ page_obj.paginator.count }} mensaje{{ page_obj.paginator.count|pluralize }}</p>{% endif %}
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body p-0">
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Fecha</th>
+                        <th class="text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in submissions %}
+                    <tr>
+                        <td>
+                            {% if s.is_read %}
+                            <span class="admin-badge admin-badge--completed">Leído</span>
+                            {% else %}
+                            <span class="admin-badge admin-badge--processing">Nuevo</span>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ s.name }}</strong></td>
+                        <td>{{ s.email }}</td>
+                        <td>{{ s.phone }}</td>
+                        <td>{{ s.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <div class="admin-actions">
+                                <a href="{% url 'core:admin_panel:contact_submission_detail' s.pk %}" class="admin-action admin-action--primary">Ver</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="admin-table__empty">No hay mensajes de contacto todavía.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="mt-4 pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">« Anterior</a>{% endif %}
+    <span class="current">Pág. {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

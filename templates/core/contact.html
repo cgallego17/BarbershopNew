@@ -101,8 +101,8 @@
                 </div>
                 <div class="contact-page__form-wrap">
                     <h3 class="mb-4">Déjanos tus inquietudes</h3>
-                    {% with contact_email=site_settings.email|default:"info@barbershop.com.co" %}
-                    <form id="contact-form" class="contact-form" action="mailto:{{ contact_email }}" method="get" target="_blank">
+                    <form id="contact-form" class="contact-form" action="" method="post">
+                        {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="contact-name" class="form-label">Nombre</label>
@@ -112,9 +112,13 @@
                                 <label for="contact-email" class="form-label">Correo</label>
                                 <input type="email" class="form-control" id="contact-email" name="email" placeholder="tu@correo.com" autocomplete="email" required>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="contact-phone" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="contact-phone" name="phone" placeholder="Tu teléfono" autocomplete="tel" required>
+                            </div>
                             <div class="col-12 mb-3">
                                 <label for="contact-message" class="form-label">Mensaje</label>
-                                <textarea class="form-control" id="contact-message" name="body" rows="5" placeholder="Escribe tu mensaje o consulta..." autocomplete="off" required></textarea>
+                                <textarea class="form-control" id="contact-message" name="message" rows="5" placeholder="Escribe tu mensaje o consulta..." autocomplete="off" required></textarea>
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="boskery-btn">
@@ -126,7 +130,6 @@
                             </div>
                         </div>
                     </form>
-                    {% endwith %}
                 </div>
             </div>
         </div>
@@ -208,22 +211,4 @@
 </style>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-(function() {
-    var form = document.getElementById('contact-form');
-    if (!form) return;
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var name = document.getElementById('contact-name').value.trim();
-        var email = document.getElementById('contact-email').value.trim();
-        var body = document.getElementById('contact-message').value.trim();
-        var mailto = form.getAttribute('action');
-        var subject = 'Consulta desde BarberShop - ' + (name || 'Contacto');
-        var bodyText = 'Nombre: ' + name + '\nEmail: ' + email + '\n\n' + body;
-        var uri = mailto + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(bodyText);
-        window.location.href = uri;
-    });
-})();
-</script>
-{% endblock %}
+

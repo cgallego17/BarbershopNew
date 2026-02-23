@@ -43,4 +43,4 @@ if settings.DEBUG:
             {'document_root': settings.BASE_DIR / 'boskery' / 'files' / 'assets'},
         ),
     ]
-    urlpatterns += [path('__debug__/', include('debug_toolbar.urls'))]
+

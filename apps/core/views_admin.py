@@ -20,6 +20,7 @@ from .forms import (
     ProductAttributeForm, ProductAttributeValueFormSet,
     get_product_variant_formset, CustomerForm, CustomerCreateForm, SiteSettingsForm,
     HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeMeatCategoryBlockForm, HomeBrandBlockForm, HomeBrandForm, HomeTestimonialForm,
+    HomePopupAnnouncementForm,
     ShippingPriceForm, ShippingFreeRuleForm,
 )
 from .models import (
@@ -31,10 +32,13 @@ from .models import (
     HomeBrandBlock,
     HomeBrand,
     HomeTestimonial,
-    ShippingPrice,
+    HomePopupAnnouncement,
     Country,
+    State,
     City,
+    ShippingPrice,
     NewsletterSubscriber,
+    ContactSubmission,
 )
 
 
@@ -483,6 +487,129 @@ class ReviewListView(StaffRequiredMixin, ListView):
         return qs.order_by(*order_map.get(sort, ['-created_at']))
 
 
+# --- Contactos (Formulario /contacto/) ---
+
+class ContactSubmissionListView(StaffRequiredMixin, ListView):
+    model = ContactSubmission
+    template_name = 'dashboard/contact_submission_list.html'
+    context_object_name = 'submissions'
+    paginate_by = 30
+
+    def get_queryset(self):
+        qs = ContactSubmission.objects.all()
+        search = (self.request.GET.get('q') or '').strip()
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search)
+                | Q(email__icontains=search)
+                | Q(phone__icontains=search)
+                | Q(message__icontains=search)
+            )
+        status = self.request.GET.get('status')
+        if status == 'unread':
+            qs = qs.filter(is_read=False)
+        elif status == 'read':
+            qs = qs.filter(is_read=True)
+        sort = self.request.GET.get('sort', '-created_at')
+        order_map = {
+            '-created_at': ['-created_at', '-id'],
+            'created_at': ['created_at', 'id'],
+            'name': ['name', '-created_at'],
+            '-name': ['-name', '-created_at'],
+        }
+        return qs.order_by(*order_map.get(sort, ['-created_at', '-id']))
+
+
+class ContactSubmissionDetailView(StaffRequiredMixin, DetailView):
+    model = ContactSubmission
+    template_name = 'dashboard/contact_submission_detail.html'
+    context_object_name = 'submission'
+
+    def get(self, request, *args, **kwargs):
+        resp = super().get(request, *args, **kwargs)
+        obj = self.get_object()
+        if obj and not obj.is_read:
+            ContactSubmission.objects.filter(pk=obj.pk).update(is_read=True)
+        return resp
+
+
+@_dashboard_required
+def contact_submission_export_excel_view(request):
+    """Exporta mensajes de contacto a Excel (.xlsx)."""
+    from django.utils import timezone
+
+    try:
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment
+    except ModuleNotFoundError:
+        messages.error(
+            request,
+            'Para exportar en Excel debe instalar openpyxl. '
+            'Ejecute: pip install openpyxl y reinicie el servidor.',
+        )
+        return redirect('core:admin_panel:contact_submission_list')
+
+    qs = ContactSubmission.objects.all().order_by('-created_at', '-id')
+    timestamp = timezone.now().strftime('%Y%m%d-%H%M')
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Contactos'
+    headers = [
+        'Estado',
+        'Nombre',
+        'Email',
+        'Teléfono',
+        'Mensaje',
+        'IP',
+        'Fecha',
+    ]
+    for col, title in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=title)
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    for row, s in enumerate(qs, 2):
+        ws.cell(row=row, column=1, value='Leído' if s.is_read else 'Nuevo')
+        ws.cell(row=row, column=2, value=s.name)
+        ws.cell(row=row, column=3, value=s.email)
+        ws.cell(row=row, column=4, value=s.phone)
+        ws.cell(row=row, column=5, value=s.message)
+        ws.cell(row=row, column=6, value=s.ip_address or '')
+        ws.cell(row=row, column=7, value=s.created_at.strftime('%Y-%m-%d %H:%M'))
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f'contactos-{timestamp}.xlsx'
+    response = HttpResponse(
+        output.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    return response
+
+
+@_dashboard_required
+def contact_submission_toggle_read_view(request, pk):
+    if request.method != 'POST':
+        return redirect('core:admin_panel:contact_submission_detail', pk=pk)
+    obj = get_object_or_404(ContactSubmission, pk=pk)
+    obj.is_read = not obj.is_read
+    obj.save(update_fields=['is_read'])
+    return redirect('core:admin_panel:contact_submission_detail', pk=pk)
+
+
+@_dashboard_required
+def contact_submission_delete_view(request, pk):
+    if request.method != 'POST':
+        return redirect('core:admin_panel:contact_submission_detail', pk=pk)
+    obj = get_object_or_404(ContactSubmission, pk=pk)
+    obj.delete()
+    messages.success(request, 'Mensaje eliminado.')
+    return redirect('core:admin_panel:contact_submission_list')
+
+
 @_dashboard_required
 def review_approve_view(request, pk):
     """Autoriza una reseña (la hace visible en la tienda)."""
@@ -645,12 +772,11 @@ class CustomerUpdateView(StaffRequiredMixin, UpdateView):
 
 
 # --- Newsletter ---
-
 class NewsletterSubscriberListView(StaffRequiredMixin, ListView):
     model = NewsletterSubscriber
     template_name = 'dashboard/newsletter_list.html'
     context_object_name = 'subscribers'
-    paginate_by = 25
+    paginate_by = 30
 
     def get_queryset(self):
         qs = NewsletterSubscriber.objects.all()
@@ -1460,3 +1586,18 @@ class HomeTestimonialDeleteView(StaffRequiredMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Testimonio eliminado.')
         return super().delete(request, *args, **kwargs)
+
+
+class HomePopupAnnouncementUpdateView(StaffRequiredMixin, UpdateView):
+    model = HomePopupAnnouncement
+    form_class = HomePopupAnnouncementForm
+    template_name = 'dashboard/home_popup_form.html'
+    context_object_name = 'popup'
+    success_url = reverse_lazy('core:admin_panel:home_sections')
+
+    def get_object(self, queryset=None):
+        return HomePopupAnnouncement.get()
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Popup del home actualizado.')
+        return super().form_valid(form)

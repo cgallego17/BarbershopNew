@@ -17,7 +17,7 @@ def site_settings(request):
     ):
         from django.urls import reverse
         from apps.accounts.models import User
-        from apps.core.models import NewsletterSubscriber
+        from apps.core.models import NewsletterSubscriber, ContactSubmission
         from apps.orders.models import Order
         from apps.products.models import Product, ProductReview
 
@@ -49,6 +49,10 @@ def site_settings(request):
         new_newsletter_24h = NewsletterSubscriber.objects.filter(
             created_at__gte=last_24h,
         ).count()
+        new_contacts_24h = ContactSubmission.objects.filter(
+            created_at__gte=last_24h,
+        ).count()
+        unread_contacts = ContactSubmission.objects.filter(is_read=False).count()
 
         notifications = []
         if pending_orders:
@@ -108,7 +112,16 @@ def site_settings(request):
                 'url': reverse('core:admin_panel:newsletter_list'),
             })
 
+        if unread_contacts:
+            notifications.append({
+                'level': 'info',
+                'icon': 'fas fa-inbox',
+                'text': f'{unread_contacts} mensajes de contacto sin leer.',
+                'url': reverse('core:admin_panel:contact_submission_list') + '?status=unread',
+            })
+
         ctx['pending_reviews_count'] = pending_reviews
+        ctx['unread_contacts_count'] = unread_contacts
         ctx['admin_notifications'] = notifications
         ctx['admin_notifications_count'] = len(notifications)
     return ctx

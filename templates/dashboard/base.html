@@ -338,6 +338,11 @@
                     <i class="fas fa-envelope-open-text"></i>
                     <span>Newsletter</span>
                 </a>
+                <a href="{% url 'core:admin_panel:contact_submission_list' %}{% if unread_contacts_count %}?status=unread{% endif %}" class="admin-sidebar__item {% if 'contact_submission' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-inbox"></i>
+                    <span>Contactos</span>
+                    {% if unread_contacts_count %}<span class="admin-sidebar__badge">{{ unread_contacts_count }}</span>{% endif %}
+                </a>
                 <a href="{% url 'core:admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Pedidos</span>

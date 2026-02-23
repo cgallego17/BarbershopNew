@@ -1,0 +1,58 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Popup anuncios{% endblock %}
+{% block topbar_title %}Popup anuncios{% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+{% block form_media %}{{ form.media }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-link"><i class="fas fa-arrow-left"></i> Volver a secciones</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card__body">
+        <form method="post" enctype="multipart/form-data" class="admin-form">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Activo</label>
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Mostrar popup en el home</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Título</label>
+                    {{ form.title }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Contenido</label>
+                    {{ form.content }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Imagen</label>
+                    {{ form.image }}
+                    {% if popup.image %}
+                    <p class="mt-2 small">Actual: <img src="{{ popup.image.url }}" alt="" style="max-height:80px; border-radius:8px;"></p>
+                    {% else %}
+                    <p class="form-text small text-muted mt-1">Opcional.</p>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Texto del botón</label>
+                    {{ form.button_text }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">URL del botón</label>
+                    {{ form.button_url }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+                <a href="{% url 'core:admin_panel:home_sections' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

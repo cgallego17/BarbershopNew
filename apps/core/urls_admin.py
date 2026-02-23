@@ -46,6 +46,12 @@ urlpatterns = [
     path('newsletter/exportar-excel/', views_admin.newsletter_export_excel_view, name='newsletter_export_excel'),
     path('newsletter/<int:pk>/toggle/', views_admin.newsletter_toggle_active_view, name='newsletter_toggle'),
     path('newsletter/<int:pk>/eliminar/', views_admin.newsletter_delete_view, name='newsletter_delete'),
+    # Contactos
+    path('contactos/', views_admin.ContactSubmissionListView.as_view(), name='contact_submission_list'),
+    path('contactos/exportar-excel/', views_admin.contact_submission_export_excel_view, name='contact_submission_export_excel'),
+    path('contactos/<int:pk>/', views_admin.ContactSubmissionDetailView.as_view(), name='contact_submission_detail'),
+    path('contactos/<int:pk>/toggle-read/', views_admin.contact_submission_toggle_read_view, name='contact_submission_toggle_read'),
+    path('contactos/<int:pk>/eliminar/', views_admin.contact_submission_delete_view, name='contact_submission_delete'),
     # Pedidos
     path('pedidos/', views_admin.OrderListView.as_view(), name='order_list'),
     path('pedidos/<int:pk>/', views_admin.order_detail_view, name='order_detail'),
@@ -72,6 +78,7 @@ urlpatterns = [
     path('secciones/hero/<int:pk>/editar/', views_admin.HomeHeroSlideUpdateView.as_view(), name='home_hero_edit'),
     path('secciones/hero/<int:pk>/eliminar/', views_admin.HomeHeroSlideDeleteView.as_view(), name='home_hero_delete'),
     path('secciones/about/', views_admin.HomeAboutBlockUpdateView.as_view(), name='home_about'),
+    path('secciones/popup/', views_admin.HomePopupAnnouncementUpdateView.as_view(), name='home_popup'),
     path('secciones/categorias/', views_admin.HomeMeatCategoryBlockUpdateView.as_view(), name='home_meat_category'),
     path('secciones/marcas/', views_admin.HomeBrandListView.as_view(), name='home_brand_list'),
     path('secciones/marcas/configurar/', views_admin.HomeBrandBlockUpdateView.as_view(), name='home_brand_block_config'),

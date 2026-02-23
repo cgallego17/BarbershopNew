@@ -8,7 +8,7 @@ from apps.products.models import Product, Category, Brand, ProductAttribute, Pro
 from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
-from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeBrand, HomeTestimonial, Country, State, City, ShippingPrice
+from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeBrand, HomeTestimonial, HomePopupAnnouncement, Country, State, City, ShippingPrice
 
 
 def _add_form_control(form):
@@ -369,6 +369,20 @@ class HomeHeroSlideForm(forms.ModelForm):
 
     def clean_text(self):
         return sanitize_html(self.cleaned_data.get('text'))
+
+
+class HomePopupAnnouncementForm(forms.ModelForm):
+    class Meta:
+        model = HomePopupAnnouncement
+        fields = ['is_active', 'title', 'content', 'image', 'button_text', 'button_url']
+        widgets = {'content': CKEDITOR_WIDGET}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)
+
+    def clean_content(self):
+        return sanitize_html(self.cleaned_data.get('content'))
 
 
 class HomeAboutBlockForm(forms.ModelForm):

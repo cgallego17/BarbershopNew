@@ -43,6 +43,33 @@
 {% endblock %}
 
 {% block content %}
+{% if home_popup and home_popup.is_active and home_popup.content %}
+<div class="modal fade" id="homeAnnouncementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ home_popup.title|default:'Anuncio' }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                {% if home_popup.image %}
+                <div class="mb-3">
+                    <img src="{{ home_popup.image.url }}" alt="{{ home_popup.title|default:'Anuncio' }}" class="img-fluid rounded">
+                </div>
+                {% endif %}
+                <div class="rich-text">{{ home_popup.content|safe }}</div>
+            </div>
+            <div class="modal-footer">
+                {% if home_popup.button_text and home_popup.button_url %}
+                <a class="btn btn-primary" href="{{ home_popup.button_url }}">{{ home_popup.button_text }}</a>
+                {% endif %}
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% for section_key in active_sections %}
     {% if section_key == 'hero' %}
         {% include 'home/section_hero.html' %}
@@ -58,4 +85,30 @@
         {% include 'home/section_testimonials.html' %}
     {% endif %}
 {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+{% if home_popup and home_popup.is_active and home_popup.content %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    try {
+        var key = 'home_popup_seen_v1';
+        if (window.localStorage && localStorage.getItem(key) === '1') {
+            return;
+        }
+        var el = document.getElementById('homeAnnouncementModal');
+        if (!el || !window.bootstrap) {
+            return;
+        }
+        var modal = new bootstrap.Modal(el);
+        modal.show();
+        if (window.localStorage) {
+            localStorage.setItem(key, '1');
+        }
+    } catch (e) {
+        // no-op
+    }
+});
+</script>
+{% endif %}
 {% endblock %}

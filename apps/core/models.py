@@ -107,6 +107,27 @@ class SiteSettings(models.Model):
         return ''
 
 
+class ContactSubmission(models.Model):
+    """Registro de envíos desde el formulario público de contacto."""
+
+    name = models.CharField('Nombre', max_length=120)
+    email = models.EmailField('Correo')
+    phone = models.CharField('Teléfono', max_length=30)
+    message = models.TextField('Mensaje')
+    ip_address = models.GenericIPAddressField('IP', blank=True, null=True)
+    user_agent = models.CharField('User agent', max_length=300, blank=True)
+    is_read = models.BooleanField('Leído', default=False)
+    created_at = models.DateTimeField('Fecha', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Contacto (mensaje)'
+        verbose_name_plural = 'Contactos (mensajes)'
+        ordering = ['-created_at', '-id']
+
+    def __str__(self):
+        return f'{self.name} - {self.email}'
+
+
 # --- Módulo de secciones del Home ---
 
 class HomeSection(models.Model):
@@ -250,6 +271,30 @@ class HomeTestimonial(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class HomePopupAnnouncement(models.Model):
+    """Popup configurable para anuncios en el home (singleton)."""
+
+    is_active = models.BooleanField('Activo', default=False)
+    title = models.CharField('Título', max_length=200, blank=True)
+    content = models.TextField('Contenido', blank=True)
+    image = models.ImageField('Imagen', upload_to='home/popup/', blank=True, null=True)
+    button_text = models.CharField('Texto del botón', max_length=50, blank=True)
+    button_url = models.CharField('URL del botón', max_length=255, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Popup del home'
+        verbose_name_plural = 'Popup del home'
+
+    def __str__(self):
+        return self.title or 'Popup del home'
+
+    @classmethod
+    def get(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
 
 
 # --- Países, estados/departamentos y ciudades ---

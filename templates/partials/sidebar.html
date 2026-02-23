@@ -21,22 +21,28 @@
             <ul class="sidebar-one__info__list">
                 <li>
                     <span class="icon-maps-and-flags"></span>
-                    <address>Dirección de tu tienda</address>
+                    {% if site_settings.address %}
+                    <address>{{ site_settings.address }}{% if site_settings.city %}, {{ site_settings.city }}{% if site_settings.country %}, {{ site_settings.country }}{% endif %}{% endif %}</address>
+                    {% endif %}
                 </li>
-                <li><span class="icon-paper-plane"></span> <a href="mailto:needhelp@company.com">needhelp@company.com</a></li>
-                <li><span class="icon-phone-call"></span> <a href="tel:+10000000000">+1 000 000 0000</a></li>
+                {% if site_settings.email %}<li><span class="icon-paper-plane"></span> <a href="mailto:{{ site_settings.email }}">{{ site_settings.email }}</a></li>{% endif %}
+                {% if site_settings.phone %}<li><span class="icon-phone-call"></span> <a href="tel:{{ site_settings.phone|cut:' ' }}">{{ site_settings.phone }}</a></li>{% endif %}
             </ul>
         </div>
 
         <div class="sidebar-one__social sidebar-one__item">
-            <a href="https://facebook.com">
+            {% if site_settings.facebook_url %}
+            <a href="{{ site_settings.facebook_url }}" target="_blank" rel="noopener">
                 <i class="fab fa-facebook-f" aria-hidden="true"></i>
                 <span class="sr-only">Facebook</span>
             </a>
-            <a href="https://instagram.com">
+            {% endif %}
+            {% if site_settings.instagram_url %}
+            <a href="{{ site_settings.instagram_url }}" target="_blank" rel="noopener">
                 <i class="fab fa-instagram" aria-hidden="true"></i>
                 <span class="sr-only">Instagram</span>
             </a>
+            {% endif %}
         </div>
     </div>
 </aside>
