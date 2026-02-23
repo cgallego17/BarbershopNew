@@ -12,6 +12,7 @@ import environ
 env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
+    CSRF_TRUSTED_ORIGINS=(list, []),
     SECRET_KEY=(str, ''),
     DATABASE_URL=(str, 'sqlite:///db.sqlite3'),
     PRODUCTS_API_URL=(str, ''),
@@ -49,6 +50,13 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = env('SECRET_KEY') or 'django-insecure-CHANGE-THIS-IN-PRODUCTION-use-env'
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
+CSRF_TRUSTED_ORIGINS = env.list(
+    'CSRF_TRUSTED_ORIGINS',
+    default=[
+        'https://barbershop.com.co',
+        'https://www.barbershop.com.co',
+    ],
+)
 
 # Application definition
 DJANGO_APPS = [
