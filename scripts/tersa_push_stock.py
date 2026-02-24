@@ -35,14 +35,18 @@ SLEEP_BATCH = 0.3   # segundos entre batches
 
 # ---------- Helpers ----------
 
-def _build_stock_payload(marca_id=1, bodega_id=2):
+def _build_stock_payload(marca_id=None, bodega_id=2):
     """
-    Lee AtributoProducto filtrado por marca y el stock de productoBodega.
+    Lee AtributoProducto y el stock de productoBodega.
+    Si marca_id es None (default) trae TODOS los productos sin filtro de marca.
     Retorna lista de dicts: [{"external_id": "...", "stock": n}, ...]
     """
     from prod.models import AtributoProducto, productoBodega
 
-    productos = AtributoProducto.objects.filter(marca_id=marca_id)
+    productos = AtributoProducto.objects.all()
+    if marca_id:
+        productos = productos.filter(marca_id=marca_id)
+
     bodegas_qs = productoBodega.objects.filter(
         bodega_id=bodega_id,
         producto__in=productos,
@@ -109,8 +113,8 @@ class Command(BaseCommand):
         parser.add_argument(
             '--marca',
             type=int,
-            default=1,
-            help='ID de marca a sincronizar (default: 1)',
+            default=0,
+            help='ID de marca a sincronizar. 0 = todas las marcas (default: 0)',
         )
         parser.add_argument(
             '--dry-run',
@@ -136,12 +140,16 @@ class Command(BaseCommand):
                 '⚠  Modo DRY-RUN — no se enviará nada al Barbershop\n'
             ))
 
+        marca_label = f'Marca ID: {marca_id}' if marca_id else 'Todas las marcas'
         self.stdout.write(
-            f'Leyendo stock — Marca ID: {marca_id} | Bodega ID: {bodega_id}...'
+            f'Leyendo stock — {marca_label} | Bodega ID: {bodega_id}...'
         )
 
         try:
-            payload = _build_stock_payload(marca_id=marca_id, bodega_id=bodega_id)
+            payload = _build_stock_payload(
+                marca_id=marca_id if marca_id else None,
+                bodega_id=bodega_id,
+            )
         except Exception as exc:
             self.stdout.write(self.style.ERROR(f'Error leyendo BD local: {exc}'))
             raise

@@ -200,7 +200,7 @@ ACCOUNT_FORMS = {
 ACCOUNT_ADAPTER = 'apps.accounts.adapters.CustomAccountAdapter'
 ACCOUNT_PREVENT_ENUMERATION = True
 ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_RATE_LIMITS = {
     'login': '30/5m',
     'login_failed': '10/5m',
