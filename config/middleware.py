@@ -69,23 +69,5 @@ class ContentSecurityPolicyMiddleware:
             for directive, sources in directives.items()
         )
         response["Content-Security-Policy"] = csp_value
-        if getattr(settings, "CSP_STRICT_REPORT_ONLY", False):
-            strict_directives = {
-                "default-src": ["'self'", "https:", "data:", "blob:"],
-                # Inline scripts y event handlers en base.html y partials; hashes son frágiles
-                "script-src": ["'self'", "https:", "'unsafe-inline'"],
-                "style-src": ["'self'", "'unsafe-inline'", "https:"],
-                "img-src": ["'self'", "data:", "blob:", "https:"],
-                "font-src": ["'self'", "data:", "https:"],
-                "connect-src": ["'self'", "https:", "ws:", "wss:"],
-                "frame-src": ["'self'", "https:"],
-                "form-action": ["'self'", "https:"],
-                "base-uri": ["'self'"],
-                "object-src": ["'none'"],
-            }
-            strict_value = "; ".join(
-                f"{directive} {' '.join(sources)}"
-                for directive, sources in strict_directives.items()
-            )
-            response["Content-Security-Policy-Report-Only"] = strict_value
+        # Report-only desactivado para no mostrar violaciones en consola (Meta Pixel, GTM, etc.)
         return response
