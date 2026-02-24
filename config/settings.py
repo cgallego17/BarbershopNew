@@ -51,15 +51,20 @@ environ.Env.read_env(BASE_DIR / '.env')
 SECRET_KEY = env('SECRET_KEY') or 'django-insecure-CHANGE-THIS-IN-PRODUCTION-use-env'
 DEBUG = env('DEBUG')
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
-CSRF_TRUSTED_ORIGINS = env.list(
+_raw_origins = env.list(
     'CSRF_TRUSTED_ORIGINS',
     default=[
         'https://barbershop.com.co',
         'https://www.barbershop.com.co',
     ],
 )
+# Strip whitespace; Django requires exact match (no trailing slash)
+CSRF_TRUSTED_ORIGINS = [o.strip().rstrip('/') for o in _raw_origins if o.strip()]
+
 # Log CSRF failures for debugging 403 on login in production
 CSRF_FAILURE_VIEW = 'apps.core.views_csrf.csrf_failure'
+# Usar sesión para CSRF en lugar de cookie; evita problemas con cookies Secure/SameSite
+CSRF_USE_SESSIONS = True
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -100,6 +105,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'config.middleware.MaintenanceModeMiddleware',
+    'config.middleware.CsrfTrustedOriginMiddleware',
     'config.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

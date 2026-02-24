@@ -1,4 +1,38 @@
 from django.conf import settings
+from django.utils.deprecation import MiddlewareMixin
+
+
+class CsrfTrustedOriginMiddleware(MiddlewareMixin):
+    """
+    Añade dinámicamente el origen de la petición a CSRF_TRUSTED_ORIGINS.
+    Si la petición llegó a Django, el Host ya pasó ALLOWED_HOSTS.
+    Soluciona 403 en login (CSRF) con proxy/HTTPS.
+    """
+    def process_request(self, request):
+        try:
+            host = request.get_host().strip().split(':')[0]
+        except Exception:
+            return
+        if not host or host.startswith('.') or ' ' in host:
+            return
+        scheme = 'https' if request.is_secure() else 'http'
+        origin = f"{scheme}://{host}"
+        trusted = list(getattr(settings, 'CSRF_TRUSTED_ORIGINS', []) or [])
+        if origin not in trusted:
+            trusted.append(origin)
+            settings.CSRF_TRUSTED_ORIGINS = trusted
+        # Añadir también el origen del Referer (por si difiere)
+        referer = request.META.get('HTTP_REFERER', '').strip()
+        if referer and referer.startswith(('http://', 'https://')):
+            from urllib.parse import urlparse
+            try:
+                parsed = urlparse(referer)
+                ref_origin = f"{parsed.scheme}://{parsed.netloc.split(':')[0]}"
+                if ref_origin and ref_origin not in trusted:
+                    trusted.append(ref_origin)
+                    settings.CSRF_TRUSTED_ORIGINS = trusted
+            except Exception:
+                pass
 
 
 class MaintenanceModeMiddleware:
