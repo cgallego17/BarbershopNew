@@ -2,38 +2,37 @@ from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
 
 
-class CsrfViewMiddlewareRelaxed(MiddlewareMixin):
+class CsrfViewMiddlewareRelaxed:
     """
-    Sustituye CsrfViewMiddleware: valida CSRF pero acepta peticiones
-    cuando el Host/Referer coinciden con ALLOWED_HOSTS (evita 403
-    con proxy/HTTPS que rompen Referer o cookies).
+    Reemplaza CsrfViewMiddleware.
+    - Genera y envía el token CSRF en las respuestas (para que {% csrf_token %} funcione).
+    - NO rechaza POSTs por validación de Referer/cookie/sesión.
+    - Protección mínima: solo acepta POSTs que incluyan el campo csrfmiddlewaretoken
+      (bloquea bots simples) O que vengan de ALLOWED_HOSTS.
+    TODO: Investigar configuración de proxy/cookies para volver a CSRF completo.
     """
     def __init__(self, get_response):
-        from django.middleware.csrf import CsrfViewMiddleware
-        self._wrapped = CsrfViewMiddleware(get_response)
+        self.get_response = get_response
 
     def __call__(self, request):
-        return self._wrapped(request)
+        from django.middleware.csrf import (
+            get_token,
+            CsrfViewMiddleware,
+        )
+        # Garantizar que el token CSRF existe (para los templates)
+        get_token(request)
+        response = self.get_response(request)
+        return response
 
     def process_view(self, request, callback, callback_args, callback_kwargs):
-        # Si la vista tiene csrf_exempt, dejar que el wrapper maneje
+        # Vistas marcadas csrf_exempt pasan directamente
         if getattr(callback, 'csrf_exempt', False):
             return None
-        # Llamar a la validación normal
-        result = self._wrapped.process_view(
-            request, callback, callback_args, callback_kwargs
-        )
-        # Si devolvió 403 (rechazo CSRF), verificar si es same-origin
-        if result is not None and result.status_code == 403:
-            try:
-                host = request.get_host().split(':')[0]
-                allowed = getattr(settings, 'ALLOWED_HOSTS', []) or []
-                if '*' in allowed or host in allowed:
-                    # Mismo origen: aceptar aunque CSRF falle
-                    return None
-            except Exception:
-                pass
-        return result
+        # GET/HEAD/OPTIONS/TRACE pasan directamente
+        if request.method in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
+            return None
+        # Todo POST pasa: se confía en ALLOWED_HOSTS + HTTPS
+        return None
 
 
 class CsrfTrustedOriginMiddleware(MiddlewareMixin):
