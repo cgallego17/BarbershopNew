@@ -1300,7 +1300,7 @@
     {% endif %}
 
 {# ── Modal de mantenimiento — bloqueante para visitantes, invisible para admins ── #}
-{% if site_settings.maintenance_mode and not user.is_staff %}
+{% if site_settings.maintenance_mode and not user.can_access_dashboard and "/cuentas/" not in request.path and "/admin/" not in request.path %}
 <div id="mm-overlay" aria-modal="true" role="alertdialog" aria-labelledby="mm-title" style="
     position:fixed;inset:0;z-index:99999;
     display:flex;align-items:center;justify-content:center;

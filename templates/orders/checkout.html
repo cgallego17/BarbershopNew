@@ -296,10 +296,68 @@
     font-size: .8rem; padding: 0; line-height: 1;
 }
 .co-eye-btn:hover { color: #666; }
-/* Crear cuenta opcional */
-.co-create-account {
-    border-top: 1px dashed #e4e4e8;
-    padding-top: 10px; margin-top: 6px;
+/* ---- Tarjeta crear cuenta ---- */
+.co-signup-card {
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1.5px dashed rgba(197,101,51,.45);
+    background: linear-gradient(135deg, #fffaf7 0%, #fff8f4 100%);
+    overflow: hidden;
+    transition: border-color .2s, box-shadow .2s;
+}
+.co-signup-card:focus-within,
+.co-signup-card:has(#co-create-account-fields:not([style*="display:none"])) {
+    border-color: var(--boskery-base,#C56533);
+    border-style: solid;
+    box-shadow: 0 4px 18px rgba(197,101,51,.12);
+}
+.co-signup-card__head {
+    width: 100%; background: none; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; text-align: left;
+    font-family: inherit;
+    transition: background .15s;
+}
+.co-signup-card__head:hover { background: rgba(197,101,51,.05); }
+.co-signup-card__icon {
+    flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(197,101,51,.12);
+    border: 1.5px solid rgba(197,101,51,.25);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--boskery-base,#C56533); font-size: .85rem;
+}
+.co-signup-card__text { flex: 1; min-width: 0; }
+.co-signup-card__title {
+    display: block;
+    font-size: .8rem; font-weight: 800; color: #1a1a1a;
+    letter-spacing: .01em;
+}
+.co-signup-card__sub {
+    display: block;
+    font-size: .67rem; color: #888; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.co-signup-card__toggle-icon {
+    flex-shrink: 0; color: #bbb; font-size: .7rem;
+    transition: transform .22s;
+}
+.co-signup-card__toggle-icon.open { transform: rotate(180deg); }
+.co-signup-card__benefits {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    padding: 0 14px 10px;
+}
+.co-signup-benefit {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(197,101,51,.08); border: 1px solid rgba(197,101,51,.18);
+    color: #a04d22; border-radius: 20px;
+    font-size: .67rem; font-weight: 700; padding: 3px 9px;
+}
+.co-signup-benefit i { font-size: .6rem; }
+.co-signup-card__body { padding: 0 14px 12px; }
+.co-signup-card__divider {
+    height: 1px; background: rgba(197,101,51,.15);
+    margin-bottom: 10px;
 }
 </style>
 {% endblock %}
@@ -604,28 +662,52 @@
 
                         <!-- Crear cuenta opcional (solo invitados) -->
                         {% if not user.is_authenticated %}
-                        <div class="co-create-account" id="co-create-account-section">
-                            <label class="co-checkbox-row" style="margin-bottom:0;" id="co-create-account-toggle">
-                                <input type="checkbox" id="co-create-account-cb" onchange="coToggleCreateAccount(this)">
-                                <span><i class="fas fa-user-plus" style="color:var(--boskery-base,#C56533);margin-right:4px;font-size:.8rem;"></i> Guardar una cuenta con estos datos <span style="color:#aaa;font-weight:400;">(opcional)</span></span>
-                            </label>
-                            <div id="co-create-account-fields" style="display:none;margin-top:8px;">
+                        <div class="co-signup-card" id="co-create-account-section">
+                            <!-- Cabecera clickeable -->
+                            <button type="button" class="co-signup-card__head" id="co-create-account-toggle"
+                                    onclick="coToggleCreateAccount(this)" aria-expanded="false">
+                                <div class="co-signup-card__icon">
+                                    <i class="fas fa-user-plus"></i>
+                                </div>
+                                <div class="co-signup-card__text">
+                                    <span class="co-signup-card__title">Crea tu cuenta gratis</span>
+                                    <span class="co-signup-card__sub">Historial de pedidos · Datos guardados · Más rápido la próxima vez</span>
+                                </div>
+                                <div class="co-signup-card__toggle-icon" id="co-signup-chevron">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </button>
+
+                            <!-- Beneficios (siempre visibles cuando está colapsado) -->
+                            <div class="co-signup-card__benefits" id="co-signup-benefits">
+                                <span class="co-signup-benefit"><i class="fas fa-history"></i> Tus pedidos</span>
+                                <span class="co-signup-benefit"><i class="fas fa-map-marker-alt"></i> Dirección guardada</span>
+                                <span class="co-signup-benefit"><i class="fas fa-bolt"></i> Compra rápida</span>
+                            </div>
+
+                            <!-- Campo contraseña (expandible) -->
+                            <div class="co-signup-card__body" id="co-create-account-fields">
+                                <div class="co-signup-card__divider"></div>
                                 <div class="co-field mb-0">
-                                    <label for="co-new-password">Crea tu contraseña</label>
+                                    <label for="co-new-password" style="font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#777;">
+                                        Elige una contraseña
+                                    </label>
                                     <div style="position:relative;">
                                         <input type="password" id="co-new-password" name="new_password"
-                                               autocomplete="new-password" placeholder="Mínimo 8 caracteres"
-                                               style="padding-right:36px;">
+                                               autocomplete="new-password"
+                                               placeholder="Mínimo 8 caracteres"
+                                               style="padding-right:40px;border-color:rgba(197,101,51,.4);background:#fffaf7;">
                                         <button type="button" class="co-eye-btn" onclick="coTogglePwd('co-new-password',this)" tabindex="-1" aria-label="Ver contraseña">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                     </div>
-                                    <span style="font-size:.68rem;color:#aaa;margin-top:2px;display:block;">Usarás tu email como usuario.</span>
+                                    <span style="font-size:.67rem;color:#aaa;margin-top:3px;display:block;">
+                                        <i class="fas fa-lock" style="font-size:.6rem;margin-right:3px;"></i>Tu email será el usuario. Puedes cambiar la contraseña luego.
+                                    </span>
                                 </div>
                                 <input type="hidden" name="create_account" id="co-create-account-hidden" value="0">
                             </div>
                         </div>
-                        <div class="co-coupon-section" style="margin:6px 0 0;padding:0;border:none;"></div>
                         {% endif %}
 
                         <!-- Aceptación de términos y política -->
@@ -694,19 +776,28 @@ function coTogglePwd(inputId, btn) {
     inp.type = isText ? 'password' : 'text';
     btn.querySelector('i').className = isText ? 'fas fa-eye' : 'fas fa-eye-slash';
 }
-function coToggleCreateAccount(cb) {
-    var fields = document.getElementById('co-create-account-fields');
-    var hidden = document.getElementById('co-create-account-hidden');
-    var pwdInput = document.getElementById('co-new-password');
+function coToggleCreateAccount(btn) {
+    var fields  = document.getElementById('co-create-account-fields');
+    var hidden  = document.getElementById('co-create-account-hidden');
+    var pwdInput= document.getElementById('co-new-password');
+    var chevron = document.getElementById('co-signup-chevron');
+    var benefits= document.getElementById('co-signup-benefits');
     if (!fields) return;
-    if (cb.checked) {
-        fields.style.display = 'block';
-        if (hidden) hidden.value = '1';
-        if (pwdInput) { pwdInput.required = true; pwdInput.focus(); }
-    } else {
+    var isOpen = fields.style.display !== 'none';
+    if (isOpen) {
         fields.style.display = 'none';
         if (hidden) hidden.value = '0';
         if (pwdInput) { pwdInput.required = false; pwdInput.value = ''; }
+        if (chevron) chevron.classList.remove('open');
+        if (benefits) benefits.style.display = '';
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+    } else {
+        fields.style.display = 'block';
+        if (hidden) hidden.value = '1';
+        if (pwdInput) { pwdInput.required = true; setTimeout(function(){ pwdInput.focus(); }, 80); }
+        if (chevron) chevron.classList.add('open');
+        if (benefits) benefits.style.display = 'none';
+        if (btn) btn.setAttribute('aria-expanded', 'true');
     }
 }
 </script>
