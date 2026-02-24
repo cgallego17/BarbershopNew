@@ -58,6 +58,8 @@ CSRF_TRUSTED_ORIGINS = env.list(
         'https://www.barbershop.com.co',
     ],
 )
+# Log CSRF failures for debugging 403 on login in production
+CSRF_FAILURE_VIEW = 'apps.core.views_csrf.csrf_failure'
 
 DJANGO_APPS = [
     'django.contrib.admin',
