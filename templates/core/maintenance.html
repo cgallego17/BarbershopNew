@@ -1,27 +1,235 @@
-{% extends 'base.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Mantenimiento — Barbershop</title>
+  <link rel="icon" type="image/png" href="{% static 'FAVICON.png' %}" />
+  <link rel="apple-touch-icon" href="{% static 'FAVICON.png' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block title %}Mantenimiento{% endblock %}
+    :root {
+      --gold:    #c9a84c;
+      --gold-lt: #e2c97e;
+      --dark:    #0c0c0c;
+      --dark2:   #141414;
+      --text:    #f2f0eb;
+      --muted:   rgba(242,240,235,.55);
+    }
 
-{% block content %}
-<section class="page-header">
-    <div class="page-header__bg"></div>
-    <div class="container">
-        <h2 class="page-header__title">Estamos en mantenimiento</h2>
-        <p class="page-header__text">Volvemos pronto. Gracias por tu paciencia.</p>
+    html, body {
+      height: 100%;
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: .04;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── radial glow ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 45%, rgba(201,168,76,.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── corner ornaments ── */
+    .ornament {
+      position: fixed;
+      width: 160px;
+      height: 160px;
+      opacity: .18;
+      z-index: 1;
+    }
+    .ornament--tl { top: 24px; left: 24px; border-top: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+    .ornament--tr { top: 24px; right: 24px; border-top: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+    .ornament--bl { bottom: 24px; left: 24px; border-bottom: 1px solid var(--gold); border-left: 1px solid var(--gold); }
+    .ornament--br { bottom: 24px; right: 24px; border-bottom: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+
+    /* ── wrapper ── */
+    .wrap {
+      position: relative;
+      z-index: 2;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      gap: 0;
+    }
+
+    /* ── logo mark ── */
+    .logo-mark {
+      width: 88px;
+      height: 88px;
+      margin-bottom: 2rem;
+      animation: breathe 4s ease-in-out infinite;
+      filter: drop-shadow(0 0 18px rgba(201,168,76,.35));
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .82; transform: scale(.97); }
+    }
+
+    /* ── divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: min(340px, 80vw);
+      margin-bottom: 2rem;
+    }
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold));
+    }
+    .divider::after {
+      background: linear-gradient(to left, transparent, var(--gold));
+    }
+    .divider svg {
+      flex-shrink: 0;
+      fill: var(--gold);
+      opacity: .9;
+    }
+
+    /* ── heading ── */
+    .script {
+      font-family: 'Alex Brush', cursive;
+      font-size: clamp(1.1rem, 3vw, 1.4rem);
+      color: var(--gold-lt);
+      letter-spacing: .06em;
+      margin-bottom: .6rem;
+    }
+    .heading {
+      font-family: 'Cormorant', serif;
+      font-size: clamp(2.2rem, 6vw, 3.4rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: .02em;
+      margin-bottom: 1.6rem;
+    }
+    .heading span {
+      color: var(--gold);
+    }
+
+    /* ── body text ── */
+    .body-text {
+      font-size: clamp(.9rem, 2vw, 1rem);
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.75;
+      max-width: 440px;
+      margin-bottom: 2.4rem;
+    }
+
+    /* ── status dots ── */
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .78rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 500;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,.7); }
+      50%       { box-shadow: 0 0 0 6px rgba(201,168,76,0); }
+    }
+
+    /* ── admin link ── */
+    .admin-link {
+      position: fixed;
+      bottom: 28px;
+      right: 32px;
+      font-size: .72rem;
+      color: rgba(242,240,235,.2);
+      text-decoration: none;
+      letter-spacing: .08em;
+      transition: color .3s;
+      z-index: 10;
+    }
+    .admin-link:hover { color: var(--gold); }
+
+    @media (max-width: 480px) {
+      .ornament { width: 80px; height: 80px; }
+    }
+    @media (max-height: 580px) {
+      .logo-mark { width: 60px; height: 60px; margin-bottom: 1.2rem; }
+      .heading { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ornament ornament--tl"></div>
+  <div class="ornament ornament--tr"></div>
+  <div class="ornament ornament--bl"></div>
+  <div class="ornament ornament--br"></div>
+
+  <main class="wrap">
+
+    <img src="{% static 'FAVICON.png' %}" alt="Logo" class="logo-mark" />
+
+    <div class="divider">
+      <!-- scissors icon -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M9.64 7.64c.23-.5.36-1.05.36-1.64 0-2.21-1.79-4-4-4S2 3.79 2 6s1.79 4 4 4c.59 0 1.14-.13 1.64-.36L10 12l-2.36 2.36C7.14 14.13 6.59 14 6 14c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4c0-.59-.13-1.14-.36-1.64L12 14l7 7h3v-1L9.64 7.64zM6 8c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm0 12c-1.1 0-2-.89-2-2s.9-2 2-2 2 .89 2 2-.9 2-2 2zm6-7.5c-.28 0-.5-.22-.5-.5s.22-.5.5-.5.5.22.5.5-.22.5-.5.5zM19 3l-6 6 2 2 7-7V3h-3z"/>
+      </svg>
     </div>
-</section>
 
-<section class="contact-one" style="padding: 80px 0;">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="text-center">
-                    <h3 class="mb-3">Estamos realizando mejoras</h3>
-                    <p class="mb-0">En este momento el sitio se encuentra temporalmente fuera de servicio por mantenimiento.</p>
-                </div>
-            </div>
-        </div>
+    <p class="script">Volveremos pronto</p>
+
+    <h1 class="heading">
+      Sitio en<br><span>Mantenimiento</span>
+    </h1>
+
+    <p class="body-text">
+      Estamos trabajando para mejorar tu experiencia.<br>
+      El sitio estará disponible de nuevo en breve.<br>
+      Gracias por tu paciencia.
+    </p>
+
+    <div class="status">
+      <span class="dot"></span>
+      Trabajando en ello
     </div>
-</section>
-{% endblock %}
+
+  </main>
+
+  <a href="{% url 'account_login' %}" class="admin-link">admin</a>
+
+</body>
+</html>
