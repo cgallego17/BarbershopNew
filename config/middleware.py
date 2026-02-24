@@ -72,8 +72,8 @@ class ContentSecurityPolicyMiddleware:
         if getattr(settings, "CSP_STRICT_REPORT_ONLY", False):
             strict_directives = {
                 "default-src": ["'self'", "https:", "data:", "blob:"],
-                # Hash del script inline del Meta Pixel (base.html)
-                "script-src": ["'self'", "https:", "'sha256-s+8fi2eznDLRxw5cI6dhcoOS2vMmprF6bSv+M/3Z24w='"],
+                # Inline scripts y event handlers en base.html y partials; hashes son frágiles
+                "script-src": ["'self'", "https:", "'unsafe-inline'"],
                 "style-src": ["'self'", "'unsafe-inline'", "https:"],
                 "img-src": ["'self'", "data:", "blob:", "https:"],
                 "font-src": ["'self'", "data:", "https:"],
