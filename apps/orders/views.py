@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.db.models import Prefetch
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
@@ -222,7 +223,9 @@ def checkout_view(request):
 
 
 def order_detail(request, order_number):
-    order = Order.objects.filter(order_number=order_number).prefetch_related('items').first()
+    order = Order.objects.filter(order_number=order_number).prefetch_related(
+        Prefetch('items', queryset=OrderItem.objects.select_related('product').prefetch_related('product__images'))
+    ).first()
     if not order:
         return redirect('core:home')
     if not _can_access_order(request, order):

@@ -226,11 +226,13 @@
           <div class="od-card__body">
             {% for item in order.items.all %}
             <div class="od-item">
-              {% if item.product.main_image %}
-                <img src="{{ item.product.main_image.url }}" alt="{{ item.product_name }}" class="od-item__img">
+              {% with main_img=item.product.get_main_image %}
+              {% if main_img %}
+                <img src="{{ main_img.image.url }}" alt="{{ item.product_name }}" class="od-item__img" loading="lazy">
               {% else %}
                 <div class="od-item__img-placeholder"><i class="fas fa-image"></i></div>
               {% endif %}
+              {% endwith %}
               <div class="od-item__name">
                 {{ item.product_name }}
                 {% if item.variant %}
