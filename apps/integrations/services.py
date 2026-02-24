@@ -97,7 +97,7 @@ def sync_tersa_products(brands=None, download_images=True):
         if attr and attr.upper() != 'SIN ATRIBUTO':
             nombre = f"{nombre} {attr}"
         sku = (item.get('codigo') or '').strip() or (f"TERSA-{external_id}" if external_id else None)
-        precio = item.get('precio1') or item.get('precio_min') or 0
+        precio = item.get('precio5') or item.get('precio_min') or 0
         try:
             price = Decimal(str(precio))
         except Exception:
