@@ -61,10 +61,9 @@ _raw_origins = env.list(
 # Strip whitespace; Django requires exact match (no trailing slash)
 CSRF_TRUSTED_ORIGINS = [o.strip().rstrip('/') for o in _raw_origins if o.strip()]
 
-# Log CSRF failures for debugging 403 on login in production
-CSRF_FAILURE_VIEW = 'apps.core.views_csrf.csrf_failure'
-# Usar sesión para CSRF en lugar de cookie; evita problemas con cookies Secure/SameSite
-CSRF_USE_SESSIONS = True
+# allauth: usar X-Real-IP (enviado por Nginx) para rate limiting.
+# Con Unix socket, REMOTE_ADDR queda vacío y allauth lanzaría PermissionDenied (403).
+ALLAUTH_TRUSTED_CLIENT_IP_HEADER = 'X-Real-IP'
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -105,12 +104,11 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'config.middleware.MaintenanceModeMiddleware',
-    'config.middleware.CsrfTrustedOriginMiddleware',
     'config.middleware.ContentSecurityPolicyMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'config.middleware.CsrfViewMiddlewareRelaxed',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

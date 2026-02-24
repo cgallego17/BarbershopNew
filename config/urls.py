@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from apps.accounts.views import LoginViewNoCsrf
 from django.views.static import serve
 from django.contrib.sitemaps.views import sitemap
 from apps.core.sitemaps import StaticViewSitemap
@@ -17,12 +16,6 @@ sitemaps = {
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # Login sin CSRF (workaround 403 en producción)
-    path(
-        'cuentas/login/',
-        LoginViewNoCsrf.as_view(),
-        name='account_login',
-    ),
     path(
         'sitemap.xml',
         sitemap,

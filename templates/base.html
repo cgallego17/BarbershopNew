@@ -16,19 +16,22 @@
     <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <meta property="og:title" content="{% block og_title %}Tienda || {{ site_settings.site_name }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'logo-768x317.png' %}{% endif %}{% endblock %}">
     <meta property="og:image:alt" content="{% block og_image_alt %}{{ site_settings.site_name }}{% endblock %}">
+    <meta property="og:image:width" content="768">
+    <meta property="og:image:height" content="317">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="{% block twitter_url %}{{ request.build_absolute_uri }}{% endblock %}">
     <meta name="twitter:title" content="{% block twitter_title %}Tienda || {{ site_settings.site_name }}{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}{{ site_settings.meta_description|default:site_settings.tagline }}{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'assets/images/logo-dark.png' %}{% endif %}{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{% if site_settings.logo %}{{ request.scheme }}://{{ request.get_host }}{{ site_settings.logo.url }}{% else %}{{ request.scheme }}://{{ request.get_host }}{% static 'logo-768x317.png' %}{% endif %}{% endblock %}">
     <meta name="twitter:image:alt" content="{% block twitter_image_alt %}{{ site_settings.site_name }}{% endblock %}">
 
     <title>{% block title %}Tienda{% endblock %} || {{ site_settings.site_name }}</title>
-    <link rel="icon" type="image/png" href="{% static 'assets/images/favicons/favicon-32x32.png' %}" />
+    <link rel="icon" type="image/png" href="{% static 'FAVICON.png' %}" />
+    <link rel="apple-touch-icon" href="{% static 'FAVICON.png' %}" />
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
