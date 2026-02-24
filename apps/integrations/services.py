@@ -294,3 +294,102 @@ def send_order_to_erp(order):
 def sync_products_from_api_task():
     """Wrapper para ejecutar como tarea (management command o Celery)."""
     return sync_products_from_api()
+
+
+# ---------------------------------------------------------------------------
+# Sincronización de stock desde TersaSoft → productos locales
+# ---------------------------------------------------------------------------
+
+def fetch_tersa_stock(brands=None, extra_ids=None):
+    """
+    Llama a la API pública de Tersa y devuelve un dict:
+      external_id (str) -> existencia (int)
+
+    Filtra las mismas marcas y IDs extra que fetch_tersa_products.
+    Se usa 'existencia' del objeto para obtener el stock actual.
+    """
+    products = fetch_tersa_products(brands=brands, extra_ids=extra_ids)
+    stock_map = {}
+    for item in products:
+        ext_id = str(item.get('id', '')).strip()
+        if not ext_id:
+            continue
+        existencia = item.get('existencia', 0)
+        try:
+            stock_map[ext_id] = max(0, int(existencia))
+        except (TypeError, ValueError):
+            stock_map[ext_id] = 0
+    return stock_map
+
+
+def sync_tersa_stock(brands=None, extra_ids=None, dry_run=False):
+    """
+    Actualiza SOLO stock_quantity en los productos locales cuyo
+    external_id coincide con un producto de la API Tersa.
+
+    Parámetros:
+      brands    – lista de marcas a filtrar (default: TERSA_BRANDS)
+      extra_ids – IDs adicionales a incluir (default: TERSA_EXTRA_PRODUCT_IDS)
+      dry_run   – si True, no guarda cambios en BD
+
+    Retorna dict con claves:
+      updated      – productos actualizados
+      unchanged    – stock ya era igual
+      not_found    – external_id no existe en BD local
+      total_api    – total de productos recibidos de la API
+    """
+    from apps.products.models import Product
+
+    stock_map = fetch_tersa_stock(brands=brands, extra_ids=extra_ids)
+    total_api = len(stock_map)
+
+    updated = unchanged = not_found = 0
+    results = []
+
+    for ext_id, new_stock in stock_map.items():
+        product = Product.objects.filter(external_id=ext_id, source='api').first()
+
+        if not product:
+            not_found += 1
+            results.append({
+                'status': 'not_found',
+                'external_id': ext_id,
+                'stock': new_stock,
+            })
+            continue
+
+        if product.stock_quantity == new_stock:
+            unchanged += 1
+            results.append({
+                'status': 'unchanged',
+                'external_id': ext_id,
+                'name': product.name,
+                'sku': product.sku,
+                'stock': new_stock,
+            })
+            continue
+
+        old_stock = product.stock_quantity
+        if not dry_run:
+            product.stock_quantity = new_stock
+            product.manage_stock = True
+            product.save(update_fields=['stock_quantity', 'manage_stock', 'updated_at'])
+
+        updated += 1
+        results.append({
+            'status': 'updated',
+            'external_id': ext_id,
+            'name': product.name,
+            'sku': product.sku,
+            'old_stock': old_stock,
+            'new_stock': new_stock,
+        })
+
+    return {
+        'updated': updated,
+        'unchanged': unchanged,
+        'not_found': not_found,
+        'total_api': total_api,
+        'results': results,
+        'dry_run': dry_run,
+    }

@@ -24,6 +24,7 @@ env = environ.Env(
     PRODUCTS_API_KEY=(str, ''),
     ERP_API_URL=(str, ''),
     ERP_API_KEY=(str, ''),
+    STOCK_SYNC_API_KEY=(str, ''),
     WOMPI_ENV=(str, 'sandbox'),
     WOMPI_PUBLIC_KEY=(str, ''),
     WOMPI_PRIVATE_KEY=(str, ''),
@@ -215,6 +216,7 @@ PRODUCTS_API_URL = env('PRODUCTS_API_URL')
 PRODUCTS_API_KEY = env('PRODUCTS_API_KEY')
 ERP_API_URL = env('ERP_API_URL')
 ERP_API_KEY = env('ERP_API_KEY')
+STOCK_SYNC_API_KEY = env('STOCK_SYNC_API_KEY')
 
 # Wompi
 WOMPI_ENV = env('WOMPI_ENV')
