@@ -125,9 +125,6 @@ def sync_tersa_products(brands=None, download_images=True):
             )
         base_slug = slugify(nombre)
         slug = f"{base_slug}-{external_id}" if external_id else f"{base_slug}-{hash(nombre) % 10**8}"
-        existencia = int(item.get('existencia', 0) or 0)
-        umbral = item.get('umbralStock')
-        low_threshold = int(umbral) if umbral is not None and str(umbral).isdigit() else None
         estado = item.get('estado', True)
         if isinstance(estado, str):
             estado = estado.lower() in ('true', '1', 'si', 'yes', 'activo')
@@ -146,9 +143,9 @@ def sync_tersa_products(brands=None, download_images=True):
             'description': descripcion,
             'is_active': estado,
             'source': 'api',
+            # Stock gestionado exclusivamente por push_stock_barbershop (bodega 2).
+            # El importador no sobreescribe stock ni umbral.
             'manage_stock': True,
-            'stock_quantity': existencia,
-            'low_stock_threshold': low_threshold,
         }
         if brand:
             defaults['brand'] = brand
