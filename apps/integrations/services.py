@@ -151,11 +151,12 @@ def sync_tersa_products(brands=None, download_images=True):
             defaults['brand'] = brand
         lookup = {'external_id': external_id, 'source': 'api'} if external_id else {'sku': api_sku, 'source': 'api'}
         product, created_flag = Product.objects.update_or_create(defaults=defaults, **lookup)
-        # Actualizar categorías: dejar solo la que viene de la API (no conservar las anteriores)
-        if category:
-            product.categories.set([category])
-        else:
-            product.categories.clear()
+        # Asignar categorías solo si el producto es nuevo; si ya existía no las tocamos
+        if created_flag:
+            if category:
+                product.categories.set([category])
+            else:
+                product.categories.clear()
         if created_flag:
             created += 1
         else:
