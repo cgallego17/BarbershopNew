@@ -63,6 +63,8 @@ class CustomSignupForm(SignupForm):
 
     def clean(self):
         data = super().clean()
+        if data is None:
+            return data
         if (data.get('website') or '').strip():
             log_security_event(
                 getattr(self, 'request', None),
@@ -133,6 +135,8 @@ class CustomLoginForm(LoginForm):
 
     def clean(self):
         cleaned = super().clean()
+        if cleaned is None:
+            return cleaned
         if (cleaned.get('website') or '').strip():
             log_security_event(
                 getattr(self, 'request', None),
@@ -149,6 +153,8 @@ class CustomResetPasswordForm(ResetPasswordForm):
 
     def clean(self):
         cleaned = super().clean()
+        if cleaned is None:
+            return cleaned
         if (cleaned.get('website') or '').strip():
             log_security_event(
                 getattr(self, 'request', None),
