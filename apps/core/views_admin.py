@@ -906,7 +906,10 @@ class OrderListView(StaffRequiredMixin, ListView):
 @_dashboard_required
 def order_detail_view(request, pk):
     """Detalle y actualización de pedido."""
-    order = get_object_or_404(Order.objects.prefetch_related('items'), pk=pk)
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items', 'wompi_transactions'),
+        pk=pk,
+    )
     if request.method == 'POST':
         form = OrderStatusForm(request.POST, instance=order)
         if form.is_valid():
@@ -915,7 +918,13 @@ def order_detail_view(request, pk):
             return redirect('core:admin_panel:order_detail', pk=order.pk)
     else:
         form = OrderStatusForm(instance=order)
-    return render(request, 'dashboard/order_detail.html', {'order': order, 'form': form})
+
+    wompi_tx = order.wompi_transactions.order_by('-created_at').first()
+    return render(request, 'dashboard/order_detail.html', {
+        'order': order,
+        'form': form,
+        'wompi_tx': wompi_tx,
+    })
 
 
 # --- Cupones ---

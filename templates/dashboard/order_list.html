@@ -70,6 +70,7 @@
                         <th>Fecha</th>
                         <th>Total</th>
                         <th>Estado</th>
+                        <th>Pago</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
@@ -81,10 +82,21 @@
                         <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                         <td>${{ order.total|floatformat:2|intcomma }}</td>
                         <td><span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
+                        <td>
+                            {% if order.payment_status == 'paid' %}
+                                <span class="pay-badge pay-badge--paid"><i class="fas fa-check-circle"></i> Pagado</span>
+                            {% elif order.payment_status == 'failed' %}
+                                <span class="pay-badge pay-badge--failed"><i class="fas fa-times-circle"></i> Fallido</span>
+                            {% elif order.payment_status == 'refunded' %}
+                                <span class="pay-badge pay-badge--refunded"><i class="fas fa-undo"></i> Reembolsado</span>
+                            {% else %}
+                                <span class="pay-badge pay-badge--pending"><i class="fas fa-clock"></i> Pendiente</span>
+                            {% endif %}
+                        </td>
                         <td class="text-end"><div class="admin-actions"><a href="{% url 'core:admin_panel:order_detail' order.pk %}" class="admin-action admin-action--primary">Ver / Editar</a></div></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="6" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}">Ver todos</a>{% else %}No hay pedidos{% endif %}</td></tr>
+                    <tr><td colspan="7" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}">Ver todos</a>{% else %}No hay pedidos{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -98,4 +110,37 @@
     {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">Siguiente »</a>{% endif %}
 </nav>
 {% endif %}
+
+<style>
+.pay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .75rem;
+    font-weight: 600;
+    padding: .25rem .65rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.pay-badge--paid {
+    background: rgba(34,197,94,.15);
+    border: 1px solid rgba(34,197,94,.35);
+    color: #4ade80;
+}
+.pay-badge--failed {
+    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(239,68,68,.3);
+    color: #f87171;
+}
+.pay-badge--pending {
+    background: rgba(234,179,8,.1);
+    border: 1px solid rgba(234,179,8,.3);
+    color: #fbbf24;
+}
+.pay-badge--refunded {
+    background: rgba(139,92,246,.12);
+    border: 1px solid rgba(139,92,246,.3);
+    color: #a78bfa;
+}
+</style>
 {% endblock %}

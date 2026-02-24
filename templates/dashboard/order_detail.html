@@ -6,6 +6,130 @@
 {% block form_media %}{{ form.media }}{% endblock %}
 
 {% block content %}
+
+{# ── Banner de pago confirmado ────────────────────────────────────────── #}
+{% if order.payment_status == 'paid' %}
+<div class="payment-confirmed-banner mb-4">
+    <div class="pcb-glow"></div>
+    <div class="pcb-inner">
+        <div class="pcb-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="pcb-body">
+            <div class="pcb-title">Pago confirmado</div>
+            <div class="pcb-sub">
+                ${{ order.total|floatformat:0|intcomma }} COP recibido
+                {% if wompi_tx %}· vía {{ wompi_tx.payment_method_type }}{% endif %}
+            </div>
+        </div>
+        {% if wompi_tx %}
+        <div class="pcb-meta">
+            <span class="pcb-tag">Wompi</span>
+            <span class="pcb-id">{{ wompi_tx.wompi_id }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% elif order.payment_status == 'failed' %}
+<div class="payment-failed-banner mb-4">
+    <i class="fas fa-times-circle me-2"></i>
+    Pago fallido o declinado
+    {% if wompi_tx %} — {{ wompi_tx.payment_method_type }} · {{ wompi_tx.wompi_id }}{% endif %}
+</div>
+{% endif %}
+
+<style>
+.payment-confirmed-banner {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0f2e1a 0%, #1a4a28 50%, #0f2e1a 100%);
+    border: 1px solid #2d7a46;
+    box-shadow: 0 4px 24px rgba(34,197,94,.18), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.pcb-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(34,197,94,.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+.pcb-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    flex-wrap: wrap;
+}
+.pcb-icon {
+    flex-shrink: 0;
+    width: 54px;
+    height: 54px;
+    background: rgba(34,197,94,.18);
+    border: 2px solid rgba(34,197,94,.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: #4ade80;
+    animation: pcb-pulse 2.5s ease-in-out infinite;
+}
+@keyframes pcb-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.3); }
+    50%      { box-shadow: 0 0 0 8px rgba(34,197,94,.0); }
+}
+.pcb-body { flex: 1; min-width: 160px; }
+.pcb-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #4ade80;
+    letter-spacing: .02em;
+    line-height: 1.2;
+}
+.pcb-sub {
+    font-size: .88rem;
+    color: #86efac;
+    margin-top: .2rem;
+    opacity: .85;
+}
+.pcb-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .3rem;
+}
+.pcb-tag {
+    background: rgba(34,197,94,.2);
+    border: 1px solid rgba(34,197,94,.35);
+    color: #4ade80;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: .15rem .55rem;
+    border-radius: 20px;
+}
+.pcb-id {
+    font-family: monospace;
+    font-size: .75rem;
+    color: #86efac;
+    opacity: .7;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.payment-failed-banner {
+    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(239,68,68,.35);
+    color: #fca5a5;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: .9rem;
+}
+</style>
+
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="admin-card mb-4">
@@ -57,7 +181,62 @@
                 </div>
             </div>
         </div>
+
+        {# ── Transacción Wompi ───────────────────────────────────────────── #}
+        {% if wompi_tx %}
+        <div class="admin-card mb-4">
+            <div class="admin-card__header">
+                <h3 class="admin-card__title"><i class="fas fa-credit-card me-2 opacity-75"></i>Transacción Wompi</h3>
+                <span class="admin-badge admin-badge--{% if wompi_tx.status == 'APPROVED' %}processing{% elif wompi_tx.status == 'PENDING' %}pending{% else %}cancelled{% endif %}">
+                    {{ wompi_tx.status }}
+                </span>
+            </div>
+            <div class="admin-card__body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">ID Wompi</span>
+                            <span class="wompi-field__value wompi-field__value--mono">{{ wompi_tx.wompi_id }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">Método de pago</span>
+                            <span class="wompi-field__value">{{ wompi_tx.payment_method_type|default:"—" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">Monto</span>
+                            <span class="wompi-field__value">
+                                ${{ wompi_tx.amount_display|floatformat:0|intcomma }} {{ wompi_tx.currency }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">Referencia</span>
+                            <span class="wompi-field__value wompi-field__value--mono">{{ wompi_tx.reference }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">Fecha</span>
+                            <span class="wompi-field__value">{{ wompi_tx.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="wompi-field">
+                            <span class="wompi-field__label">Última actualización</span>
+                            <span class="wompi-field__value">{{ wompi_tx.updated_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
+
     <div class="col-lg-4">
         <div class="admin-card">
             <div class="admin-card__header">
@@ -87,4 +266,28 @@
         </div>
     </div>
 </div>
+
+<style>
+.wompi-field {
+    display: flex;
+    flex-direction: column;
+    gap: .2rem;
+}
+.wompi-field__label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--admin-text-muted, #888);
+}
+.wompi-field__value {
+    font-size: .88rem;
+    color: var(--admin-text, #ddd);
+}
+.wompi-field__value--mono {
+    font-family: monospace;
+    font-size: .8rem;
+    word-break: break-all;
+}
+</style>
 {% endblock %}
