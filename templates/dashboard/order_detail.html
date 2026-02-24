@@ -186,6 +186,8 @@
                 <div class="text-end mt-3">
                     <p class="mb-1">Subtotal: ${{ order.subtotal|floatformat:2|intcomma }}</p>
                     {% if order.discount_total %}<p class="mb-1">Descuento: -${{ order.discount_total|floatformat:2|intcomma }}</p>{% endif %}
+                    {% if order.shipping_total %}<p class="mb-1">Envío: ${{ order.shipping_total|floatformat:2|intcomma }}</p>{% endif %}
+                    {% if order.tax_total %}<p class="mb-1">Impuesto: ${{ order.tax_total|floatformat:2|intcomma }}</p>{% endif %}
                     <p class="mb-0 fs-5 fw-bold">Total: ${{ order.total|floatformat:2|intcomma }}</p>
                     {% if order.coupon_code %}<p class="text-muted small">Cupón: {{ order.coupon_code }}</p>{% endif %}
                 </div>
