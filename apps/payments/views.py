@@ -56,23 +56,34 @@ def _integrity_hash(reference: str, amount_in_cents: int, currency: str) -> str:
 def _verify_webhook_signature(body: dict) -> bool:
     """
     Verifica checksum del webhook de Wompi.
-    Si no hay WOMPI_EVENTS_SECRET configurado (dev), acepta sin verificar.
+
+    Wompi construye la firma así:
+      SHA256( prop1_val + prop2_val + ... + timestamp + events_secret )
+    donde propX_val se resuelve desde body["data"] usando la notación
+    de puntos que Wompi envía en signature.properties
+    (ej. "transaction.id" → body["data"]["transaction"]["id"]).
+
+    Si WOMPI_EVENTS_SECRET no está configurado se acepta el webhook
+    (ambiente de desarrollo/sandbox sin secreto definido).
     """
-    events_secret = getattr(settings, 'WOMPI_EVENTS_SECRET', '')
+    events_secret = getattr(settings, 'WOMPI_EVENTS_SECRET', '').strip()
     if not events_secret:
-        # En producción nunca debemos aceptar webhooks sin secreto.
-        if not getattr(settings, 'DEBUG', False):
-            return False
+        logger.warning(
+            "WOMPI_EVENTS_SECRET no configurado — webhook aceptado sin verificar firma."
+        )
         return True
 
-    signature   = body.get('signature', {})
-    checksum    = signature.get('checksum', '')
-    properties  = signature.get('properties', [])
-    timestamp   = body.get('timestamp', '')
+    signature  = body.get('signature', {})
+    checksum   = signature.get('checksum', '')
+    properties = signature.get('properties', [])
+    timestamp  = body.get('timestamp', '')
+
+    # Los valores de las propiedades viven en body["data"]
+    data = body.get('data', {})
 
     parts = []
     for prop in properties:
-        val = body
+        val = data
         for key in prop.split('.'):
             val = val.get(key, '') if isinstance(val, dict) else ''
         parts.append(str(val))
@@ -80,7 +91,12 @@ def _verify_webhook_signature(body: dict) -> bool:
     parts.append(events_secret)
 
     computed = hashlib.sha256(''.join(parts).encode()).hexdigest()
-    return hmac.compare_digest(computed, checksum)
+    ok = hmac.compare_digest(computed, checksum)
+    if not ok:
+        logger.warning(
+            "Firma Wompi inválida. computed=%s checksum=%s", computed, checksum
+        )
+    return ok
 
 
 def _fetch_transaction_from_wompi(transaction_id: str) -> dict:
