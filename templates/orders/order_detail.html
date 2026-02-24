@@ -4,45 +4,388 @@
 {% block title %}Pedido {{ order.order_number }}{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 {% block meta_description %}Detalle del pedido {{ order.order_number }} en {{ site_settings.site_name }}.{% endblock %}
-{% block og_title %}Pedido {{ order.order_number }} | {{ site_settings.site_name }}{% endblock %}
-{% block og_description %}Consulta el estado y el resumen de tu pedido.{% endblock %}
-{% block twitter_title %}Pedido {{ order.order_number }} | {{ site_settings.site_name }}{% endblock %}
-{% block twitter_description %}Revisa el estado y los productos de tu pedido.{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── variables ── */
+  :root {
+    --od-gold:   #c9a84c;
+    --od-dark:   #111317;
+    --od-card:   #181c22;
+    --od-border: #252a33;
+    --od-muted:  #8892a4;
+    --od-text:   #e8e6e1;
+  }
+
+  /* ── section ── */
+  .order-detail-section { background: var(--od-dark); padding: 60px 0 80px; }
+
+  /* ── status badge ── */
+  .od-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 5px 14px; border-radius: 50px;
+    font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  }
+  .od-badge__dot { width: 7px; height: 7px; border-radius: 50%; }
+  .od-badge--pending   { background: rgba(234,179,8,.12);  color: #f5c518; border: 1px solid rgba(234,179,8,.3); }
+  .od-badge--pending .od-badge__dot   { background: #f5c518; }
+  .od-badge--processing{ background: rgba(59,130,246,.12); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+  .od-badge--processing .od-badge__dot{ background: #60a5fa; }
+  .od-badge--on_hold   { background: rgba(168,85,247,.12); color: #c084fc; border: 1px solid rgba(168,85,247,.3); }
+  .od-badge--on_hold .od-badge__dot   { background: #c084fc; }
+  .od-badge--completed { background: rgba(34,197,94,.12);  color: #4ade80; border: 1px solid rgba(34,197,94,.3); }
+  .od-badge--completed .od-badge__dot { background: #4ade80; }
+  .od-badge--cancelled,.od-badge--refunded { background: rgba(239,68,68,.12); color: #f87171; border: 1px solid rgba(239,68,68,.3); }
+  .od-badge--cancelled .od-badge__dot,.od-badge--refunded .od-badge__dot { background: #f87171; }
+
+  /* ── payment badge ── */
+  .od-pay-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 4px;
+    font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .od-pay-badge--pending  { background: rgba(234,179,8,.1);  color: #f5c518; }
+  .od-pay-badge--paid     { background: rgba(34,197,94,.12); color: #4ade80; }
+  .od-pay-badge--failed   { background: rgba(239,68,68,.12); color: #f87171; }
+  .od-pay-badge--refunded { background: rgba(168,85,247,.12);color: #c084fc; }
+
+  /* ── cards ── */
+  .od-card {
+    background: var(--od-card);
+    border: 1px solid var(--od-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .od-card__head {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--od-border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .od-card__head-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(201,168,76,.12);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--od-gold); font-size: .85rem; flex-shrink: 0;
+  }
+  .od-card__head h6 {
+    margin: 0; font-size: .8rem; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; color: var(--od-text);
+  }
+  .od-card__body { padding: 24px; }
+
+  /* ── order header bar ── */
+  .od-header {
+    background: var(--od-card);
+    border: 1px solid var(--od-border);
+    border-radius: 12px;
+    padding: 24px 28px;
+    display: flex; flex-wrap: wrap; gap: 20px;
+    align-items: center; justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .od-header__number {
+    font-family: 'Cormorant', serif;
+    font-size: 1.5rem; font-weight: 600;
+    color: var(--od-text);
+  }
+  .od-header__number span { color: var(--od-gold); }
+  .od-header__meta {
+    font-size: .78rem; color: var(--od-muted); margin-top: 4px;
+  }
+
+  /* ── product row ── */
+  .od-item {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--od-border);
+  }
+  .od-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .od-item:first-child { padding-top: 0; }
+  .od-item__img {
+    width: 54px; height: 54px; border-radius: 8px; flex-shrink: 0;
+    object-fit: cover; background: #1e2330;
+    border: 1px solid var(--od-border);
+  }
+  .od-item__img-placeholder {
+    width: 54px; height: 54px; border-radius: 8px; flex-shrink: 0;
+    background: #1e2330; border: 1px solid var(--od-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--od-muted); font-size: 1.1rem;
+  }
+  .od-item__name {
+    flex: 1; font-size: .9rem; font-weight: 500; color: var(--od-text);
+    line-height: 1.3;
+  }
+  .od-item__variant { font-size: .75rem; color: var(--od-muted); margin-top: 2px; }
+  .od-item__qty {
+    font-size: .8rem; color: var(--od-muted);
+    background: #1e2330; border: 1px solid var(--od-border);
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .od-item__price { font-size: .9rem; font-weight: 600; color: var(--od-text); min-width: 90px; text-align: right; }
+
+  /* ── totals ── */
+  .od-total-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: .88rem; color: var(--od-muted);
+    border-bottom: 1px solid var(--od-border);
+  }
+  .od-total-row:last-child { border-bottom: none; }
+  .od-total-row--main {
+    color: var(--od-text); font-size: 1.05rem; font-weight: 700;
+    padding-top: 14px;
+  }
+  .od-total-row--main .od-total-val { color: var(--od-gold); font-size: 1.15rem; }
+  .od-total-row--discount { color: #4ade80; }
+
+  /* ── info grid ── */
+  .od-info-row { display: flex; gap: 8px; margin-bottom: 12px; font-size: .85rem; }
+  .od-info-label { color: var(--od-muted); min-width: 120px; flex-shrink: 0; }
+  .od-info-value { color: var(--od-text); font-weight: 500; }
+
+  /* ── action buttons ── */
+  .od-btn-gold {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--od-gold), #e2c97e);
+    color: #111; font-weight: 700; font-size: .85rem;
+    border-radius: 6px; text-decoration: none; border: none;
+    letter-spacing: .04em; transition: opacity .2s;
+  }
+  .od-btn-gold:hover { opacity: .88; color: #111; }
+  .od-btn-outline {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 22px;
+    background: transparent;
+    color: var(--od-muted); font-size: .85rem;
+    border: 1px solid var(--od-border);
+    border-radius: 6px; text-decoration: none;
+    transition: border-color .2s, color .2s;
+  }
+  .od-btn-outline:hover { border-color: var(--od-gold); color: var(--od-gold); }
+
+  @media (max-width: 768px) {
+    .od-header { flex-direction: column; align-items: flex-start; }
+    .od-item__price { min-width: auto; }
+    .od-info-label { min-width: 100px; }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
 <section class="page-header">
-    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
-    <div class="container">
-        <h2 class="page-header__title">Pedido {{ order.order_number }}</h2>
-        <ul class="boskery-breadcrumb list-unstyled">
-            <li><a href="{% url 'core:home' %}">Inicio</a></li>
-            <li><a href="{% url 'orders:list' %}">Mi cuenta</a></li>
-            <li><span>{{ order.order_number }}</span></li>
-        </ul>
-    </div>
+  <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+  <div class="container">
+    <h2 class="page-header__title">Detalle del pedido</h2>
+    <ul class="boskery-breadcrumb list-unstyled">
+      <li><a href="{% url 'core:home' %}">Inicio</a></li>
+      <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
+      <li><span>{{ order.order_number }}</span></li>
+    </ul>
+  </div>
 </section>
 
-<section class="section-space">
-    <div class="container">
-        <p><strong>Estado:</strong> {{ order.get_status_display }}</p>
-        <p><strong>Fecha:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</p>
-        <h5>Productos</h5>
-        <table class="table">
-            <thead>
-                <tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Total</th></tr>
-            </thead>
-            <tbody>
-                {% for item in order.items.all %}
-                <tr>
-                    <td>{{ item.product_name }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>${{ item.price|floatformat:2 }}</td>
-                    <td>${{ item.total|floatformat:2 }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        <p class="text-end"><strong>Total: ${{ order.total|floatformat:2 }}</strong></p>
+<section class="order-detail-section">
+  <div class="container">
+
+    <!-- Header bar -->
+    <div class="od-header">
+      <div>
+        <div class="od-header__number">
+          Pedido <span>#{{ order.order_number }}</span>
+        </div>
+        <div class="od-header__meta">
+          <i class="fas fa-clock me-1"></i>{{ order.created_at|date:"d \d\e F \d\e Y, H:i" }}
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <!-- Order status -->
+        <span class="od-badge od-badge--{{ order.status }}">
+          <span class="od-badge__dot"></span>
+          {{ order.get_status_display }}
+        </span>
+        <!-- Payment status -->
+        <span class="od-pay-badge od-pay-badge--{{ order.payment_status }}">
+          <i class="fas fa-{% if order.payment_status == 'paid' %}check-circle{% elif order.payment_status == 'failed' %}times-circle{% elif order.payment_status == 'refunded' %}undo{% else %}hourglass-half{% endif %} me-1"></i>
+          Pago: {{ order.get_payment_status_display }}
+        </span>
+      </div>
     </div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: products + totals -->
+      <div class="col-lg-8">
+
+        <!-- Products -->
+        <div class="od-card mb-4">
+          <div class="od-card__head">
+            <div class="od-card__head-icon"><i class="fas fa-box-open"></i></div>
+            <h6>Productos</h6>
+          </div>
+          <div class="od-card__body">
+            {% for item in order.items.all %}
+            <div class="od-item">
+              {% if item.product.main_image %}
+                <img src="{{ item.product.main_image.url }}" alt="{{ item.product_name }}" class="od-item__img">
+              {% else %}
+                <div class="od-item__img-placeholder"><i class="fas fa-image"></i></div>
+              {% endif %}
+              <div class="od-item__name">
+                {{ item.product_name }}
+                {% if item.variant %}
+                  <div class="od-item__variant">{{ item.variant }}</div>
+                {% endif %}
+              </div>
+              <span class="od-item__qty">× {{ item.quantity }}</span>
+              <div class="od-item__price">
+                ${{ item.total|floatformat:0|intcomma }}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="od-card">
+          <div class="od-card__head">
+            <div class="od-card__head-icon"><i class="fas fa-receipt"></i></div>
+            <h6>Resumen del pedido</h6>
+          </div>
+          <div class="od-card__body">
+            <div class="od-total-row">
+              <span>Subtotal</span>
+              <span>${{ order.subtotal|floatformat:0|intcomma }}</span>
+            </div>
+            {% if order.discount_total %}
+            <div class="od-total-row od-total-row--discount">
+              <span><i class="fas fa-tag me-1"></i>Descuento{% if order.coupon_code %} ({{ order.coupon_code }}){% endif %}</span>
+              <span>-${{ order.discount_total|floatformat:0|intcomma }}</span>
+            </div>
+            {% endif %}
+            {% if order.shipping_total %}
+            <div class="od-total-row">
+              <span>Envío</span>
+              <span>${{ order.shipping_total|floatformat:0|intcomma }}</span>
+            </div>
+            {% endif %}
+            {% if order.tax_total %}
+            <div class="od-total-row">
+              <span>Impuestos</span>
+              <span>${{ order.tax_total|floatformat:0|intcomma }}</span>
+            </div>
+            {% endif %}
+            <div class="od-total-row od-total-row--main">
+              <span>Total</span>
+              <span class="od-total-val">${{ order.total|floatformat:0|intcomma }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: billing + actions -->
+      <div class="col-lg-4">
+
+        <!-- Pay now button -->
+        {% if order.payment_status == 'pending' and order.status != 'cancelled' %}
+        <div class="od-card mb-4" style="border-color: rgba(201,168,76,.35);">
+          <div class="od-card__body text-center" style="padding: 28px 24px;">
+            <div style="font-size: 2rem; margin-bottom: 12px;">💳</div>
+            <p style="font-size: .85rem; color: var(--od-muted); margin-bottom: 18px; line-height: 1.6;">
+              Tu pedido está pendiente de pago. Completa el proceso para confirmar tu compra.
+            </p>
+            <a href="{% url 'payments:payment_page' order.order_number %}" class="od-btn-gold w-100 justify-content-center">
+              <i class="fas fa-lock"></i> Pagar ahora
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Billing info -->
+        <div class="od-card mb-4">
+          <div class="od-card__head">
+            <div class="od-card__head-icon"><i class="fas fa-user"></i></div>
+            <h6>Datos de facturación</h6>
+          </div>
+          <div class="od-card__body">
+            <div class="od-info-row">
+              <span class="od-info-label">Nombre</span>
+              <span class="od-info-value">{{ order.billing_first_name }} {{ order.billing_last_name }}</span>
+            </div>
+            <div class="od-info-row">
+              <span class="od-info-label">Email</span>
+              <span class="od-info-value" style="word-break: break-all;">{{ order.billing_email }}</span>
+            </div>
+            {% if order.billing_phone %}
+            <div class="od-info-row">
+              <span class="od-info-label">Teléfono</span>
+              <span class="od-info-value">{{ order.billing_phone }}</span>
+            </div>
+            {% endif %}
+            {% if order.billing_document_number %}
+            <div class="od-info-row">
+              <span class="od-info-label">{{ order.billing_document_type }}</span>
+              <span class="od-info-value">{{ order.billing_document_number }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Shipping address -->
+        <div class="od-card mb-4">
+          <div class="od-card__head">
+            <div class="od-card__head-icon"><i class="fas fa-map-marker-alt"></i></div>
+            <h6>Dirección de entrega</h6>
+          </div>
+          <div class="od-card__body">
+            <div class="od-info-row">
+              <span class="od-info-label">Dirección</span>
+              <span class="od-info-value">{{ order.billing_address }}</span>
+            </div>
+            <div class="od-info-row">
+              <span class="od-info-label">Ciudad</span>
+              <span class="od-info-value">{{ order.billing_city }}{% if order.billing_state %}, {{ order.billing_state }}{% endif %}</span>
+            </div>
+            <div class="od-info-row">
+              <span class="od-info-label">País</span>
+              <span class="od-info-value">{{ order.billing_country }}</span>
+            </div>
+            {% if order.billing_postal_code %}
+            <div class="od-info-row">
+              <span class="od-info-label">Código postal</span>
+              <span class="od-info-value">{{ order.billing_postal_code }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {% if order.notes %}
+        <!-- Notes -->
+        <div class="od-card mb-4">
+          <div class="od-card__head">
+            <div class="od-card__head-icon"><i class="fas fa-sticky-note"></i></div>
+            <h6>Notas del pedido</h6>
+          </div>
+          <div class="od-card__body">
+            <p style="font-size: .85rem; color: var(--od-muted); margin: 0; line-height: 1.7;">{{ order.notes }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex flex-column gap-2">
+          <a href="{% url 'orders:list' %}" class="od-btn-outline justify-content-center">
+            <i class="fas fa-arrow-left"></i> Volver a mis pedidos
+          </a>
+          <a href="{% url 'products:list' %}" class="od-btn-outline justify-content-center">
+            <i class="fas fa-shopping-bag"></i> Seguir comprando
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
 </section>
 {% endblock %}
