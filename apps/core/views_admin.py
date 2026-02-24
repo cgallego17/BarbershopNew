@@ -1,7 +1,7 @@
 """Vistas CRUD del panel de administración (sin Django Admin)."""
 import io
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpResponse
@@ -12,7 +12,7 @@ from django.views.generic import ListView, CreateView, UpdateView, DeleteView, D
 from django.contrib import messages
 
 from apps.products.models import Product, Category, Brand, ProductAttribute, ProductReview
-from apps.orders.models import Order
+from apps.orders.models import Order, OrderItem
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
 from .forms import (
@@ -907,7 +907,10 @@ class OrderListView(StaffRequiredMixin, ListView):
 def order_detail_view(request, pk):
     """Detalle y actualización de pedido."""
     order = get_object_or_404(
-        Order.objects.prefetch_related('items', 'wompi_transactions'),
+        Order.objects.prefetch_related(
+            Prefetch('items', queryset=OrderItem.objects.select_related('product').prefetch_related('product__images')),
+            'wompi_transactions',
+        ),
         pk=pk,
     )
     if request.method == 'POST':
