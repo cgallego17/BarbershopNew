@@ -2,24 +2,33 @@ from django.conf import settings
 
 
 class MaintenanceModeMiddleware:
+    """
+    Cuando maintenance_mode está activo:
+      - Staff / superusuarios pasan sin restricción alguna.
+      - El resto de usuarios ve un modal bloqueante inyectado
+        desde base.html (site_settings.maintenance_mode en contexto).
+      - Rutas técnicas siempre pasan (static, media, admin, panel…).
+    No realiza ninguna redirección; el bloqueo visual lo gestiona
+    el template mediante el contexto site_settings.
+    """
+
+    _BYPASS = (
+        '/panel/', '/admin/', '/cuentas/',
+        '/static/', '/media/', '/assets/',
+    )
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
         path = request.path or '/'
-        if path.startswith('/panel/'):
-            return self.get_response(request)
-        if path.startswith('/static/') or path.startswith('/media/') or path.startswith('/assets/'):
-            return self.get_response(request)
-        if path.startswith('/mantenimiento/'):
-            return self.get_response(request)
 
-        try:
-            from apps.core.models import SiteSettings
-            if SiteSettings.get().maintenance_mode:
-                from django.shortcuts import redirect
-                return redirect('core:maintenance')
-        except Exception:
+        for prefix in self._BYPASS:
+            if path.startswith(prefix):
+                return self.get_response(request)
+
+        user = getattr(request, 'user', None)
+        if user is not None and user.is_authenticated and (user.is_staff or user.is_superuser):
             return self.get_response(request)
 
         return self.get_response(request)

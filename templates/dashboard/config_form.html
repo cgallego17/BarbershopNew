@@ -139,7 +139,14 @@
                             {{ form.maintenance_mode }}
                             <label class="form-check-label" for="id_maintenance_mode">Modo mantenimiento</label>
                         </div>
-                        <p class="form-text small text-muted mt-1">Si está activo, el sitio público mostrará la página de mantenimiento. El panel (/panel/) seguirá funcionando.</p>
+                        <p class="form-text small text-muted mt-1">
+                            Si está activo, los visitantes verán un modal bloqueante. Admins y staff navegan con normalidad.
+                        </p>
+                    </div>
+                    <div class="col-12" id="maintenance-message-field">
+                        <label class="form-label fw-semibold" for="id_maintenance_message">Mensaje del modal de mantenimiento</label>
+                        {{ form.maintenance_message }}
+                        <p class="form-text small text-muted mt-1">Texto visible para los visitantes. Si está vacío se usa el mensaje por defecto.</p>
                     </div>
                 </div>
             </div>

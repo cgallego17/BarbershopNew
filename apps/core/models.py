@@ -62,6 +62,11 @@ class SiteSettings(models.Model):
         default=False,
         help_text='Si está activo, el sitio público mostrará la página de mantenimiento (excepto /panel/).'
     )
+    maintenance_message = models.TextField(
+        'Mensaje de mantenimiento',
+        blank=True,
+        help_text='Texto que verán los visitantes en el modal de mantenimiento. Si está vacío se usa el mensaje por defecto.',
+    )
 
     # Información adicional
     about_text = models.TextField('Texto sobre nosotros', blank=True)

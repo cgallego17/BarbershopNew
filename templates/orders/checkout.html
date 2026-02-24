@@ -249,6 +249,58 @@
     .co-card { padding: 14px 16px; margin-bottom: 8px; }
     .co-steps { margin-bottom: 14px; }
 }
+
+/* ---- Auth block (login / cuenta) ---- */
+.co-auth-block {
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 1px 6px rgba(0,0,0,.04);
+    overflow: hidden;
+}
+.co-auth-tabs {
+    display: flex;
+    border-bottom: 1px solid #f0f0f4;
+}
+.co-auth-tab {
+    flex: 1; padding: 10px 14px;
+    background: none; border: none; cursor: pointer;
+    font-size: .78rem; font-weight: 700; color: #999;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    transition: color .18s, background .18s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-family: inherit;
+}
+.co-auth-tab:hover { color: var(--boskery-base,#C56533); background: #fdf8f5; }
+.co-auth-tab--active { color: var(--boskery-base,#C56533); border-bottom-color: var(--boskery-base,#C56533); background: #fdf8f5; }
+.co-auth-panel { padding: 14px 18px; }
+.co-auth-hint { font-size: .78rem; color: #999; margin: 0 0 10px; }
+.co-auth-form .co-field input { background: #fafafa; }
+.co-auth-submit {
+    padding: 7px 14px; border-radius: 6px;
+    background: var(--boskery-base,#C56533); color: #fff;
+    border: none; font-size: .8rem; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: background .18s;
+    white-space: nowrap;
+}
+.co-auth-submit:hover { background: #a34120; }
+.co-auth-links { margin-top: 8px; font-size: .73rem; color: #aaa; display: flex; gap: 6px; flex-wrap: wrap; }
+.co-auth-links a { color: var(--boskery-base,#C56533); text-decoration: none; }
+.co-auth-links a:hover { text-decoration: underline; }
+.co-auth-sep { color: #ddd; }
+.co-eye-btn {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; color: #bbb;
+    font-size: .8rem; padding: 0; line-height: 1;
+}
+.co-eye-btn:hover { color: #666; }
+/* Crear cuenta opcional */
+.co-create-account {
+    border-top: 1px dashed #e4e4e8;
+    padding-top: 10px; margin-top: 6px;
+}
 </style>
 {% endblock %}
 
@@ -285,6 +337,60 @@
                 <span>Confirmación</span>
             </div>
         </div>
+
+        {# ── Bloque login / cuenta (solo invitados) ────────────────────── #}
+        {% if not user.is_authenticated %}
+        <div class="co-auth-block mb-3" id="co-auth-block">
+            <div class="co-auth-tabs">
+                <button type="button" class="co-auth-tab co-auth-tab--active" id="co-tab-login" onclick="coAuthSwitch('login')">
+                    <i class="fas fa-sign-in-alt"></i> Ya tengo cuenta
+                </button>
+                <button type="button" class="co-auth-tab" id="co-tab-guest" onclick="coAuthSwitch('guest')">
+                    <i class="fas fa-user-circle"></i> Continuar como invitado
+                </button>
+            </div>
+
+            <!-- Panel: Iniciar sesión -->
+            <div id="co-auth-login" class="co-auth-panel">
+                <p class="co-auth-hint">Inicia sesión para que tus datos se completen automáticamente.</p>
+                <form method="post" action="{% url 'account_login' %}?next={% url 'orders:checkout' %}" class="co-auth-form">
+                    {% csrf_token %}
+                    <div class="row g-2">
+                        <div class="col-sm-5">
+                            <div class="co-field mb-0">
+                                <label for="co-login-email">Email</label>
+                                <input type="email" id="co-login-email" name="login" required autocomplete="email" placeholder="tu@email.com">
+                            </div>
+                        </div>
+                        <div class="col-sm-5">
+                            <div class="co-field mb-0">
+                                <label for="co-login-pass">Contraseña</label>
+                                <div style="position:relative;">
+                                    <input type="password" id="co-login-pass" name="password" required autocomplete="current-password" placeholder="••••••••" style="padding-right:36px;">
+                                    <button type="button" class="co-eye-btn" onclick="coTogglePwd('co-login-pass',this)" tabindex="-1" aria-label="Ver contraseña">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-2 d-flex align-items-end">
+                            <button type="submit" class="co-auth-submit w-100">Entrar</button>
+                        </div>
+                    </div>
+                    <div class="co-auth-links">
+                        <a href="{% url 'account_reset_password' %}">¿Olvidaste tu contraseña?</a>
+                        <span class="co-auth-sep">·</span>
+                        <a href="{% url 'account_signup' %}?next={% url 'orders:checkout' %}">Crear cuenta nueva</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Panel: invitado (oculto por defecto) -->
+            <div id="co-auth-guest" class="co-auth-panel" style="display:none;">
+                <p class="co-auth-hint">Completa tus datos abajo. Al final puedes guardar tu cuenta opcionalmente.</p>
+            </div>
+        </div>
+        {% endif %}
 
         <form method="post" id="checkout-form">
             {% csrf_token %}
@@ -496,6 +602,32 @@
                             <span class="co-grand-total__val" id="co-total-val">{{ site_settings.currency }}{{ cart_total|floatformat:0|intcomma }}</span>
                         </div>
 
+                        <!-- Crear cuenta opcional (solo invitados) -->
+                        {% if not user.is_authenticated %}
+                        <div class="co-create-account" id="co-create-account-section">
+                            <label class="co-checkbox-row" style="margin-bottom:0;" id="co-create-account-toggle">
+                                <input type="checkbox" id="co-create-account-cb" onchange="coToggleCreateAccount(this)">
+                                <span><i class="fas fa-user-plus" style="color:var(--boskery-base,#C56533);margin-right:4px;font-size:.8rem;"></i> Guardar una cuenta con estos datos <span style="color:#aaa;font-weight:400;">(opcional)</span></span>
+                            </label>
+                            <div id="co-create-account-fields" style="display:none;margin-top:8px;">
+                                <div class="co-field mb-0">
+                                    <label for="co-new-password">Crea tu contraseña</label>
+                                    <div style="position:relative;">
+                                        <input type="password" id="co-new-password" name="new_password"
+                                               autocomplete="new-password" placeholder="Mínimo 8 caracteres"
+                                               style="padding-right:36px;">
+                                        <button type="button" class="co-eye-btn" onclick="coTogglePwd('co-new-password',this)" tabindex="-1" aria-label="Ver contraseña">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                    <span style="font-size:.68rem;color:#aaa;margin-top:2px;display:block;">Usarás tu email como usuario.</span>
+                                </div>
+                                <input type="hidden" name="create_account" id="co-create-account-hidden" value="0">
+                            </div>
+                        </div>
+                        <div class="co-coupon-section" style="margin:6px 0 0;padding:0;border:none;"></div>
+                        {% endif %}
+
                         <!-- Aceptación de términos y política -->
                         <div class="co-legal-checkboxes">
                             <label class="co-checkbox-row">
@@ -534,6 +666,50 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+/* ── Auth block helpers ─────────────────────────────────────── */
+function coAuthSwitch(tab) {
+    var loginPanel = document.getElementById('co-auth-login');
+    var guestPanel = document.getElementById('co-auth-guest');
+    var tabLogin   = document.getElementById('co-tab-login');
+    var tabGuest   = document.getElementById('co-tab-guest');
+    if (!loginPanel) return;
+    if (tab === 'login') {
+        loginPanel.style.display = '';
+        if (guestPanel) guestPanel.style.display = 'none';
+        tabLogin.classList.add('co-auth-tab--active');
+        tabGuest.classList.remove('co-auth-tab--active');
+        document.getElementById('co-login-email').focus();
+    } else {
+        loginPanel.style.display = 'none';
+        if (guestPanel) guestPanel.style.display = '';
+        tabGuest.classList.add('co-auth-tab--active');
+        tabLogin.classList.remove('co-auth-tab--active');
+    }
+}
+function coTogglePwd(inputId, btn) {
+    var inp = document.getElementById(inputId);
+    if (!inp) return;
+    var isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    btn.querySelector('i').className = isText ? 'fas fa-eye' : 'fas fa-eye-slash';
+}
+function coToggleCreateAccount(cb) {
+    var fields = document.getElementById('co-create-account-fields');
+    var hidden = document.getElementById('co-create-account-hidden');
+    var pwdInput = document.getElementById('co-new-password');
+    if (!fields) return;
+    if (cb.checked) {
+        fields.style.display = 'block';
+        if (hidden) hidden.value = '1';
+        if (pwdInput) { pwdInput.required = true; pwdInput.focus(); }
+    } else {
+        fields.style.display = 'none';
+        if (hidden) hidden.value = '0';
+        if (pwdInput) { pwdInput.required = false; pwdInput.value = ''; }
+    }
+}
+</script>
 <script>
 (function () {
     var CART_SUBTOTAL = {{ cart_total|unlocalize }};

@@ -169,6 +169,36 @@ def checkout_view(request):
 
         notify_order_created(order)
         cart.clear()
+
+        # Creación opcional de cuenta durante el checkout
+        if not request.user.is_authenticated and request.POST.get('create_account') == '1':
+            new_password = request.POST.get('new_password', '').strip()
+            email = cleaned.get('billing_email', '').strip()
+            if new_password and len(new_password) >= 8 and email:
+                from django.contrib.auth import get_user_model, login as _auth_login
+                UserModel = get_user_model()
+                if not UserModel.objects.filter(email=email).exists():
+                    try:
+                        new_user = UserModel.objects.create_user(
+                            username=email,
+                            email=email,
+                            password=new_password,
+                            first_name=cleaned.get('billing_first_name', ''),
+                            last_name=billing_last,
+                        )
+                        order.user = new_user
+                        order.save(update_fields=['user'])
+                        _auth_login(
+                            request, new_user,
+                            backend='django.contrib.auth.backends.ModelBackend',
+                        )
+                        messages.success(
+                            request,
+                            'Cuenta creada exitosamente. Ya iniciaste sesión.',
+                        )
+                    except Exception:
+                        pass
+
         # Redirigir a la pasarela de pago Wompi
         return redirect('payments:payment_page', order_number=order.order_number)
 
