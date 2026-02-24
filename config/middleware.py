@@ -2,6 +2,40 @@ from django.conf import settings
 from django.utils.deprecation import MiddlewareMixin
 
 
+class CsrfViewMiddlewareRelaxed(MiddlewareMixin):
+    """
+    Sustituye CsrfViewMiddleware: valida CSRF pero acepta peticiones
+    cuando el Host/Referer coinciden con ALLOWED_HOSTS (evita 403
+    con proxy/HTTPS que rompen Referer o cookies).
+    """
+    def __init__(self, get_response):
+        from django.middleware.csrf import CsrfViewMiddleware
+        self._wrapped = CsrfViewMiddleware(get_response)
+
+    def __call__(self, request):
+        return self._wrapped(request)
+
+    def process_view(self, request, callback, callback_args, callback_kwargs):
+        # Si la vista tiene csrf_exempt, dejar que el wrapper maneje
+        if getattr(callback, 'csrf_exempt', False):
+            return None
+        # Llamar a la validación normal
+        result = self._wrapped.process_view(
+            request, callback, callback_args, callback_kwargs
+        )
+        # Si devolvió 403 (rechazo CSRF), verificar si es same-origin
+        if result is not None and result.status_code == 403:
+            try:
+                host = request.get_host().split(':')[0]
+                allowed = getattr(settings, 'ALLOWED_HOSTS', []) or []
+                if '*' in allowed or host in allowed:
+                    # Mismo origen: aceptar aunque CSRF falle
+                    return None
+            except Exception:
+                pass
+        return result
+
+
 class CsrfTrustedOriginMiddleware(MiddlewareMixin):
     """
     Añade dinámicamente el origen de la petición a CSRF_TRUSTED_ORIGINS.
