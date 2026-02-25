@@ -10,6 +10,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
+import urllib.parse
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
@@ -113,6 +114,38 @@ def _fetch_transaction_from_wompi(transaction_id: str) -> dict:
     except Exception as exc:
         logger.error("Error consultando transacción Wompi %s: %s", transaction_id, exc)
         return {}
+
+
+def _with_query_param(url: str, key: str, value: str) -> str:
+    """Agrega/reemplaza un query param en una URL."""
+    parsed = urllib.parse.urlparse(url)
+    query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
+    query[key] = value
+    return urllib.parse.urlunparse(
+        parsed._replace(query=urllib.parse.urlencode(query))
+    )
+
+
+def _build_support_whatsapp_url(order: Order, status: str, transaction_id: str) -> str:
+    """Arma enlace wa.me con contexto del pedido para soporte."""
+    if not order:
+        return ''
+    try:
+        from apps.core.models import SiteSettings
+
+        base = SiteSettings.get().get_whatsapp_wa_me_url()
+        if not base:
+            return ''
+        msg = (
+            "Hola, necesito ayuda con el pago de mi pedido.\n"
+            f"Pedido: {order.order_number}\n"
+            f"Estado: {status}\n"
+            f"Transacción: {transaction_id or 'N/D'}\n"
+            f"Total: {order.total}\n"
+        )
+        return f"{base}?text={urllib.parse.quote(msg)}"
+    except Exception:
+        return ''
 
 
 def _is_transaction_consistent(order: Order, tx_data: dict) -> bool:
@@ -254,6 +287,8 @@ def payment_page(request, order_number):
         getattr(settings, 'WOMPI_REDIRECT_URL', '').strip()
         or request.build_absolute_uri('/pagos/confirmacion/')
     )
+    # Permite identificar el pedido en el return incluso si falla consulta a Wompi.
+    redirect_url = _with_query_param(redirect_url, 'order', order.order_number)
     integrity      = _integrity_hash(order_number, amount_cents, currency)
 
     context = {
@@ -275,14 +310,18 @@ def payment_return(request):
     Consultamos la API para obtener el estado actualizado.
     """
     transaction_id = request.GET.get('id', '').strip()
-    if not transaction_id:
-        return redirect('core:home')
+    order_hint = request.GET.get('order', '').strip()
+    tx_data = {}
+    wompi_connection_error = False
 
-    tx_data   = _fetch_transaction_from_wompi(transaction_id)
-    reference = tx_data.get('reference', '')
-    status    = tx_data.get('status', 'ERROR')
+    if transaction_id:
+        tx_data = _fetch_transaction_from_wompi(transaction_id)
+        wompi_connection_error = not bool(tx_data)
 
-    order = Order.objects.filter(order_number=reference).first()
+    reference = tx_data.get('reference', '') or order_hint
+    status = tx_data.get('status', 'ERROR')
+
+    order = Order.objects.filter(order_number=reference).first() if reference else None
 
     if order and not _can_access_order(request, order):
         order = None
@@ -303,12 +342,28 @@ def payment_return(request):
                 order.save(update_fields=['payment_status', 'updated_at'])
                 notify_payment_failed(order)
 
+    if wompi_connection_error:
+        status = 'WOMPI_UNAVAILABLE'
+    elif not transaction_id:
+        status = 'MISSING_TRANSACTION'
+
     STATUS_LABELS = {
         'APPROVED': ('success', '¡Pago aprobado!',      'Tu pedido está en proceso.'),
         'PENDING':  ('warning', 'Pago en proceso…',     'Tu transacción está siendo verificada.'),
         'DECLINED': ('error',   'Pago declinado',       'Tu banco rechazó el pago. Puedes intentar de nuevo.'),
         'VOIDED':   ('error',   'Pago anulado',         'La transacción fue anulada.'),
         'ERROR':    ('error',   'Error en el pago',     'Ocurrió un error. Contacta soporte si el dinero fue debitado.'),
+        'WOMPI_UNAVAILABLE': (
+            'warning',
+            'No pudimos confirmar tu pago ahora',
+            'La conexión con Wompi está temporalmente inestable. '
+            'No cierres esta página: reintentaremos validar tu pago automáticamente.',
+        ),
+        'MISSING_TRANSACTION': (
+            'error',
+            'No recibimos la transacción de pago',
+            'No fue posible validar la transacción. Intenta pagar de nuevo o contacta soporte.',
+        ),
     }
     kind, title, subtitle = STATUS_LABELS.get(status, STATUS_LABELS['ERROR'])
 
@@ -319,6 +374,10 @@ def payment_return(request):
         'title':          title,
         'subtitle':       subtitle,
         'transaction_id': transaction_id,
+        'wompi_connection_error': wompi_connection_error,
+        'support_whatsapp_url': _build_support_whatsapp_url(
+            order, status, transaction_id
+        ),
     }
     return render(request, 'payments/payment_result.html', context)
 

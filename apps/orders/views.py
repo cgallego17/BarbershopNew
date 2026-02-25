@@ -110,6 +110,8 @@ def checkout_view(request):
         billing_city_name = cleaned.get('billing_city', '').strip()
         billing_state_name = cleaned.get('billing_state', '').strip()
         billing_country_name = cleaned.get('billing_country', '').strip()
+        shipping_city_found = False
+        shipping_configured = False
         if not is_free_shipping and billing_city_name and billing_country_name:
             city = City.objects.filter(
                 name__iexact=billing_city_name,
@@ -117,21 +119,89 @@ def checkout_view(request):
                 state__country__name__iexact=billing_country_name,
             ).first()
             if city:
+                shipping_city_found = True
                 try:
                     sp = ShippingPrice.objects.get(city=city, is_active=True)
                     shipping_total = sp.price
+                    shipping_configured = True
                 except ShippingPrice.DoesNotExist:
                     pass
+        elif not is_free_shipping:
+            messages.error(request, 'Debes seleccionar una ciudad válida para calcular el envío.')
+            return redirect('orders:checkout')
+
+        if not is_free_shipping and (not shipping_city_found or not shipping_configured):
+            messages.error(
+                request,
+                'No hay costo de envío configurado para la ciudad seleccionada. '
+                'Por favor elige otra ciudad o configura el envío en el panel.',
+            )
+            return redirect('orders:checkout')
+
+        # Usuario para asociar al pedido (guest, autenticado o login en este flujo).
+        account_user = request.user if request.user.is_authenticated else None
+
+        # Si invitado pide crear cuenta, validar ANTES de crear el pedido.
+        create_account_requested = (
+            not request.user.is_authenticated
+            and request.POST.get('create_account') == '1'
+        )
+        new_password = request.POST.get('new_password', '').strip()
+        billing_email = cleaned.get('billing_email', '').strip()
+        if create_account_requested:
+            if len(new_password) < 8:
+                messages.error(
+                    request,
+                    'Para crear cuenta debes ingresar una contraseña de mínimo 8 caracteres.',
+                )
+                return redirect('orders:checkout')
+            if not billing_email:
+                messages.error(
+                    request,
+                    'No pudimos validar el email para crear la cuenta. Intenta de nuevo.',
+                )
+                return redirect('orders:checkout')
+            from django.contrib.auth import get_user_model
+            UserModel = get_user_model()
+            existing_user = UserModel.objects.filter(email__iexact=billing_email).first()
+            if existing_user:
+                from django.contrib.auth import authenticate, login as _auth_login
+
+                username_or_email = (
+                    getattr(existing_user, 'username', '').strip() or billing_email
+                )
+                authenticated = authenticate(
+                    request,
+                    username=username_or_email,
+                    password=new_password,
+                )
+                if not authenticated:
+                    messages.error(
+                        request,
+                        'Ese correo ya existe. La contraseña no coincide; '
+                        'corrígela para iniciar sesión.',
+                    )
+                    return redirect('orders:checkout')
+                _auth_login(
+                    request,
+                    authenticated,
+                    backend='django.contrib.auth.backends.ModelBackend',
+                )
+                account_user = authenticated
+                messages.success(
+                    request,
+                    'Detectamos una cuenta existente y ya iniciaste sesión.',
+                )
 
         order = Order(
-            user=request.user if request.user.is_authenticated else None,
+            user=account_user,
             billing_customer_type=billing_type,
             billing_document_type=billing_doctype,
             billing_document_number=cleaned.get('billing_document_number', ''),
             billing_date_of_birth=billing_dob,
             billing_first_name=cleaned.get('billing_first_name'),
             billing_last_name=billing_last,
-            billing_email=cleaned.get('billing_email'),
+            billing_email=billing_email,
             billing_phone=cleaned.get('billing_phone', ''),
             billing_address=cleaned.get('billing_address'),
             billing_city=billing_city_name,
@@ -168,43 +238,46 @@ def checkout_view(request):
                 total=item['total_price'],
             )
 
-        try:
-            notify_order_created(order)
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception(
-                "Error enviando email de confirmación para pedido %s", order.order_number
-            )
+        import threading
+
+        def _send_email():
+            try:
+                notify_order_created(order)
+            except Exception:
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Error enviando email de confirmación para pedido %s", order.order_number
+                )
+        threading.Thread(target=_send_email, daemon=True).start()
         cart.clear()
 
         # Creación opcional de cuenta durante el checkout
-        if not request.user.is_authenticated and request.POST.get('create_account') == '1':
-            new_password = request.POST.get('new_password', '').strip()
-            email = cleaned.get('billing_email', '').strip()
-            if new_password and len(new_password) >= 8 and email:
-                from django.contrib.auth import get_user_model, login as _auth_login
-                UserModel = get_user_model()
-                if not UserModel.objects.filter(email=email).exists():
-                    try:
-                        new_user = UserModel.objects.create_user(
-                            username=email,
-                            email=email,
-                            password=new_password,
-                            first_name=cleaned.get('billing_first_name', ''),
-                            last_name=billing_last,
-                        )
-                        order.user = new_user
-                        order.save(update_fields=['user'])
-                        _auth_login(
-                            request, new_user,
-                            backend='django.contrib.auth.backends.ModelBackend',
-                        )
-                        messages.success(
-                            request,
-                            'Cuenta creada exitosamente. Ya iniciaste sesión.',
-                        )
-                    except Exception:
-                        pass
+        if create_account_requested and not account_user:
+            from django.contrib.auth import get_user_model, login as _auth_login
+            UserModel = get_user_model()
+            try:
+                new_user = UserModel.objects.create_user(
+                    username=billing_email,
+                    email=billing_email,
+                    password=new_password,
+                    first_name=cleaned.get('billing_first_name', ''),
+                    last_name=billing_last,
+                )
+                order.user = new_user
+                order.save(update_fields=['user'])
+                _auth_login(
+                    request, new_user,
+                    backend='django.contrib.auth.backends.ModelBackend',
+                )
+                messages.success(
+                    request,
+                    'Cuenta creada exitosamente. Ya iniciaste sesión.',
+                )
+            except Exception:
+                messages.warning(
+                    request,
+                    'El pedido se creó, pero no pudimos crear la cuenta en este momento.',
+                )
 
         # Redirigir a la pasarela de pago Wompi
         return redirect('payments:payment_page', order_number=order.order_number)

@@ -166,6 +166,11 @@
     color: #fff; box-shadow: 0 6px 24px rgba(124,58,237,.35);
 }
 .pr-btn--retry:hover { box-shadow: 0 12px 32px rgba(124,58,237,.5); color: #fff; }
+.pr-btn--whatsapp {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff; box-shadow: 0 6px 24px rgba(34,197,94,.35);
+}
+.pr-btn--whatsapp:hover { box-shadow: 0 12px 32px rgba(34,197,94,.5); color: #fff; }
 
 /* Nota */
 .pr-note {
@@ -202,6 +207,13 @@
 
             <h1 class="pr-title">{{ title }}</h1>
             <p class="pr-subtitle">{{ subtitle }}</p>
+
+            {% if wompi_connection_error %}
+            <p class="pr-pending-spinner" style="margin-top:-8px;">
+                <i class="fas fa-info-circle"></i>
+                Si ya pagaste, no repitas el pago: verifica el estado en unos segundos.
+            </p>
+            {% endif %}
 
             {% if kind == 'warning' %}
             <p class="pr-pending-spinner">
@@ -284,6 +296,11 @@
                 {% else %}
                     <a href="{% url 'products:list' %}" class="pr-btn pr-btn--primary">
                         <i class="fas fa-store"></i> Ir a la tienda
+                    </a>
+                {% endif %}
+                {% if support_whatsapp_url and kind != 'success' %}
+                    <a href="{{ support_whatsapp_url }}" class="pr-btn pr-btn--whatsapp" target="_blank" rel="noopener noreferrer">
+                        <i class="fab fa-whatsapp"></i> Contactar soporte por WhatsApp
                     </a>
                 {% endif %}
             </div>

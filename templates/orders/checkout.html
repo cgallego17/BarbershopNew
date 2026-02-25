@@ -400,16 +400,16 @@
         {% if not user.is_authenticated %}
         <div class="co-auth-block mb-3" id="co-auth-block">
             <div class="co-auth-tabs">
-                <button type="button" class="co-auth-tab co-auth-tab--active" id="co-tab-login" onclick="coAuthSwitch('login')">
-                    <i class="fas fa-sign-in-alt"></i> Ya tengo cuenta
-                </button>
-                <button type="button" class="co-auth-tab" id="co-tab-guest" onclick="coAuthSwitch('guest')">
+                <button type="button" class="co-auth-tab co-auth-tab--active" id="co-tab-guest" onclick="coAuthSwitch('guest')">
                     <i class="fas fa-user-circle"></i> Continuar como invitado
+                </button>
+                <button type="button" class="co-auth-tab" id="co-tab-login" onclick="coAuthSwitch('login')">
+                    <i class="fas fa-user-plus"></i> Crear/Iniciar cuenta
                 </button>
             </div>
 
             <!-- Panel: Iniciar sesión -->
-            <div id="co-auth-login" class="co-auth-panel">
+            <div id="co-auth-login" class="co-auth-panel" style="display:none;">
                 <p class="co-auth-hint">Inicia sesión para que tus datos se completen automáticamente.</p>
                 <form method="post" action="{% url 'account_login' %}?next={% url 'orders:checkout' %}" class="co-auth-form">
                     {% csrf_token %}
@@ -443,8 +443,8 @@
                 </form>
             </div>
 
-            <!-- Panel: invitado (oculto por defecto) -->
-            <div id="co-auth-guest" class="co-auth-panel" style="display:none;">
+            <!-- Panel: invitado (visible por defecto) -->
+            <div id="co-auth-guest" class="co-auth-panel">
                 <p class="co-auth-hint">Completa tus datos abajo. Al final puedes guardar tu cuenta opcionalmente.</p>
             </div>
         </div>
@@ -1078,6 +1078,180 @@ function coToggleCreateAccount(btn) {
         setTimeout(function() {
             if (citySelect.value) onCityChange();
         }, 600);
+    }
+
+    function checkoutError(message, el) {
+        if (window.showToast) {
+            window.showToast(message, 'error');
+        } else {
+            alert(message);
+        }
+        if (el && typeof el.focus === 'function') {
+            el.focus();
+        }
+    }
+
+    function selectedCustomerType() {
+        var checked = document.querySelector('input[name="billing_customer_type"]:checked');
+        return checked ? checked.value : 'person';
+    }
+
+    function isShippingConfiguredLabel() {
+        var txt = (shippingVal && shippingVal.textContent ? shippingVal.textContent : '').trim().toLowerCase();
+        return txt && txt.indexOf('no configurado') === -1;
+    }
+
+    var checkoutForm = document.getElementById('checkout-form');
+    var submitBtn = document.querySelector('.co-btn-confirm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function (e) {
+            var debugId = 'CK-' + Date.now();
+            var type = selectedCustomerType();
+            var doctype = document.getElementById('co-doctype');
+            var docnum = document.getElementById('co-document');
+            var fname = document.getElementById('co-fname');
+            var lname = document.getElementById('co-lname');
+            var email = document.getElementById('co-email');
+            var address = document.getElementById('co-address');
+            var country = checkoutForm.querySelector('select[name="billing_country"]');
+            var city = checkoutForm.querySelector('select[name="billing_city"]');
+            var terms = document.getElementById('co-accept-terms');
+            var privacy = document.getElementById('co-accept-privacy');
+            var createAcc = document.getElementById('co-create-account-hidden');
+            var newPwd = document.getElementById('co-new-password');
+
+            console.groupCollapsed('[Checkout Debug ' + debugId + '] Click en Confirmar pedido');
+            console.log('Estado inicial', {
+                customer_type: type,
+                document_type: doctype ? doctype.value : null,
+                country: country ? country.value : null,
+                city: city ? city.value : null,
+                shipping_label: shippingVal ? shippingVal.textContent : '',
+                shipping_required: !hasFreeShippingBySubtotal(),
+                create_account: createAcc ? createAcc.value : '0',
+            });
+
+            if (!doctype || !doctype.value) {
+                e.preventDefault();
+                console.error('Bloqueado: tipo de documento vacío');
+                console.groupEnd();
+                checkoutError('Selecciona el tipo de documento.', doctype);
+                return;
+            }
+            if (type === 'person' && ['CC', 'CE', 'PA'].indexOf(doctype.value) === -1) {
+                e.preventDefault();
+                console.error('Bloqueado: documento inválido para persona natural:', doctype.value);
+                console.groupEnd();
+                checkoutError('Para persona natural el documento debe ser CC, CE o PA.', doctype);
+                return;
+            }
+            if (type === 'company' && doctype.value !== 'NIT') {
+                e.preventDefault();
+                console.error('Bloqueado: documento inválido para empresa:', doctype.value);
+                console.groupEnd();
+                checkoutError('Para empresa el tipo de documento debe ser NIT.', doctype);
+                return;
+            }
+            if (!docnum || !docnum.value.trim()) {
+                e.preventDefault();
+                console.error('Bloqueado: número de identificación vacío');
+                console.groupEnd();
+                checkoutError('Ingresa el número de identificación.', docnum);
+                return;
+            }
+            if (!fname || !fname.value.trim()) {
+                e.preventDefault();
+                console.error('Bloqueado: nombre vacío');
+                console.groupEnd();
+                checkoutError('Ingresa el nombre.', fname);
+                return;
+            }
+            if (type === 'person' && (!lname || !lname.value.trim())) {
+                e.preventDefault();
+                console.error('Bloqueado: apellido vacío para persona natural');
+                console.groupEnd();
+                checkoutError('Ingresa el apellido para persona natural.', lname);
+                return;
+            }
+            if (!email || !email.value.trim()) {
+                e.preventDefault();
+                console.error('Bloqueado: email vacío');
+                console.groupEnd();
+                checkoutError('Ingresa el correo electrónico.', email);
+                return;
+            }
+            if (!address || !address.value.trim()) {
+                e.preventDefault();
+                console.error('Bloqueado: dirección vacía');
+                console.groupEnd();
+                checkoutError('Ingresa la dirección.', address);
+                return;
+            }
+            if (!country || !country.value) {
+                e.preventDefault();
+                console.error('Bloqueado: país no seleccionado');
+                console.groupEnd();
+                checkoutError('Selecciona el país.', country);
+                return;
+            }
+            if (!city || !city.value) {
+                e.preventDefault();
+                console.error('Bloqueado: ciudad no seleccionada');
+                console.groupEnd();
+                checkoutError('Selecciona la ciudad de envío.', city);
+                return;
+            }
+            if (!hasFreeShippingBySubtotal() && !isShippingConfiguredLabel()) {
+                e.preventDefault();
+                console.error('Bloqueado: ciudad sin envío configurado');
+                console.groupEnd();
+                checkoutError('Esta ciudad no tiene costo de envío configurado. Selecciona otra ciudad o configura el envío.', city);
+                return;
+            }
+            if (!terms || !terms.checked) {
+                e.preventDefault();
+                console.error('Bloqueado: términos no aceptados');
+                console.groupEnd();
+                checkoutError('Debes aceptar los términos y condiciones.', terms);
+                return;
+            }
+            if (!privacy || !privacy.checked) {
+                e.preventDefault();
+                console.error('Bloqueado: política de privacidad no aceptada');
+                console.groupEnd();
+                checkoutError('Debes aceptar la política de tratamiento de datos.', privacy);
+                return;
+            }
+            if (createAcc && createAcc.value === '1') {
+                var pwd = newPwd ? newPwd.value.trim() : '';
+                if (pwd.length < 8) {
+                    e.preventDefault();
+                    console.error('Bloqueado: contraseña corta para crear cuenta');
+                    console.groupEnd();
+                    checkoutError('La contraseña debe tener mínimo 8 caracteres.', newPwd);
+                    return;
+                }
+            }
+
+            // Evitar doble envío
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando pedido...';
+            }
+            console.log('Validaciones frontend OK. Enviando formulario al backend...', {
+                action: checkoutForm.action || window.location.pathname,
+                method: checkoutForm.method || 'post',
+            });
+            console.groupEnd();
+            setTimeout(function () {
+                if (document.body.contains(checkoutForm)) {
+                    console.warn(
+                        '[Checkout Debug ' + debugId + '] Han pasado 8s y sigues en checkout. '
+                        + 'Revisa respuesta de red (POST /pedidos/finalizar-compra/) y logs backend.'
+                    );
+                }
+            }, 8000);
+        });
     }
 })();
 </script>

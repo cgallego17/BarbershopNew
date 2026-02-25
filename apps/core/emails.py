@@ -86,80 +86,107 @@ def send_templated_email(
 
 
 def notify_new_customer(user):
-    if user.email:
+    try:
+        if user.email:
+            send_templated_email(
+                subject=f"Bienvenido a {SiteSettings.get().site_name}",
+                to_emails=[user.email],
+                template_key="customer_welcome",
+                context={"user": user},
+            )
+
+        staff_emails = get_staff_admin_emails()
         send_templated_email(
-            subject=f"Bienvenido a {SiteSettings.get().site_name}",
-            to_emails=[user.email],
-            template_key="customer_welcome",
+            subject="Nuevo cliente registrado",
+            to_emails=staff_emails,
+            template_key="admin_new_customer",
             context={"user": user},
         )
-
-    staff_emails = get_staff_admin_emails()
-    send_templated_email(
-        subject="Nuevo cliente registrado",
-        to_emails=staff_emails,
-        template_key="admin_new_customer",
-        context={"user": user},
-    )
+    except Exception:
+        logger.exception(
+            "Error en notify_new_customer para user=%s",
+            getattr(user, "id", None),
+        )
 
 
 def notify_order_created(order):
-    if order.billing_email:
+    try:
+        if order.billing_email:
+            send_templated_email(
+                subject=f"Pedido recibido #{order.order_number}",
+                to_emails=[order.billing_email],
+                template_key="customer_order_created",
+                context={"order": order},
+            )
+
         send_templated_email(
-            subject=f"Pedido recibido #{order.order_number}",
-            to_emails=[order.billing_email],
-            template_key="customer_order_created",
+            subject=f"Nuevo pedido #{order.order_number}",
+            to_emails=get_staff_admin_emails(),
+            template_key="admin_new_order",
             context={"order": order},
         )
-
-    send_templated_email(
-        subject=f"Nuevo pedido #{order.order_number}",
-        to_emails=get_staff_admin_emails(),
-        template_key="admin_new_order",
-        context={"order": order},
-    )
+    except Exception:
+        logger.exception(
+            "Error en notify_order_created para order=%s",
+            getattr(order, "order_number", None),
+        )
 
 
 def notify_payment_approved(order):
-    if order.billing_email:
+    try:
+        if order.billing_email:
+            send_templated_email(
+                subject=f"Pago aprobado #{order.order_number}",
+                to_emails=[order.billing_email],
+                template_key="customer_payment_approved",
+                context={"order": order},
+            )
+
         send_templated_email(
-            subject=f"Pago aprobado #{order.order_number}",
-            to_emails=[order.billing_email],
-            template_key="customer_payment_approved",
+            subject=f"Pago aprobado en pedido #{order.order_number}",
+            to_emails=get_staff_admin_emails(),
+            template_key="admin_payment_approved",
             context={"order": order},
         )
-
-    send_templated_email(
-        subject=f"Pago aprobado en pedido #{order.order_number}",
-        to_emails=get_staff_admin_emails(),
-        template_key="admin_payment_approved",
-        context={"order": order},
-    )
+    except Exception:
+        logger.exception(
+            "Error en notify_payment_approved para order=%s",
+            getattr(order, "order_number", None),
+        )
 
 
 def notify_payment_failed(order):
-    if order.billing_email:
+    try:
+        if order.billing_email:
+            send_templated_email(
+                subject=f"Pago no completado #{order.order_number}",
+                to_emails=[order.billing_email],
+                template_key="customer_payment_failed",
+                context={"order": order},
+            )
+
         send_templated_email(
-            subject=f"Pago no completado #{order.order_number}",
-            to_emails=[order.billing_email],
-            template_key="customer_payment_failed",
+            subject=f"Pago fallido en pedido #{order.order_number}",
+            to_emails=get_staff_admin_emails(),
+            template_key="admin_payment_failed",
             context={"order": order},
         )
-
-    send_templated_email(
-        subject=f"Pago fallido en pedido #{order.order_number}",
-        to_emails=get_staff_admin_emails(),
-        template_key="admin_payment_failed",
-        context={"order": order},
-    )
+    except Exception:
+        logger.exception(
+            "Error en notify_payment_failed para order=%s",
+            getattr(order, "order_number", None),
+        )
 
 
 def notify_low_stock(items):
-    if not items:
-        return
-    send_templated_email(
-        subject="Alerta de stock bajo",
-        to_emails=get_staff_admin_emails(),
-        template_key="admin_low_stock_alert",
-        context={"items": items},
-    )
+    try:
+        if not items:
+            return
+        send_templated_email(
+            subject="Alerta de stock bajo",
+            to_emails=get_staff_admin_emails(),
+            template_key="admin_low_stock_alert",
+            context={"items": items},
+        )
+    except Exception:
+        logger.exception("Error en notify_low_stock")

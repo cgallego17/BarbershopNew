@@ -252,6 +252,7 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS')
 EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL')
+EMAIL_TIMEOUT = 8  # segundos máximo para conexión SMTP; evita que el checkout se quede colgado
 _default_from = env('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER or 'no-reply@localhost'
 DEFAULT_FROM_EMAIL = _default_from
 SERVER_EMAIL = _default_from
