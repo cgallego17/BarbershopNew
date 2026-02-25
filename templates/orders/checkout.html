@@ -526,8 +526,8 @@
                             </div>
                             <div class="col-md-5 ps-md-2">
                                 <div class="co-field">
-                                    <label for="co-phone">Teléfono</label>
-                                    <input type="tel" id="co-phone" name="billing_phone" autocomplete="tel"
+                                    <label for="co-phone">Teléfono *</label>
+                                    <input type="tel" id="co-phone" name="billing_phone" required autocomplete="tel"
                                            value="{% if user.is_authenticated %}{{ user.phone|default:'' }}{% endif %}" placeholder="(+57) 300 000 0000">
                                 </div>
                             </div>
@@ -1112,6 +1112,7 @@ function coToggleCreateAccount(btn) {
             var fname = document.getElementById('co-fname');
             var lname = document.getElementById('co-lname');
             var email = document.getElementById('co-email');
+            var phone = document.getElementById('co-phone');
             var address = document.getElementById('co-address');
             var country = checkoutForm.querySelector('select[name="billing_country"]');
             var city = checkoutForm.querySelector('select[name="billing_city"]');
@@ -1178,6 +1179,13 @@ function coToggleCreateAccount(btn) {
                 console.error('Bloqueado: email vacío');
                 console.groupEnd();
                 checkoutError('Ingresa el correo electrónico.', email);
+                return;
+            }
+            if (!phone || !phone.value.trim()) {
+                e.preventDefault();
+                console.error('Bloqueado: teléfono vacío');
+                console.groupEnd();
+                checkoutError('Ingresa el teléfono.', phone);
                 return;
             }
             if (!address || !address.value.trim()) {

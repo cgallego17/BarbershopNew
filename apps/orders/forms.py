@@ -30,7 +30,7 @@ class CheckoutForm(forms.Form):
     billing_first_name = forms.CharField(max_length=150)
     billing_last_name = forms.CharField(required=False, max_length=150)
     billing_email = forms.EmailField(max_length=254)
-    billing_phone = forms.CharField(required=False, max_length=20)
+    billing_phone = forms.CharField(required=True, max_length=20)
     billing_address = forms.CharField(max_length=255)
     billing_city = forms.CharField(max_length=100)
     billing_state = forms.CharField(required=False, max_length=100)
