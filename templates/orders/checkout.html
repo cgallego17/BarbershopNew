@@ -469,7 +469,7 @@
                             </div>
                             <div class="col-6 ps-2">
                                 <label class="co-radio-option">
-                                    <input type="radio" name="billing_customer_type" value="company" {% if user.customer_type == 'company' %}checked{% endif %}>
+                                    <input type="radio" name="billing_customer_type" value="company" {% if user.is_authenticated and user.customer_type == 'company' %}checked{% endif %}>
                                     <span>Empresa</span>
                                 </label>
                             </div>
@@ -478,12 +478,12 @@
                             <div class="col-md-6 pe-md-2">
                                 <div class="co-field">
                                     <label for="co-doctype">Tipo doc *</label>
-                                    <select id="co-doctype" name="billing_document_type" required autocomplete="off" data-initial-doctype="{{ user.document_type|default:'' }}">
+                                    <select id="co-doctype" name="billing_document_type" required autocomplete="off" data-initial-doctype="{% if user.is_authenticated %}{{ user.document_type|default:'' }}{% endif %}">
                                         <option value="">Seleccione…</option>
-                                        <option value="CC" {% if user.document_type == 'CC' %}selected{% endif %}>Cédula ciudadanía</option>
-                                        <option value="CE" {% if user.document_type == 'CE' %}selected{% endif %}>Cédula extranjería</option>
-                                        <option value="PA" {% if user.document_type == 'PA' %}selected{% endif %}>Pasaporte</option>
-                                        <option value="NIT" {% if user.customer_type == 'company' or user.document_type == 'NIT' %}selected{% endif %}>NIT</option>
+                                        <option value="CC" {% if user.is_authenticated and user.document_type == 'CC' %}selected{% endif %}>Cédula ciudadanía</option>
+                                        <option value="CE" {% if user.is_authenticated and user.document_type == 'CE' %}selected{% endif %}>Cédula extranjería</option>
+                                        <option value="PA" {% if user.is_authenticated and user.document_type == 'PA' %}selected{% endif %}>Pasaporte</option>
+                                        <option value="NIT" {% if user.is_authenticated and user.customer_type == 'company' or user.is_authenticated and user.document_type == 'NIT' %}selected{% endif %}>NIT</option>
                                     </select>
                                 </div>
                             </div>
@@ -491,14 +491,14 @@
                                 <div class="co-field">
                                     <label for="co-document">Nº identificación *</label>
                                     <input type="text" id="co-document" name="billing_document_number" required autocomplete="off"
-                                           value="{{ user.document_number|default:'' }}">
+                                           value="{% if user.is_authenticated %}{{ user.document_number|default:'' }}{% endif %}">
                                 </div>
                             </div>
                             <div id="co-person-birth-wrap" class="col-md-6 pe-md-2 co-person-only">
                                 <div class="co-field">
                                     <label for="co-birth">Nacimiento</label>
                                     <input type="date" id="co-birth" name="billing_date_of_birth" autocomplete="bday"
-                                           value="{{ user.date_of_birth|date:'Y-m-d'|default:'' }}" placeholder="dd/mm/aaaa">
+                                           value="{% if user.is_authenticated %}{{ user.date_of_birth|date:'Y-m-d'|default:'' }}{% endif %}" placeholder="dd/mm/aaaa">
                                 </div>
                             </div>
                         </div>
@@ -507,28 +507,28 @@
                                 <div class="co-field">
                                     <label for="co-fname">Nombre *</label>
                                     <input type="text" id="co-fname" name="billing_first_name" required autocomplete="given-name"
-                                           value="{{ user.first_name|default:'' }}" placeholder="Tu nombre">
+                                           value="{% if user.is_authenticated %}{{ user.first_name|default:'' }}{% endif %}" placeholder="Tu nombre">
                                 </div>
                             </div>
                             <div id="co-person-lname-wrap" class="col-md-6 ps-md-2 co-person-only">
                                 <div class="co-field">
                                     <label for="co-lname">Apellido *</label>
                                     <input type="text" id="co-lname" name="billing_last_name" autocomplete="family-name"
-                                           value="{{ user.last_name|default:'' }}" placeholder="Tu apellido">
+                                           value="{% if user.is_authenticated %}{{ user.last_name|default:'' }}{% endif %}" placeholder="Tu apellido">
                                 </div>
                             </div>
                             <div class="col-md-7 pe-md-2">
                                 <div class="co-field">
                                     <label for="co-email">Email *</label>
                                     <input type="email" id="co-email" name="billing_email" required autocomplete="email"
-                                           value="{{ user.email|default:'' }}" placeholder="tu@email.com">
+                                           value="{% if user.is_authenticated %}{{ user.email|default:'' }}{% endif %}" placeholder="tu@email.com">
                                 </div>
                             </div>
                             <div class="col-md-5 ps-md-2">
                                 <div class="co-field">
                                     <label for="co-phone">Teléfono</label>
                                     <input type="tel" id="co-phone" name="billing_phone" autocomplete="tel"
-                                           value="{{ user.phone|default:'' }}" placeholder="(+57) 300 000 0000">
+                                           value="{% if user.is_authenticated %}{{ user.phone|default:'' }}{% endif %}" placeholder="(+57) 300 000 0000">
                                 </div>
                             </div>
                         </div>

@@ -56,8 +56,15 @@ def send_templated_email(
     if context:
         payload.update(context)
 
-    text_body = render_to_string(f"emails/{template_key}.txt", payload)
-    html_body = render_to_string(f"emails/{template_key}.html", payload)
+    try:
+        text_body = render_to_string(f"emails/{template_key}.txt", payload)
+        html_body = render_to_string(f"emails/{template_key}.html", payload)
+    except Exception:
+        logger.exception(
+            "Error renderizando template de email '%s'",
+            template_key,
+        )
+        return 0
 
     message = EmailMultiAlternatives(
         subject=subject.strip().replace("\n", " "),

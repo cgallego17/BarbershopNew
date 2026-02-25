@@ -168,7 +168,13 @@ def checkout_view(request):
                 total=item['total_price'],
             )
 
-        notify_order_created(order)
+        try:
+            notify_order_created(order)
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                "Error enviando email de confirmación para pedido %s", order.order_number
+            )
         cart.clear()
 
         # Creación opcional de cuenta durante el checkout
