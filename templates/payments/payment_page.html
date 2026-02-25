@@ -105,12 +105,14 @@
 }
 .pay-item__img-wrap img { width: 100%; height: 100%; object-fit: cover; }
 .pay-item__qty {
-    position: absolute; top: -5px; right: -5px;
-    width: 17px; height: 17px; border-radius: 50%;
+    position: absolute; top: -6px; right: -6px;
+    min-width: 20px; height: 20px; padding: 0 5px;
+    border-radius: 999px;
     background: var(--boskery-base, #C56533); color: #fff;
-    font-size: .55rem; font-weight: 800;
+    font-size: .7rem; font-weight: 800; line-height: 1;
     display: flex; align-items: center; justify-content: center;
-    border: 1.5px solid #1a1a22;
+    border: 2px solid #1a1a22;
+    box-sizing: border-box;
 }
 .pay-item__name {
     flex: 1; font-size: .83rem; font-weight: 600; color: #e0e0ec; line-height: 1.3;
@@ -145,16 +147,17 @@
 .pay-wompi-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 14px;
     width: 100%; padding: 17px 22px;
-    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    background: #c56533;
     color: #fff; font-size: .95rem; font-weight: 800; letter-spacing: .01em;
     border: none; border-radius: 14px; cursor: pointer;
     text-decoration: none;
-    box-shadow: 0 6px 30px rgba(124,58,237,.4);
+    box-shadow: 0 6px 30px rgba(197,101,51,.4);
     transition: transform .18s, box-shadow .18s, opacity .18s;
 }
 .pay-wompi-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 36px rgba(124,58,237,.55);
+    box-shadow: 0 12px 36px rgba(197,101,51,.55);
+    background: #b85a2e;
     color: #fff; text-decoration: none;
 }
 .pay-wompi-btn:active { transform: translateY(0); }
@@ -363,7 +366,6 @@
                         <div class="pay-methods">
                             <span class="pay-method-badge"><i class="fas fa-credit-card"></i> Crédito/Débito</span>
                             <span class="pay-method-badge"><i class="fas fa-university"></i> PSE</span>
-                            <span class="pay-method-badge"><i class="fas fa-money-bill-wave"></i> Efectivo</span>
                             <span class="pay-method-badge"><i class="fas fa-wallet"></i> Nequi</span>
                             <span class="pay-method-badge"><i class="fas fa-mobile-alt"></i> Daviplata</span>
                         </div>
