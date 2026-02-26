@@ -84,13 +84,18 @@ class ProductListView(ListView):
             )
         sort = self.request.GET.get('sort', 'default')
         if sort == 'price_asc':
-            qs = qs.order_by('sale_price', 'regular_price')
+            order_fields = ['sale_price', 'regular_price']
         elif sort == 'price_desc':
-            qs = qs.order_by('-sale_price', '-regular_price')
+            order_fields = ['-sale_price', '-regular_price']
         elif sort == 'name':
-            qs = qs.order_by('name')
+            order_fields = ['name']
         elif sort == 'newest':
-            qs = qs.order_by('-created_at')
+            order_fields = ['-created_at']
+        else:
+            order_fields = ['id']
+        if category_slug == 'kit':
+            order_fields = ['-is_featured'] + order_fields
+        qs = qs.order_by(*order_fields)
         return qs.distinct()
 
     def get_context_data(self, **kwargs):

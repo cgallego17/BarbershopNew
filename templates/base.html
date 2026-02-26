@@ -782,28 +782,52 @@
     .mfp-wrap.mfp-video-popup.mfp-youtube .mfp-iframe-scaler {
       padding-top: 56.25%;
     }
-    /* TikTok: vertical 9:16, sin marco ni bordes */
-    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder {
-      padding: 0;
-      background: transparent;
-    }
+    /* TikTok: disposición vertical (columna), formato 9:16 */
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-container {
-      padding: 0;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 0 !important;
+      background: #0b0b0b !important;
+    }
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-container:before {
+      display: none !important;
+    }
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder,
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder .mfp-content,
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler {
+      padding: 0 !important;
+      border: none !important;
+      box-shadow: none !important;
+      background: #0b0b0b !important;
+    }
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder .mfp-content {
       max-width: 380px;
-      background: transparent;
-      box-shadow: none;
-      border: none;
+      width: 380px;
+      display: block;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler {
+      width: 100%;
       padding-top: 177.78%;
-      box-shadow: none;
-      border: none;
+      overflow: hidden;
+      position: relative;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler iframe {
-      background: #000;
-      box-shadow: none;
+      background: #000 !important;
+      box-shadow: none !important;
+    }
+    /* Recortar blanco que trae el embed de TikTok: zoom del iframe para que el video llene y se oculten los márgenes blancos */
+    .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler iframe {
+      transform: scale(1.15);
+      transform-origin: center center;
     }
     </style>
     {% block extra_js %}{% endblock %}
