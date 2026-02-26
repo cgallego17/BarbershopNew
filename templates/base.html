@@ -725,6 +725,7 @@
         var url = trigger.getAttribute('href');
         if (!url) return;
         var embedUrl = url;
+        var isTiktok = false;
         var ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
         if (ytMatch) {
           var vid = ytMatch[1];
@@ -734,6 +735,7 @@
           var tiktokMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
           if (tiktokMatch) {
             embedUrl = 'https://www.tiktok.com/embed/v2/' + tiktokMatch[1];
+            isTiktok = true;
           }
         }
 
@@ -742,10 +744,11 @@
           window.jQuery.magnificPopup &&
           typeof window.jQuery.magnificPopup.open === 'function'
         ) {
+          var mainClass = 'mfp-fade mfp-video-popup' + (isTiktok ? ' mfp-tiktok' : '');
           window.jQuery.magnificPopup.open({
             items: [{ src: embedUrl }],
             type: 'iframe',
-            mainClass: 'mfp-fade',
+            mainClass: mainClass,
             removalDelay: 160,
             preloader: true,
             fixedContentPos: false
@@ -757,6 +760,29 @@
       });
     })();
     </script>
+    <style>
+    /* Video popup: quitar espacios blancos y fondo oscuro */
+    .mfp-wrap.mfp-video-popup .mfp-iframe-holder {
+      padding: 0;
+      background: #0b0b0b;
+    }
+    .mfp-wrap.mfp-video-popup .mfp-iframe-holder .mfp-content {
+      background: #0b0b0b;
+      max-width: 900px;
+    }
+    .mfp-wrap.mfp-video-popup .mfp-close {
+      top: 0;
+      color: #fff;
+      opacity: 0.9;
+    }
+    /* TikTok: contenedor vertical 9:16, sin bandas blancas laterales */
+    .mfp-wrap.mfp-tiktok .mfp-iframe-holder .mfp-content {
+      max-width: 380px;
+    }
+    .mfp-wrap.mfp-tiktok .mfp-iframe-scaler {
+      padding-top: 177.78%;
+    }
+    </style>
     {% block extra_js %}{% endblock %}
 
     <!-- ============================================================
