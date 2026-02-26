@@ -83,6 +83,7 @@ class ProductListView(ListView):
                 models.Q(codigo__icontains=search)
             )
         sort = self.request.GET.get('sort', 'default')
+        order_fields = None
         if sort == 'price_asc':
             order_fields = ['sale_price', 'regular_price']
         elif sort == 'price_desc':
@@ -91,11 +92,11 @@ class ProductListView(ListView):
             order_fields = ['name']
         elif sort == 'newest':
             order_fields = ['-created_at']
-        else:
-            order_fields = ['id']
         if category_slug == 'kit':
-            order_fields = ['-is_featured'] + order_fields
-        qs = qs.order_by(*order_fields)
+            # En categoría kit: destacados primero (especialmente en móvil)
+            order_fields = ['-is_featured'] + (order_fields or ['id'])
+        if order_fields is not None:
+            qs = qs.order_by(*order_fields)
         return qs.distinct()
 
     def get_context_data(self, **kwargs):

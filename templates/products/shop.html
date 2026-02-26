@@ -714,13 +714,13 @@
                     </div>
                 </div>
 
-                <!-- Grid de productos -->
-                <div class="row g-3" id="products-grid"
+                <!-- Grid de productos (category=kit: 2 columnas; móvil ve destacados primero) -->
+                <div class="row g-3 {% if filter_category == 'kit' %}shop-grid-kit{% endif %}" id="products-grid"
                      data-has-next="{{ page_obj.has_next|yesno:'true,false' }}"
                      data-next-page="{% if page_obj.has_next %}{{ page_obj.next_page_number }}{% endif %}"
                      data-base-url="?{{ request.GET.urlencode }}">
                     {% for product in products %}
-                    <div class="{% if filter_category == 'kit' %}col-lg-6{% else %}col-xl-3 col-lg-4 col-sm-6{% endif %}">
+                    <div class="{% if filter_category == 'kit' %}col-6 col-sm-6 col-lg-4 col-xl-3{% else %}col-xl-3 col-lg-4 col-sm-6{% endif %}">
                         <div class="shop-product-card wow fadeInUp" data-wow-delay="{{ forloop.counter0|add:1 }}00ms">
                             <div class="shop-product-card__image">
                                 <a href="{{ product.get_absolute_url }}">
@@ -888,7 +888,7 @@
       var newGrid = parser.querySelector('#products-grid');
       if (!newGrid) { hasNext = false; hideLoader(); appendEndMsg(); return; }
 
-      var cards = newGrid.querySelectorAll('#products-grid > [class*="col-"]');
+      var cards = newGrid.querySelectorAll('.col-xl-3, .col-lg-4, .col-sm-6, .col-6');
       cards.forEach(function (card) {
         // animar entrada
         card.style.opacity = '0';
