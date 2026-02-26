@@ -171,8 +171,8 @@ class HomeHeroSlide(models.Model):
         help_text='Forma decorativa sobre la imagen. Si está vacío se usa la imagen por defecto.')
     button_text = models.CharField('Texto del botón', max_length=50, blank=True)
     button_url = models.CharField('URL del botón', max_length=255, blank=True)
-    video_url = models.URLField('URL video (YouTube)', blank=True,
-        help_text='Ej: https://www.youtube.com/watch?v=xxxxx. Si lo completas, se mostrará el botón de play sobre la imagen del slide.')
+    video_url = models.URLField('URL video (YouTube o TikTok)', blank=True,
+        help_text='YouTube: https://www.youtube.com/watch?v=xxxxx. TikTok: https://www.tiktok.com/@usuario/video/xxxxx. Si lo completas, se mostrará el botón de play sobre la imagen del slide.')
     order = models.PositiveIntegerField('Orden', default=0)
 
     class Meta:

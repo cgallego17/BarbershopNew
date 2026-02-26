@@ -730,6 +730,11 @@
           var vid = ytMatch[1];
           var params = 'autoplay=1&mute=1&rel=0';
           embedUrl = 'https://www.youtube-nocookie.com/embed/' + vid + '?' + params;
+        } else {
+          var tiktokMatch = url.match(/tiktok\.com\/@[^/]+\/video\/(\d+)/);
+          if (tiktokMatch) {
+            embedUrl = 'https://www.tiktok.com/embed/v2/' + tiktokMatch[1];
+          }
         }
 
         if (
