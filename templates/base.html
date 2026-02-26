@@ -782,7 +782,7 @@
     .mfp-wrap.mfp-video-popup.mfp-youtube .mfp-iframe-scaler {
       padding-top: 56.25%;
     }
-    /* TikTok: vertical 9:16, solo el video sin nada detrás */
+    /* TikTok: vertical 9:16, sin marco ni bordes */
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder {
       padding: 0;
       background: transparent;
@@ -794,13 +794,16 @@
       max-width: 380px;
       background: transparent;
       box-shadow: none;
+      border: none;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler {
       padding-top: 177.78%;
-      box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+      box-shadow: none;
+      border: none;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler iframe {
       background: #000;
+      box-shadow: none;
     }
     </style>
     {% block extra_js %}{% endblock %}
