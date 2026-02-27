@@ -347,6 +347,7 @@
                 <a href="{% url 'core:admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-shopping-cart"></i>
                     <span>Pedidos</span>
+                    {% if orders_count %}<span class="admin-sidebar__badge">{{ orders_count }}</span>{% endif %}
                 </a>
                 <a href="{% url 'core:admin_panel:coupon_list' %}" class="admin-sidebar__item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-ticket-alt"></i>
