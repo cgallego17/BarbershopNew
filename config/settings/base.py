@@ -29,7 +29,7 @@ env = environ.Env(
     CSP_ALLOW_UNSAFE_EVAL=(bool, False),
     CSP_STRICT_REPORT_ONLY=(bool, True),
     # Email SMTP
-    EMAIL_BACKEND=(str, 'django.core.mail.backends.console.EmailBackend'),
+    EMAIL_BACKEND=(str, 'django.core.mail.backends.smtp.EmailBackend'),
     EMAIL_HOST=(str, 'smtp.gmail.com'),
     EMAIL_PORT=(int, 587),
     EMAIL_HOST_USER=(str, ''),
