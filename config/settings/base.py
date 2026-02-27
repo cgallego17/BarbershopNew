@@ -36,6 +36,7 @@ env = environ.Env(
     EMAIL_HOST_PASSWORD=(str, ''),
     EMAIL_USE_TLS=(bool, True),
     EMAIL_USE_SSL=(bool, False),
+    EMAIL_SSL_VERIFY=(bool, True),
     DEFAULT_FROM_EMAIL=(str, ''),
 )
 
@@ -245,7 +246,11 @@ CSP_ALLOW_UNSAFE_EVAL  = env.bool('CSP_ALLOW_UNSAFE_EVAL', default=DEBUG)
 CSP_STRICT_REPORT_ONLY = env.bool('CSP_STRICT_REPORT_ONLY', default=True)
 
 # ─── Email SMTP ────────────────────────────────────────────────────────────
-EMAIL_BACKEND = env('EMAIL_BACKEND')
+EMAIL_SSL_VERIFY = env.bool('EMAIL_SSL_VERIFY', True)
+if EMAIL_SSL_VERIFY:
+    EMAIL_BACKEND = env('EMAIL_BACKEND')
+else:
+    EMAIL_BACKEND = 'apps.core.email_backend.EmailBackend'
 EMAIL_HOST = env('EMAIL_HOST')
 EMAIL_PORT = env.int('EMAIL_PORT')
 EMAIL_HOST_USER = env('EMAIL_HOST_USER')
