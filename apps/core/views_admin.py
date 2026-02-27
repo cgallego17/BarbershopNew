@@ -10,6 +10,8 @@ from django.urls import reverse_lazy, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from django.contrib import messages
+from django.views.decorators.cache import never_cache
+from django.utils.decorators import method_decorator
 
 from apps.products.models import Product, Category, Brand, ProductAttribute, ProductReview
 from apps.orders.models import Order, OrderItem
@@ -870,6 +872,7 @@ def newsletter_delete_view(request, pk):
 
 # --- Pedidos ---
 
+@method_decorator(never_cache, name='dispatch')
 class OrderListView(StaffRequiredMixin, ListView):
     model = Order
     template_name = 'dashboard/order_list.html'
@@ -877,7 +880,12 @@ class OrderListView(StaffRequiredMixin, ListView):
     paginate_by = 25
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related('user')
+        qs = (
+            super()
+            .get_queryset()
+            .select_related('user')
+            .prefetch_related('wompi_transactions')
+        )
         search = (self.request.GET.get('q') or '').strip()
         if search:
             qs = qs.filter(
@@ -901,6 +909,18 @@ class OrderListView(StaffRequiredMixin, ListView):
             '-total': ['-total', '-created_at'],
         }
         return qs.order_by(*order_map.get(sort, ['-created_at']))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        orders = context.get(self.context_object_name, [])
+        for order in orders:
+            if order.payment_status != 'pending':
+                continue
+            latest_tx = order.wompi_transactions.first()
+            if latest_tx and latest_tx.status == 'APPROVED':
+                order.payment_status = 'paid'
+                order.save(update_fields=['payment_status', 'updated_at'])
+        return context
 
 
 @_dashboard_required

@@ -120,14 +120,15 @@
     top: 34px;
     right: -49.86px;
 }
-/* Mostrar botón de video también en móvil (el tema lo oculta por defecto en &lt;500px) */
+/* Solo en celular: círculo del botón video más compacto y posicionado */
 @media (max-width: 500px) {
     .hero-slider-three__curved-circle-box--visible {
         display: inline-block !important;
         width: 120px !important;
         height: 120px !important;
-        top: 10px;
+        top: -75px;
         right: 0;
+        background-color: #1e1e1e;
     }
     .hero-slider-three__curved-circle-box--visible .video-popup { font-size: 16px; }
 }
