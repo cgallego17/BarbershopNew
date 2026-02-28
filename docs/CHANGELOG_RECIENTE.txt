@@ -1,0 +1,116 @@
+================================================================================
+INFORME DE MEJORAS - GESTIÓN DEL NEGOCIO
+================================================================================
+Última actualización: 2026-02-27 20:24 (Bogotá, Colombia - COT)
+Todas las fechas y horas en zona horaria de Bogotá (UTC-5)
+================================================================================
+
+RESUMEN EJECUTIVO
+--------------------------------------------------------------------------------
+Se implementaron mejoras en comunicación automática con clientes, consulta de
+pedidos y notificaciones post-compra. El objetivo: recuperar ventas perdidas,
+aumentar reseñas, fomentar la recompra y mejorar la experiencia del cliente.
+
+
+1. RECUPERACIÓN DE VENTAS PERDIDAS
+--------------------------------------------------------------------------------
+
+  PAGO FALLIDO                                    [2026-02-27 20:11 Bogotá]
+  - Qué hace: Envía correo al cliente cuando el pago no se completa.
+  - Beneficio: Reduce ventas perdidas por errores de pago o abandono en checkout.
+  - Acción: El cliente recibe enlace directo para reintentar el pago.
+
+  PEDIDO PENDIENTE DE PAGO                         [2026-02-27 20:11 Bogotá]
+  - Qué hace: Recordatorio automático a clientes que dejaron el pago a medias.
+  - Beneficio: Recupera pedidos que quedaron en "carrito" después del checkout.
+  - Cuándo: Pedidos con más de 2 horas sin pagar.
+  - Tarea programada: Ejecutar cada 6 horas.
+
+  CARRITO ABANDONADO                               [2026-02-27 20:11 Bogotá]
+  - Qué hace: El cliente puede dejar su correo en la página del carrito para
+    recibir un recordatorio con los productos que dejó.
+  - Beneficio: Captura leads y recupera ventas de carritos abandonados.
+  - Dónde: Formulario "¿Olvidaste algo? Recibe un recordatorio por correo"
+    en la página del carrito.
+  - Tarea programada: Ejecutar cada hora (para leads que pidieron aviso
+    hace más de 1 hora).
+
+
+2. ATENCIÓN AL CLIENTE - CONSULTA DE PEDIDOS      [2026-02-27 20:21 Bogotá]
+--------------------------------------------------------------------------------
+
+  Qué hace: Zona pública donde cualquier cliente puede consultar su pedido
+  ingresando su correo y número de pedido (ej. ORD-20260225-XXXXXXXX).
+
+  Beneficio:
+  - Menos consultas por teléfono o correo.
+  - El cliente puede ver estado, productos y pagar si está pendiente.
+  - Sin necesidad de crear cuenta.
+
+  Dónde: Enlace "Consultar pedido" en el pie de página y en el detalle del
+  pedido para clientes invitados.
+
+  Seguridad: Límite de 5 consultas por IP cada 5 minutos para evitar abusos.
+  (Implementado: 2026-02-27 20:21 Bogotá)
+
+
+3. FIDELIZACIÓN Y VENTAS RECURRENTES              [2026-02-27 20:21 Bogotá]
+--------------------------------------------------------------------------------
+
+  SOLICITUD DE RESEÑAS (3-7 días después de entrega)
+  - Qué hace: Envía correo al cliente pidiendo que deje su opinión sobre los
+    productos que compró.
+  - Beneficio: Más reseñas = más confianza para nuevos clientes y mejor SEO.
+  - Contenido: Lista de productos con fotos y enlaces directos para reseñar.
+  - Mejora email con fotos: 2026-02-27 20:24 Bogotá
+  - Tarea programada: Ejecutar diariamente (ej. 10:00 Bogotá).
+
+  RECORDATORIO DE RECOMPRA (2-3 meses después)     [2026-02-27 20:21 Bogotá]
+  - Qué hace: Envía correo al cliente recordándole los productos que compró
+    con enlaces para comprarlos de nuevo.
+  - Beneficio: Ventas recurrentes (productos consumibles: cremas, aceites, etc.).
+  - Cuándo: Pedidos completados hace 60-90 días.
+  - Tarea programada: Ejecutar diariamente (ej. 11:00 Bogotá).
+
+
+4. PRODUCTO DE NUEVO EN STOCK                     [2026-02-27 20:21 Bogotá]
+--------------------------------------------------------------------------------
+
+  Qué hace: Cuando un producto está agotado, el cliente puede dejar su correo
+  para recibir un aviso cuando vuelva a estar disponible.
+
+  Beneficio: Recupera ventas perdidas por falta de stock. El cliente no tiene
+  que buscar manualmente si ya hay stock.
+
+  Dónde: Formulario "Avisarme cuando haya stock" en la página del producto
+  cuando está agotado.
+
+  Tarea programada: Ejecutar cada hora. Verifica que no se envíen correos
+  duplicados al mismo cliente.
+  (Protección anti-duplicados: 2026-02-27 20:22 Bogotá)
+
+
+5. TAREAS PROGRAMADAS (CRON) - RECOMENDADAS       [2026-02-27 20:21 Bogotá]
+--------------------------------------------------------------------------------
+
+  Para que todo funcione automáticamente, configurar estas tareas:
+
+  Cada 6 horas  → Recordatorios de pago pendiente
+  Cada hora     → Recordatorios de carrito abandonado
+  Cada hora     → Alertas de producto en stock
+  Diario 10:00  → Solicitudes de reseña (hora Bogotá)
+  Diario 11:00  → Recordatorios de recompra (hora Bogotá)
+
+  (Ver documentación técnica para los comandos exactos)
+
+
+6. INDICADORES A SEGUIR                           [2026-02-27 20:21 Bogotá]
+--------------------------------------------------------------------------------
+
+  - Tasa de conversión de correos de pago fallido vs. pagos completados
+  - Número de leads de carrito abandonado y sus conversiones
+  - Cantidad de reseñas nuevas tras las solicitudes
+  - Ventas por recompra (pedidos de clientes que recibieron recordatorio)
+  - Ventas recuperadas por alertas de stock
+
+================================================================================

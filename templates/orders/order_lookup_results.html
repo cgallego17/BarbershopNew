@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Tus pedidos{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+.ol-results-section { background: #f2f3f5; padding: 56px 0 80px; }
+.ol-results-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 2px 14px rgba(0,0,0,.06);
+    padding: 32px;
+    max-width: 640px;
+    margin: 0 auto;
+}
+.ol-results-title { font-size: 1.2rem; font-weight: 800; color: #1a1a1a; margin-bottom: 8px; }
+.ol-results-sub { font-size: .9rem; color: #888; margin-bottom: 24px; }
+.ol-order-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    border: 1px solid #e8e8ec;
+}
+.ol-order-row:last-child { margin-bottom: 0; }
+.ol-order-info {}
+.ol-order-number { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
+.ol-order-number a { color: var(--boskery-base, #C56533); text-decoration: none; }
+.ol-order-number a:hover { text-decoration: underline; }
+.ol-order-meta { font-size: .82rem; color: #888; margin-top: 4px; }
+.ol-order-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--boskery-base, #C56533);
+    color: #fff;
+    border-radius: 10px;
+    font-size: .88rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+}
+.ol-order-btn:hover { background: #a34120; transform: translateY(-1px); color: #fff; }
+.ol-back-link { display: inline-block; margin-top: 24px; font-size: .9rem; color: #888; text-decoration: none; }
+.ol-back-link:hover { color: var(--boskery-base, #C56533); }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Tus pedidos</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
+            <li><a href="{% url 'orders:lookup' %}">Consultar pedido</a></li>
+            <li><span>Resultados</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="ol-results-section">
+    <div class="container">
+        <div class="ol-results-card">
+            <h3 class="ol-results-title">
+                <i class="fas fa-box-open me-2"></i>Pedidos encontrados
+            </h3>
+            <p class="ol-results-sub">
+                Encontramos {{ orders|length }} pedido{{ orders|length|pluralize }} con el correo <strong>{{ email }}</strong>.
+            </p>
+
+            {% for order in orders %}
+            <div class="ol-order-row">
+                <div class="ol-order-info">
+                    <div class="ol-order-number">
+                        <a href="{% url 'orders:detail' order.order_number %}">#{{ order.order_number }}</a>
+                    </div>
+                    <div class="ol-order-meta">
+                        {{ order.created_at|date:"d/m/Y H:i" }} &middot;
+                        {{ order.get_status_display }} &middot;
+                        {{ site_settings.currency }}{{ order.total|floatformat:0|intcomma }}
+                    </div>
+                </div>
+                <a href="{% url 'orders:detail' order.order_number %}" class="ol-order-btn">
+                    Ver detalle <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            {% endfor %}
+
+            <a href="{% url 'orders:lookup' %}" class="ol-back-link">
+                <i class="fas fa-arrow-left me-1"></i> Consultar otro pedido
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

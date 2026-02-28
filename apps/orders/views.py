@@ -340,12 +340,48 @@ def order_lookup(request):
 
         order_number = (request.POST.get('order_number') or '').strip().upper()
         email = (request.POST.get('email') or '').strip().lower()
-        if not order_number or not email:
-            messages.warning(request, 'Ingresa el número de pedido y el correo electrónico.')
+        if not order_number and not email:
+            messages.warning(request, 'Ingresa al menos el correo o el número de pedido.')
             return render(request, 'orders/order_lookup.html', {
                 'order_number': order_number or initial_order,
                 'email': email,
             })
+
+        # Solo número de pedido: mostrar pedido (cualquiera con el número puede verlo)
+        if order_number and not email:
+            order = Order.objects.filter(order_number__iexact=order_number).first()
+            if not order:
+                messages.error(request, 'No encontramos un pedido con ese número.')
+                return render(request, 'orders/order_lookup.html', {
+                    'order_number': order_number,
+                    'email': '',
+                })
+            _remember_guest_order(request, order.order_number)
+            return redirect('orders:detail', order_number=order.order_number)
+
+        # Solo correo: mostrar todos los pedidos de ese correo
+        if email and not order_number:
+            orders = list(
+                Order.objects.filter(billing_email__iexact=email)
+                .order_by('-created_at')[:20]
+            )
+            if not orders:
+                messages.error(request, 'No encontramos pedidos con ese correo.')
+                return render(request, 'orders/order_lookup.html', {
+                    'order_number': '',
+                    'email': email,
+                })
+            if len(orders) == 1:
+                _remember_guest_order(request, orders[0].order_number)
+                return redirect('orders:detail', order_number=orders[0].order_number)
+            for o in orders:
+                _remember_guest_order(request, o.order_number)
+            return render(request, 'orders/order_lookup_results.html', {
+                'orders': orders,
+                'email': email,
+            })
+
+        # Ambos: validar coincidencia
         order = Order.objects.filter(
             order_number__iexact=order_number,
             billing_email__iexact=email,
