@@ -33,7 +33,10 @@ class Command(BaseCommand):
             status='completed',
             payment_status='paid',
             review_request_sent_at__isnull=True,
-        ).exclude(billing_email='').prefetch_related('items__product')
+        ).exclude(billing_email='').prefetch_related(
+            'items__product',
+            'items__product__images',
+        )
 
         orders = []
         for order in qs:

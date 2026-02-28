@@ -282,7 +282,7 @@ def notify_cart_abandoned(email, cart_items, cart_total):
         )
 
 
-def _build_product_items_for_email(order):
+def _build_product_items_for_email(order, include_image=False):
     """Construye lista de items con URLs para emails (reseña, recompra)."""
     from django.contrib.sites.models import Site
     base = getattr(settings, "SITE_URL", "") or ""
@@ -296,16 +296,25 @@ def _build_product_items_for_email(order):
             pass
     if not base:
         base = "http://localhost:8000"
+    base = base.rstrip("/")
     items = []
-    for item in order.items.select_related("product").all():
+    for item in order.items.select_related("product").prefetch_related(
+            "product__images"
+    ).all():
         product = item.product
         path = product.get_absolute_url()
-        product_url = base.rstrip("/") + path
+        product_url = base + path
+        img_url = None
+        if include_image:
+            main_img = product.get_main_image()
+            if main_img and main_img.image:
+                img_url = base + main_img.image.url
         items.append({
             "product_name": item.product_name,
             "variant": str(item.variant) if item.variant else "",
             "product_url": product_url,
             "product_slug": product.slug,
+            "product_image_url": img_url,
         })
     return items
 
@@ -315,7 +324,7 @@ def notify_request_review(order):
     try:
         if not order.billing_email:
             return
-        product_items = _build_product_items_for_email(order)
+        product_items = _build_product_items_for_email(order, include_image=True)
         if not product_items:
             return
         send_templated_email(
