@@ -1,0 +1,15 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+¡Tu pedido te está esperando!
+
+Hola {{ order.billing_first_name }},
+
+Iniciaste tu compra pero aún no has completado el pago. Tu pedido está guardado.
+
+  Pedido: #{{ order.order_number }}
+  Total:  ${{ order.total|floatformat:0|intcomma }}
+
+Completa tu pago aquí:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pagos/pagar/{{ order.order_number }}/
+{% endblock %}

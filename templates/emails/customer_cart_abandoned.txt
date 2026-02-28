@@ -1,0 +1,17 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+¿Olvidaste algo?
+
+Dejaste productos en tu carrito. Te recordamos por si quieres completar tu compra.
+
+{% for item in cart_items %}
+  {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+    Cant.: {{ item.quantity }}   Total: ${{ item.total|floatformat:0|intcomma }}
+{% endfor %}
+
+Total: ${{ cart_total|floatformat:0|intcomma }}
+
+Ver tu carrito:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/carrito/
+{% endblock %}

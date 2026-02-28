@@ -1,0 +1,61 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}¿Olvidaste algo en tu carrito?{% endblock %}
+{% block header_label %}Recordatorio{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:22px;font-weight:800;color:#ffffff;">
+    ¿Olvidaste algo?
+</h2>
+<p style="margin:0 0 22px 0;font-size:14px;color:#8892a4;">
+    Hola, dejaste productos en tu carrito. Te recordamos por si quieres completar tu compra.
+</p>
+
+{% if cart_items %}
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+       style="border-collapse:collapse;margin-bottom:20px;">
+    <tr style="background:#1a1f2d;">
+        <td style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7686;text-transform:uppercase;border-bottom:1px solid #272c38;">Producto</td>
+        <td align="center" style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7686;text-transform:uppercase;border-bottom:1px solid #272c38;">Cant.</td>
+        <td align="right" style="padding:10px 14px;font-size:11px;font-weight:700;color:#6b7686;text-transform:uppercase;border-bottom:1px solid #272c38;">Total</td>
+    </tr>
+    {% for item in cart_items %}
+    <tr>
+        <td style="padding:11px 14px;font-size:13px;color:#d1d9eb;border-bottom:1px solid #1e2330;">
+            {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+        </td>
+        <td align="center" style="padding:11px 14px;font-size:13px;color:#adb5c9;border-bottom:1px solid #1e2330;">
+            {{ item.quantity }}
+        </td>
+        <td align="right" style="padding:11px 14px;font-size:13px;color:#d1d9eb;font-weight:600;border-bottom:1px solid #1e2330;">
+            ${{ item.total|floatformat:0|intcomma }}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endif %}
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:12px 16px;background:#1e2330;border-radius:10px;border:1px solid #272c38;">
+            <span style="font-size:15px;font-weight:700;color:#ffffff;">Total</span>
+            <span style="float:right;font-size:18px;font-weight:800;color:#e07a40;">
+                ${{ cart_total|floatformat:0|intcomma }}
+            </span>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:28px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/carrito/"
+               style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver mi carrito →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

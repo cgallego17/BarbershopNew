@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from apps.products.models import Product
 from .cart import Cart
+from .models import AbandonedCartLead
 
 
 def _safe_next_url(request, next_url, fallback):
@@ -184,3 +185,63 @@ def cart_update_item(request, item_key):
 def cart_detail(request):
     from django.shortcuts import render
     return render(request, 'cart/cart.html')
+
+
+@require_POST
+def cart_reminder(request):
+    """Guarda email para enviar recordatorio de carrito abandonado."""
+    from decimal import Decimal
+    from apps.core.emails import notify_cart_abandoned
+
+    email = (request.POST.get('reminder_email') or '').strip().lower()
+    if not email:
+        messages.warning(request, 'Ingresa tu correo para recibir el recordatorio.')
+        return redirect('cart:detail')
+
+    cart = Cart(request)
+    if not cart:
+        messages.info(request, 'Tu carrito está vacío.')
+        return redirect('cart:detail')
+
+    # Construir snapshot del carrito
+    items = []
+    for item in cart:
+        product_name = item['product'].name if item.get('product') else f"Producto #{item['product_id']}"
+        variant = item.get('variant')
+        variant_name = str(variant) if variant else ''
+        qty = item['quantity']
+        price = item['price']
+        total = price * qty
+        items.append({
+            'product_id': item['product_id'],
+            'product_name': product_name,
+            'variant': variant_name,
+            'quantity': qty,
+            'price': str(price),
+            'total': str(total),
+        })
+
+    lead = AbandonedCartLead.objects.create(
+        email=email,
+        cart_snapshot=items,
+        cart_total=cart.get_total_price(),
+    )
+    # Enviar de inmediato (opcional: o esperar a que el cron lo haga)
+    try:
+        cart_items = [
+            {
+                'product_name': i['product_name'],
+                'variant': i.get('variant', ''),
+                'quantity': i['quantity'],
+                'total': Decimal(i['total']),
+            }
+            for i in items
+        ]
+        notify_cart_abandoned(email, cart_items, lead.cart_total)
+        from django.utils import timezone
+        lead.reminder_sent_at = timezone.now()
+        lead.save(update_fields=['reminder_sent_at'])
+    except Exception:
+        pass
+    messages.success(request, 'Te enviaremos un recordatorio a tu correo.')
+    return redirect('cart:detail')

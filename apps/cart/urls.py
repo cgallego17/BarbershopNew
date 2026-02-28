@@ -16,4 +16,5 @@ urlpatterns = [
         name='update_item'
     ),
     path('sidebar/', views.cart_sidebar_json, name='sidebar_json'),
+    path('recordatorio/', views.cart_reminder, name='reminder'),
 ]

@@ -237,6 +237,51 @@ def notify_order_note_to_customer(order, note_content):
         return 0
 
 
+def notify_order_pending_payment(order):
+    """Envía recordatorio al cliente para que complete el pago de su pedido pendiente."""
+    try:
+        if not order.billing_email:
+            return
+        send_templated_email(
+            subject=f"Completa tu pedido #{order.order_number}",
+            to_emails=[order.billing_email],
+            template_key="customer_order_pending_payment",
+            context={"order": order},
+        )
+    except Exception:
+        logger.exception(
+            "Error en notify_order_pending_payment para order=%s",
+            getattr(order, "order_number", None),
+        )
+
+
+def notify_cart_abandoned(email, cart_items, cart_total):
+    """
+    Envía recordatorio de carrito abandonado.
+    cart_items: lista de dicts con product_name, variant (opcional), quantity, total
+    cart_total: Decimal o número
+    """
+    try:
+        if not email or not (cart_items or []):
+            return
+        from decimal import Decimal
+        total = Decimal(str(cart_total)) if cart_total is not None else Decimal("0")
+        send_templated_email(
+            subject="¿Olvidaste algo en tu carrito?",
+            to_emails=[email],
+            template_key="customer_cart_abandoned",
+            context={
+                "cart_items": cart_items,
+                "cart_total": total,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Error en notify_cart_abandoned para email=%s",
+            email,
+        )
+
+
 def notify_order_status_changed(order):
     """Envía por email al cliente que el estado o pago de su pedido fue actualizado.
     Lanza si el envío falla para que la vista pueda informar al usuario.

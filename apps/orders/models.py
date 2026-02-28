@@ -79,6 +79,12 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     notes = models.TextField(blank=True)
+    payment_reminder_sent_at = models.DateTimeField(
+        'Recordatorio de pago enviado',
+        null=True,
+        blank=True,
+        help_text='Si está definido, ya se envió el correo de recordatorio para completar el pago.',
+    )
 
     class Meta:
         verbose_name = 'Pedido'

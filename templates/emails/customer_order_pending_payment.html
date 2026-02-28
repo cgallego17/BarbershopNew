@@ -1,0 +1,48 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}Completa tu pedido #{{ order.order_number }}{% endblock %}
+{% block header_label %}Recordatorio{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:22px;font-weight:800;color:#ffffff;">
+    ¡Tu pedido te está esperando!
+</h2>
+<p style="margin:0 0 22px 0;font-size:14px;color:#8892a4;">
+    Hola <strong style="color:#d1d9eb;">{{ order.billing_first_name }}</strong>,
+    iniciaste tu compra pero aún no has completado el pago. Tu pedido está guardado.
+</p>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+        <td style="padding:16px 20px;background:#1e2330;border-radius:10px;border:1px solid #272c38;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;padding-bottom:8px;">Pedido</td>
+                    <td align="right" style="font-size:14px;font-weight:700;color:#e07a40;padding-bottom:8px;">
+                        #{{ order.order_number }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-size:12px;color:#6b7686;">Total</td>
+                    <td align="right" style="font-size:14px;font-weight:700;color:#d1d9eb;">
+                        ${{ order.total|floatformat:0|intcomma }}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:28px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/pagos/pagar/{{ order.order_number }}/"
+               style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Completar pago →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
