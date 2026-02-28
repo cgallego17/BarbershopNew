@@ -9,6 +9,7 @@ from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
 from apps.core.models import SiteSettings, HomeSection, HomeHeroSlide, HomeAboutBlock, HomeMeatCategoryBlock, HomeBrandBlock, HomeBrand, HomeTestimonial, HomePopupAnnouncement, Country, State, City, ShippingPrice
+from apps.core.emails import notify_new_customer
 
 
 def _add_form_control(form):
@@ -244,6 +245,10 @@ class CustomerCreateForm(forms.ModelForm):
         user.set_password(self.cleaned_data['password1'])
         if commit:
             user.save()
+            try:
+                notify_new_customer(user)
+            except Exception:
+                pass
         return user
 
 

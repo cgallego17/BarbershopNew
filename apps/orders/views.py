@@ -19,7 +19,7 @@ from apps.accounts.forms import (
 from .forms import CheckoutForm
 from apps.accounts.models import UserAddress
 from apps.products.models import ProductFavorite
-from apps.core.emails import notify_order_created
+from apps.core.emails import notify_order_created, notify_new_customer
 
 GUEST_ORDER_SESSION_KEY = 'guest_order_numbers'
 
@@ -269,6 +269,15 @@ def checkout_view(request):
                     request, new_user,
                     backend='django.contrib.auth.backends.ModelBackend',
                 )
+                def _send_welcome():
+                    try:
+                        notify_new_customer(new_user)
+                    except Exception:
+                        import logging
+                        logging.getLogger(__name__).exception(
+                            "Error enviando email bienvenida para user=%s", new_user.email
+                        )
+                threading.Thread(target=_send_welcome, daemon=True).start()
                 messages.success(
                     request,
                     'Cuenta creada exitosamente. Ya iniciaste sesión.',
