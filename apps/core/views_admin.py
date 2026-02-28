@@ -999,6 +999,7 @@ def order_detail_view(request, pk):
     )
     if request.method == 'POST':
         note_content = (request.POST.get('note_content') or '').strip()
+        # Notas: distinguir por add_internal_note / add_client_note
         if request.POST.get('add_internal_note'):
             if note_content:
                 OrderNote.objects.create(
@@ -1031,39 +1032,53 @@ def order_detail_view(request, pk):
             else:
                 messages.warning(request, 'Escribe el contenido de la nota para el cliente.')
             return redirect('core:admin_panel:order_detail', pk=order.pk)
-        form = OrderStatusForm(request.POST, instance=order)
-        if form.is_valid():
-            import logging
-            from apps.core.emails import notify_order_status_changed
+        # Formulario de estado/pago (submit con name="update_status")
+        if request.POST.get('update_status'):
+            form = OrderStatusForm(request.POST, instance=order)
+            if form.is_valid():
+                import logging
+                from apps.core.emails import notify_order_status_changed
 
-            log = logging.getLogger(__name__)
-            form.save()
-            # Notificar siempre al cliente al guardar estado/pago (así recibe el correo aunque
-            # la comparación previa diera igual por tipo/caché del formulario).
-            if order.billing_email:
-                log.info(
-                    "Enviando notificación de estado pedido %s a %s",
-                    order.order_number,
-                    order.billing_email,
-                )
-                try:
-                    notify_order_status_changed(order)
-                    messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
-                except Exception:
-                    log.exception(
-                        "Error enviando notificación para pedido %s",
+                log = logging.getLogger(__name__)
+                form.save()
+                if order.billing_email:
+                    log.info(
+                        "Enviando notificación de estado pedido %s a %s",
                         order.order_number,
+                        order.billing_email,
                     )
+                    try:
+                        notify_order_status_changed(order)
+                        messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
+                    except Exception:
+                        log.exception(
+                            "Error enviando notificación para pedido %s",
+                            order.order_number,
+                        )
+                        messages.warning(
+                            request,
+                            'Pedido actualizado, pero no se pudo enviar el correo al cliente. Revisa los logs.',
+                        )
+                else:
                     messages.warning(
                         request,
-                        'Pedido actualizado, pero no se pudo enviar el correo al cliente. Revisa los logs.',
+                        'Pedido actualizado. No se envió correo: el pedido no tiene email de facturación.',
                     )
+                return redirect('core:admin_panel:order_detail', pk=order.pk)
             else:
-                messages.warning(
-                    request,
-                    'Pedido actualizado. No se envió correo: el pedido no tiene email de facturación.',
+                import logging
+                log = logging.getLogger(__name__)
+                log.warning(
+                    "OrderStatusForm inválido para pedido %s: %s",
+                    order.order_number,
+                    form.errors,
                 )
-            return redirect('core:admin_panel:order_detail', pk=order.pk)
+                for field, errs in form.errors.items():
+                    label = getattr(form.fields.get(field), 'label', field) or field
+                    for e in errs:
+                        messages.error(request, f'{label}: {e}')
+        else:
+            form = OrderStatusForm(instance=order)
     else:
         form = OrderStatusForm(instance=order)
 
