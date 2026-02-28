@@ -66,12 +66,25 @@ def send_templated_email(
         )
         return 0
 
+    site = SiteSettings.get()
+    from_email = _default_from_email()
+    reply_to_list = reply_to
+    if reply_to_list is None and getattr(site, "email", None) and site.email.strip():
+        reply_to_list = [site.email.strip()]
+
+    headers = {
+        "X-Auto-Response-Suppress": "All",
+        "X-Priority": "3",
+        "Auto-Submitted": "auto-generated",
+    }
+
     message = EmailMultiAlternatives(
         subject=subject.strip().replace("\n", " "),
         body=text_body,
-        from_email=_default_from_email(),
+        from_email=from_email,
         to=recipients,
-        reply_to=reply_to or None,
+        reply_to=reply_to_list,
+        headers=headers,
     )
     message.attach_alternative(html_body, "text/html")
     try:
