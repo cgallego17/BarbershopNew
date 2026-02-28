@@ -21,9 +21,21 @@ def _default_from_email():
 
 def _site_context():
     site = SiteSettings.get()
+    logo_url = None
+    if getattr(site, "logo", None) and site.logo:
+        try:
+            from django.contrib.sites.models import Site
+            s = Site.objects.get_current()
+            domain = (s.domain or "").strip()
+            if domain:
+                base = ("https://" + domain).rstrip("/")
+                logo_url = base + site.logo.url
+        except Exception:
+            pass
     return {
         "site_settings": site,
         "site_name": site.site_name or "The BARBERSHOP",
+        "site_logo_url": logo_url,
     }
 
 
