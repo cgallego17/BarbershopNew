@@ -331,6 +331,11 @@
                     {% if pending_reviews_count %}<span class="admin-sidebar__badge">{{ pending_reviews_count }}</span>{% endif %}
                 </a>
                 <div class="admin-sidebar__section">Ventas</div>
+                <a href="{% url 'core:admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Pedidos</span>
+                    {% if orders_count %}<span class="admin-sidebar__badge">{{ orders_count }}</span>{% endif %}
+                </a>
                 <a href="{% url 'core:admin_panel:customer_list' %}" class="admin-sidebar__item {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-users"></i>
                     <span>Clientes</span>
@@ -343,11 +348,6 @@
                     <i class="fas fa-inbox"></i>
                     <span>Contactos</span>
                     {% if unread_contacts_count %}<span class="admin-sidebar__badge">{{ unread_contacts_count }}</span>{% endif %}
-                </a>
-                <a href="{% url 'core:admin_panel:order_list' %}" class="admin-sidebar__item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span>Pedidos</span>
-                    {% if orders_count %}<span class="admin-sidebar__badge">{{ orders_count }}</span>{% endif %}
                 </a>
                 <a href="{% url 'core:admin_panel:coupon_list' %}" class="admin-sidebar__item {% if 'coupon' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-ticket-alt"></i>

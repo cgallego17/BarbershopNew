@@ -5,24 +5,10 @@
 {% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
 
 {% block content %}
-<ul class="orders-tabs mb-4">
-    <li class="orders-tabs__item">
-        <a href="{% url 'core:admin_panel:order_list' %}?tab=activos" class="orders-tabs__link {% if orders_tab == 'activos' %}orders-tabs__link--active{% endif %}">
-            <i class="fas fa-shopping-cart me-1"></i> Activos
-        </a>
-    </li>
-    <li class="orders-tabs__item">
-        <a href="{% url 'core:admin_panel:order_list' %}?tab=cancelados" class="orders-tabs__link {% if orders_tab == 'cancelados' %}orders-tabs__link--active{% endif %}">
-            <i class="fas fa-ban me-1"></i> Cancelados
-            {% if orders_cancelled_count %}<span class="orders-tabs__badge">{{ orders_cancelled_count }}</span>{% endif %}
-        </a>
-    </li>
-</ul>
-
 <div class="admin-card mb-4">
     <div class="admin-card__header">
         <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
-        {% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.sort or request.GET.tab or request.GET.date_from or request.GET.date_to or request.GET.filter_state or request.GET.filter_city %}
+        {% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.sort or request.GET.tab or request.GET.date_from or request.GET.date_to or request.GET.filter_country or request.GET.filter_state or request.GET.filter_city %}
         <a href="{% url 'core:admin_panel:order_list' %}?tab={{ orders_tab }}" class="admin-card__action">Limpiar filtros</a>
         {% endif %}
     </div>
@@ -43,14 +29,33 @@
                     <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="form-control">
                 </div>
                 <div class="col-md-2">
+                    <label class="form-label">País</label>
+                    <select name="filter_country" id="orders-filter-country" class="form-select">
+                        <option value="">Todos</option>
+                        {% for c in filter_countries %}
+                        <option value="{{ c.id }}" {% if filter_country_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label class="form-label">Departamento / Estado</label>
-                    <input type="text" name="filter_state" value="{{ request.GET.filter_state }}" class="form-control" placeholder="Ej. Antioquia">
+                    <select name="filter_state" id="orders-filter-state" class="form-select">
+                        <option value="">Todos</option>
+                        {% for s in filter_states %}
+                        <option value="{{ s.id }}" {% if filter_state_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <label class="form-label">Ciudad</label>
-                    <input type="text" name="filter_city" value="{{ request.GET.filter_city }}" class="form-control" placeholder="Ej. Medellín">
+                    <select name="filter_city" id="orders-filter-city" class="form-select">
+                        <option value="">Todas</option>
+                        {% for c in filter_cities %}
+                        <option value="{{ c.id }}" {% if filter_city_id == c.id|stringformat:'s' %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                {% if orders_tab == 'activos' %}
+                {% if orders_tab == 'activos' or orders_tab == 'completados' %}
                 <div class="col-md-2">
                     <label class="form-label">Estado pedido</label>
                     <select name="status" class="form-select">
@@ -91,6 +96,26 @@
     </div>
 </div>
 
+<ul class="orders-tabs mb-3">
+    <li class="orders-tabs__item">
+        <a href="{% url 'core:admin_panel:order_list' %}?tab=activos" class="orders-tabs__link {% if orders_tab == 'activos' %}orders-tabs__link--active{% endif %}">
+            <i class="fas fa-shopping-cart me-1"></i> Activos
+        </a>
+    </li>
+    <li class="orders-tabs__item">
+        <a href="{% url 'core:admin_panel:order_list' %}?tab=completados" class="orders-tabs__link {% if orders_tab == 'completados' %}orders-tabs__link--active{% endif %}">
+            <i class="fas fa-check-circle me-1"></i> Completados
+            {% if orders_completed_count %}<span class="orders-tabs__badge orders-tabs__badge--completed">{{ orders_completed_count }}</span>{% endif %}
+        </a>
+    </li>
+    <li class="orders-tabs__item">
+        <a href="{% url 'core:admin_panel:order_list' %}?tab=cancelados" class="orders-tabs__link {% if orders_tab == 'cancelados' %}orders-tabs__link--active{% endif %}">
+            <i class="fas fa-ban me-1"></i> Cancelados
+            {% if orders_cancelled_count %}<span class="orders-tabs__badge">{{ orders_cancelled_count }}</span>{% endif %}
+        </a>
+    </li>
+</ul>
+
 <div class="admin-card">
     <div class="admin-card__body p-0">
         <div class="admin-table-wrapper">
@@ -130,7 +155,7 @@
                         <td class="text-end"><div class="admin-actions"><a href="{% url 'core:admin_panel:order_detail' order.pk %}" class="admin-action admin-action--primary">Ver / Editar</a></div></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.date_from or request.GET.date_to or request.GET.filter_state or request.GET.filter_city %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}?tab={{ orders_tab }}">Limpiar filtros</a>{% else %}{% if orders_tab == 'cancelados' %}No hay pedidos cancelados{% else %}No hay pedidos{% endif %}{% endif %}</td></tr>
+                    <tr><td colspan="8" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.date_from or request.GET.date_to or request.GET.filter_country or request.GET.filter_state or request.GET.filter_city %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}?tab={{ orders_tab }}">Limpiar filtros</a>{% else %}{% if orders_tab == 'cancelados' %}No hay pedidos cancelados{% elif orders_tab == 'completados' %}No hay pedidos completados{% else %}No hay pedidos activos{% endif %}{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -182,6 +207,10 @@
     color: #f87171;
     border-radius: 10px;
 }
+.orders-tabs__badge--completed {
+    background: rgba(34, 197, 94, .25);
+    color: #4ade80;
+}
 .pay-badge {
     display: inline-flex;
     align-items: center;
@@ -213,4 +242,24 @@
     color: #a78bfa;
 }
 </style>
+<script>
+(function() {
+    var countryEl = document.getElementById('orders-filter-country');
+    var stateEl = document.getElementById('orders-filter-state');
+    var cityEl = document.getElementById('orders-filter-city');
+    if (countryEl) {
+        countryEl.addEventListener('change', function() {
+            if (stateEl) stateEl.value = '';
+            if (cityEl) cityEl.value = '';
+            if (this.form) this.form.submit();
+        });
+    }
+    if (stateEl) {
+        stateEl.addEventListener('change', function() {
+            if (cityEl) cityEl.value = '';
+            if (this.form) this.form.submit();
+        });
+    }
+})();
+</script>
 {% endblock %}

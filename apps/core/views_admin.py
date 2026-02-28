@@ -889,8 +889,10 @@ class OrderListView(StaffRequiredMixin, ListView):
         tab = (self.request.GET.get('tab') or 'activos').strip().lower()
         if tab == 'cancelados':
             qs = qs.filter(status='cancelled')
+        elif tab == 'completados':
+            qs = qs.filter(status='completed')
         else:
-            qs = qs.exclude(status='cancelled')
+            qs = qs.exclude(status__in=['cancelled', 'completed'])
         search = (self.request.GET.get('q') or '').strip()
         if search:
             qs = qs.filter(
@@ -900,7 +902,7 @@ class OrderListView(StaffRequiredMixin, ListView):
                 models.Q(billing_last_name__icontains=search) |
                 models.Q(billing_phone__icontains=search)
             )
-        if tab != 'cancelados':
+        if tab in ('activos', 'completados'):
             status = self.request.GET.get('status')
             if status:
                 qs = qs.filter(status=status)
@@ -923,12 +925,23 @@ class OrderListView(StaffRequiredMixin, ListView):
                 qs = qs.filter(created_at__date__lte=dt)
             except ValueError:
                 pass
-        filter_state = (self.request.GET.get('filter_state') or '').strip()
-        if filter_state:
-            qs = qs.filter(billing_state__icontains=filter_state)
-        filter_city = (self.request.GET.get('filter_city') or '').strip()
-        if filter_city:
-            qs = qs.filter(billing_city__icontains=filter_city)
+        filter_state_id = self.request.GET.get('filter_state')
+        filter_city_id = self.request.GET.get('filter_city')
+        if filter_city_id:
+            try:
+                city = City.objects.select_related('state').get(pk=filter_city_id)
+                qs = qs.filter(
+                    billing_state__iexact=city.state.name,
+                    billing_city__iexact=city.name,
+                )
+            except (City.DoesNotExist, ValueError):
+                pass
+        elif filter_state_id:
+            try:
+                state = State.objects.get(pk=filter_state_id)
+                qs = qs.filter(billing_state__iexact=state.name)
+            except (State.DoesNotExist, ValueError):
+                pass
         sort = self.request.GET.get('sort', '-created_at')
         order_map = {
             '-created_at': ['-created_at'],
@@ -941,8 +954,27 @@ class OrderListView(StaffRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tab = (self.request.GET.get('tab') or 'activos').strip().lower()
-        context['orders_tab'] = tab if tab == 'cancelados' else 'activos'
+        context['orders_tab'] = tab if tab in ('cancelados', 'completados') else 'activos'
         context['orders_cancelled_count'] = Order.objects.filter(status='cancelled').count()
+        context['orders_completed_count'] = Order.objects.filter(status='completed').count()
+        context['geo_states_url'] = reverse('core:geo_states')
+        context['geo_cities_url'] = reverse('core:geo_cities')
+        context['filter_countries'] = Country.objects.all().order_by('name')
+        filter_country_id = self.request.GET.get('filter_country')
+        if filter_country_id:
+            context['filter_states'] = State.objects.filter(country_id=filter_country_id).order_by('name')
+            context['filter_country_id'] = filter_country_id
+        else:
+            context['filter_states'] = State.objects.none()
+            context['filter_country_id'] = ''
+        filter_state_id = self.request.GET.get('filter_state')
+        if filter_state_id:
+            context['filter_cities'] = City.objects.filter(state_id=filter_state_id).order_by('name')
+            context['filter_state_id'] = filter_state_id
+        else:
+            context['filter_cities'] = City.objects.none()
+            context['filter_state_id'] = ''
+        context['filter_city_id'] = self.request.GET.get('filter_city') or ''
         orders = context.get(self.context_object_name, [])
         for order in orders:
             if order.payment_status != 'pending':
