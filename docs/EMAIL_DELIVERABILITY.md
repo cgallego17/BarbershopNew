@@ -1,48 +1,84 @@
 # Cómo reducir que los correos caigan en spam
 
+## Checklist rápido
+
+- [ ] **DNS:** SPF, DKIM (y opcional DMARC) configurados y activos.
+- [ ] **Panel:** Configuración con Email de contacto, Teléfono y Dirección completos.
+- [ ] **From:** Usar un correo del mismo dominio que el SMTP (ej. noreply@barbershop.com.co).
+- [ ] **Probar:** Enviar a [mail-tester.com](https://www.mail-tester.com) y revisar puntuación.
+
+---
+
 ## 1. Autenticación DNS (lo más importante)
 
 Los proveedores (Gmail, Outlook, etc.) comprueban que el servidor que envía está autorizado para tu dominio.
 
 ### SPF (Sender Policy Framework)
-- Ya tienes un registro SPF en tu zona DNS.
-- Asegúrate de que incluya la IP o el host que envía (ej. `mail.barbershop.com.co` o la IP de tu servidor de correo).
-- Ejemplo: `v=spf1 +a +mx +ip4:162.0.235.248 include:spf.web-hosting.com ~all`
-- Si envías desde otro servidor (ej. SendGrid), añade su include: `include:sendgrid.net` o el que indiquen.
+- Debe existir un registro TXT en tu dominio (ej. `barbershop.com.co`) con `v=spf1 ...`.
+- Tiene que incluir la IP o el host desde el que envías (ej. `ip4:162.0.235.248` o `include:spf.web-hosting.com`).
+- Si usas un servicio (SendGrid, Mailgun), añade su `include:...` según su documentación.
 
 ### DKIM (firma del dominio)
-- Ya tienes un registro DKIM (`default._domainkey.barbershop.com.co`).
-- Debe estar configurado en el **servidor de correo** (cPanel / hosting) para que firme cada mensaje con esa clave.
-- En el panel de tu hosting (correo/cPanel) revisa que “DKIM” esté activado para el dominio.
+- Debe existir un registro TXT en `selector._domainkey.tudominio.com` con la clave pública.
+- En el **servidor de correo** (cPanel / hosting) DKIM debe estar **activado** para el dominio, para que cada mensaje se firme con la clave privada.
+- Sin DKIM activo en el servidor, los correos se consideran no firmados y es más fácil que caigan en spam.
 
-### DMARC (opcional pero recomendado)
-- Indica qué hacer si fallan SPF o DKIM y dónde recibir informes.
-- Añade un TXT en `_dmarc.barbershop.com.co`:
-  - Ejemplo: `v=DMARC1; p=none; rua=mailto:admin@barbershop.com.co`
-  - Luego puedes subir a `p=quarantine` o `p=reject` cuando todo funcione bien.
+### DMARC (recomendado)
+- Registro TXT en `_dmarc.barbershop.com.co`.
+- Ejemplo: `v=DMARC1; p=none; rua=mailto:admin@barbershop.com.co`
+- Cuando SPF y DKIM estén bien, puedes pasar a `p=quarantine` o `p=reject`.
+
+---
 
 ## 2. Configuración en la app (ya aplicada)
 
-- **Reply-To:** Si en Panel → Configuración tienes “Email de contacto”, se usa como Reply-To. Así el From puede ser `noreply@...` y las respuestas llegan a un buzón real.
-- **Cabeceras:** Se envían `X-Auto-Response-Suppress: All`, `Auto-Submitted: auto-generated` y prioridad normal para que los filtros traten los correos como transaccionales.
+- **Reply-To:** Si en Panel → Configuración tienes "Email de contacto", se usa como Reply-To en todos los correos. Las respuestas llegan a un buzón real.
+- **Cabeceras anti-spam:**
+  - `X-Auto-Response-Suppress: All` (Outlook no envía auto-respuestas)
+  - `Precedence: auto` (correo automático)
+  - `Auto-Submitted: auto-generated` (transaccional)
+  - `X-Priority: 3` (prioridad normal)
+  - `X-Mailer` (identificación del envío)
+- **Pie de correo:** Se incluye texto "Correo transaccional", enlace de contacto y, si está configurada, la **dirección física** (mejora confianza y cumplimiento).
 
-## 3. Buenas prácticas de contenido
+---
 
-- Evitar palabras típicas de spam (“GRATIS”, “URGENTE”, “¡Gana dinero!”, etc.) en asuntos y cuerpo.
-- Incluir siempre versión texto además de HTML (ya lo haces).
-- No enviar solo imágenes; mantener proporción texto/HTML razonable (ya lo haces).
-- Que el dominio del “From” coincida con el que envía (noreply@barbershop.com.co con mail.barbershop.com.co está bien).
+## 3. Panel → Configuración (recomendado)
 
-## 4. Si sigues yendo a spam: usar servicio transaccional
+Completa en **Panel → Configuración**:
+
+| Campo | Uso |
+|-------|-----|
+| **Email de contacto** | Se usa como Reply-To y se muestra en el pie del correo. |
+| **Teléfono** | Aparece en el pie. |
+| **Dirección** | Se muestra en el pie; aporta confianza y ayuda a filtros anti-spam. |
+
+Cuanto más completa y coherente sea la identidad del remitente, mejor suele ser la deliverabilidad.
+
+---
+
+## 4. Buenas prácticas de contenido
+
+- Evitar en asunto y cuerpo: "GRATIS", "URGENTE", "¡Gana dinero!", muchos signos de exclamación, TODO EN MAYÚSCULAS.
+- Enviar siempre versión **texto** y **HTML** (la app ya lo hace).
+- No enviar solo imágenes; mantener proporción razonable texto/HTML (la app ya lo hace).
+- Que el dominio del **From** coincida con el servidor SMTP (ej. noreply@barbershop.com.co enviado desde mail.barbershop.com.co).
+
+---
+
+## 5. Si sigues yendo a spam: servicio transaccional
 
 Servicios como **SendGrid**, **Mailgun** o **Amazon SES**:
-- Usan dominios e IPs con buena reputación.
-- Gestionan SPF/DKIM por su lado (te dan valores para tu DNS).
+- Usan IPs y dominios con buena reputación.
+- Te dan los registros SPF/DKIM para tu DNS.
 - Suelen mejorar mucho la llegada a bandeja de entrada.
 
-En ese caso solo cambias en `.env` el `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER` y `EMAIL_HOST_PASSWORD` según las instrucciones del proveedor.
+Solo cambias en `.env`: `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD` (y si aplica `EMAIL_USE_TLS` / `EMAIL_USE_SSL`) según la documentación del proveedor.
 
-## 5. Comprobar tu configuración
+---
 
-- [mail-tester.com](https://www.mail-tester.com): envía un correo a la dirección que te dan y revisa la puntuación y sugerencias.
-- [mxtoolbox.com](https://mxtoolbox.com): comprueba SPF, DKIM, blacklists y DNS del dominio.
+## 6. Comprobar configuración
+
+- **[mail-tester.com](https://www.mail-tester.com):** Envía un correo de prueba a la dirección que te dan (por ejemplo con `python manage.py send_test_email --email la-direccion@que-te-dan.com`). Revisa puntuación y sugerencias (SPF, DKIM, contenido, etc.).
+- **[mxtoolbox.com](https://mxtoolbox.com):** Comprueba SPF, DKIM, blacklists y DNS del dominio.
+- **Gmail:** Si tienes cuenta Gmail, envía un correo a ti mismo y en "Mostrar original" revisa que aparezcan "spf=pass" y "dkim=pass".

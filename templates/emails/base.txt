@@ -6,7 +6,9 @@
 {% block content %}{% endblock %}
 
 ------------------------------------------------------------
-Este correo fue generado automáticamente.
-{% if site_settings.email %}Soporte: {{ site_settings.email }}{% endif %}
+Correo transaccional. Si tienes dudas, contáctanos.
+{% if site_settings.email %}Email: {{ site_settings.email }}{% endif %}
 {% if site_settings.phone %}Tel: {{ site_settings.phone }}{% endif %}
+{% if site_settings.address %}{{ site_settings.address }}{% endif %}
 © {{ site_name|default:"The BARBERSHOP" }} – Todos los derechos reservados
+Realizado con tecnología de by megadominio.co

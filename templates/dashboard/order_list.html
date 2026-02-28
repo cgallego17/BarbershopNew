@@ -5,29 +5,60 @@
 {% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
 
 {% block content %}
+<ul class="orders-tabs mb-4">
+    <li class="orders-tabs__item">
+        <a href="{% url 'core:admin_panel:order_list' %}?tab=activos" class="orders-tabs__link {% if orders_tab == 'activos' %}orders-tabs__link--active{% endif %}">
+            <i class="fas fa-shopping-cart me-1"></i> Activos
+        </a>
+    </li>
+    <li class="orders-tabs__item">
+        <a href="{% url 'core:admin_panel:order_list' %}?tab=cancelados" class="orders-tabs__link {% if orders_tab == 'cancelados' %}orders-tabs__link--active{% endif %}">
+            <i class="fas fa-ban me-1"></i> Cancelados
+            {% if orders_cancelled_count %}<span class="orders-tabs__badge">{{ orders_cancelled_count }}</span>{% endif %}
+        </a>
+    </li>
+</ul>
+
 <div class="admin-card mb-4">
     <div class="admin-card__header">
         <h3 class="admin-card__title mb-0"><i class="fas fa-search me-2"></i>Buscar y filtrar</h3>
-        {% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.sort %}
-        <a href="{% url 'core:admin_panel:order_list' %}" class="admin-card__action">Limpiar filtros</a>
+        {% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.sort or request.GET.tab or request.GET.date_from or request.GET.date_to or request.GET.filter_state or request.GET.filter_city %}
+        <a href="{% url 'core:admin_panel:order_list' %}?tab={{ orders_tab }}" class="admin-card__action">Limpiar filtros</a>
         {% endif %}
     </div>
     <div class="admin-card__body">
         <form method="get" class="admin-form">
+            <input type="hidden" name="tab" value="{{ orders_tab }}">
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label">Buscar</label>
                     <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="#pedido, email, nombre, teléfono">
                 </div>
                 <div class="col-md-2">
-                    <label class="form-label">Estado</label>
+                    <label class="form-label">Fecha desde</label>
+                    <input type="date" name="date_from" value="{{ request.GET.date_from }}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Fecha hasta</label>
+                    <input type="date" name="date_to" value="{{ request.GET.date_to }}" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Departamento / Estado</label>
+                    <input type="text" name="filter_state" value="{{ request.GET.filter_state }}" class="form-control" placeholder="Ej. Antioquia">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Ciudad</label>
+                    <input type="text" name="filter_city" value="{{ request.GET.filter_city }}" class="form-control" placeholder="Ej. Medellín">
+                </div>
+                {% if orders_tab == 'activos' %}
+                <div class="col-md-2">
+                    <label class="form-label">Estado pedido</label>
                     <select name="status" class="form-select">
                         <option value="">Todos</option>
                         <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendiente</option>
                         <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>Procesando</option>
                         <option value="on_hold" {% if request.GET.status == 'on_hold' %}selected{% endif %}>En espera</option>
                         <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completado</option>
-                        <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelado</option>
                         <option value="refunded" {% if request.GET.status == 'refunded' %}selected{% endif %}>Reembolsado</option>
                     </select>
                 </div>
@@ -41,6 +72,7 @@
                         <option value="refunded" {% if request.GET.payment_status == 'refunded' %}selected{% endif %}>Reembolsado</option>
                     </select>
                 </div>
+                {% endif %}
                 <div class="col-md-2">
                     <label class="form-label">Ordenar por</label>
                     <select name="sort" class="form-select">
@@ -98,7 +130,7 @@
                         <td class="text-end"><div class="admin-actions"><a href="{% url 'core:admin_panel:order_detail' order.pk %}" class="admin-action admin-action--primary">Ver / Editar</a></div></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="8" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}">Ver todos</a>{% else %}No hay pedidos{% endif %}</td></tr>
+                    <tr><td colspan="8" class="admin-table__empty">{% if request.GET.q or request.GET.status or request.GET.payment_status or request.GET.date_from or request.GET.date_to or request.GET.filter_state or request.GET.filter_city %}No se encontraron pedidos con los filtros aplicados. <a href="{% url 'core:admin_panel:order_list' %}?tab={{ orders_tab }}">Limpiar filtros</a>{% else %}{% if orders_tab == 'cancelados' %}No hay pedidos cancelados{% else %}No hay pedidos{% endif %}{% endif %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -114,6 +146,42 @@
 {% endif %}
 
 <style>
+.orders-tabs {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-bottom: 2px solid var(--admin-border, #2d3548);
+}
+.orders-tabs__item { margin: 0; }
+.orders-tabs__link {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: var(--admin-text-muted, #8892a4);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: color .2s, border-color .2s;
+}
+.orders-tabs__link:hover {
+    color: var(--admin-text, #e2e8f0);
+}
+.orders-tabs__link--active {
+    color: var(--admin-accent, #e07a40);
+    border-bottom-color: var(--admin-accent, #e07a40);
+}
+.orders-tabs__badge {
+    margin-left: 6px;
+    padding: 2px 8px;
+    font-size: .75rem;
+    font-weight: 600;
+    background: rgba(239, 68, 68, .25);
+    color: #f87171;
+    border-radius: 10px;
+}
 .pay-badge {
     display: inline-flex;
     align-items: center;

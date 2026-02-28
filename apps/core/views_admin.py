@@ -886,6 +886,11 @@ class OrderListView(StaffRequiredMixin, ListView):
             .select_related('user')
             .prefetch_related('wompi_transactions')
         )
+        tab = (self.request.GET.get('tab') or 'activos').strip().lower()
+        if tab == 'cancelados':
+            qs = qs.filter(status='cancelled')
+        else:
+            qs = qs.exclude(status='cancelled')
         search = (self.request.GET.get('q') or '').strip()
         if search:
             qs = qs.filter(
@@ -895,12 +900,35 @@ class OrderListView(StaffRequiredMixin, ListView):
                 models.Q(billing_last_name__icontains=search) |
                 models.Q(billing_phone__icontains=search)
             )
-        status = self.request.GET.get('status')
-        if status:
-            qs = qs.filter(status=status)
-        payment_status = self.request.GET.get('payment_status')
-        if payment_status:
-            qs = qs.filter(payment_status=payment_status)
+        if tab != 'cancelados':
+            status = self.request.GET.get('status')
+            if status:
+                qs = qs.filter(status=status)
+            payment_status = self.request.GET.get('payment_status')
+            if payment_status:
+                qs = qs.filter(payment_status=payment_status)
+        date_from = (self.request.GET.get('date_from') or '').strip()
+        if date_from:
+            try:
+                from datetime import datetime
+                dt = datetime.strptime(date_from, '%Y-%m-%d').date()
+                qs = qs.filter(created_at__date__gte=dt)
+            except ValueError:
+                pass
+        date_to = (self.request.GET.get('date_to') or '').strip()
+        if date_to:
+            try:
+                from datetime import datetime
+                dt = datetime.strptime(date_to, '%Y-%m-%d').date()
+                qs = qs.filter(created_at__date__lte=dt)
+            except ValueError:
+                pass
+        filter_state = (self.request.GET.get('filter_state') or '').strip()
+        if filter_state:
+            qs = qs.filter(billing_state__icontains=filter_state)
+        filter_city = (self.request.GET.get('filter_city') or '').strip()
+        if filter_city:
+            qs = qs.filter(billing_city__icontains=filter_city)
         sort = self.request.GET.get('sort', '-created_at')
         order_map = {
             '-created_at': ['-created_at'],
@@ -912,6 +940,9 @@ class OrderListView(StaffRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        tab = (self.request.GET.get('tab') or 'activos').strip().lower()
+        context['orders_tab'] = tab if tab == 'cancelados' else 'activos'
+        context['orders_cancelled_count'] = Order.objects.filter(status='cancelled').count()
         orders = context.get(self.context_object_name, [])
         for order in orders:
             if order.payment_status != 'pending':

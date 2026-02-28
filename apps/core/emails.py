@@ -75,7 +75,9 @@ def send_templated_email(
     headers = {
         "X-Auto-Response-Suppress": "All",
         "X-Priority": "3",
+        "Precedence": "auto",
         "Auto-Submitted": "auto-generated",
+        "X-Mailer": "Django (The BARBERSHOP)",
     }
 
     message = EmailMultiAlternatives(
