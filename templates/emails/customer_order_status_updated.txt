@@ -1,0 +1,18 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+Actualización de tu pedido #{{ order.order_number }}
+
+Hola {{ order.billing_first_name }},
+
+Te informamos que el estado de tu pedido ha sido actualizado.
+
+  Pedido:     #{{ order.order_number }}
+  Estado:     {{ order.get_status_display }}
+  Pago:       {{ order.get_payment_status_display }}
+
+Si tienes dudas, contáctanos.
+
+Ver mi pedido:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/pedido/{{ order.order_number }}/
+{% endblock %}

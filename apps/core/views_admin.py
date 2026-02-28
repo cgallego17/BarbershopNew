@@ -1033,8 +1033,28 @@ def order_detail_view(request, pk):
             return redirect('core:admin_panel:order_detail', pk=order.pk)
         form = OrderStatusForm(request.POST, instance=order)
         if form.is_valid():
+            old_status = order.status
+            old_payment_status = order.payment_status
             form.save()
-            messages.success(request, 'Pedido actualizado.')
+            status_changed = old_status != order.status or old_payment_status != order.payment_status
+            if status_changed and order.billing_email:
+                import threading
+                from apps.core.emails import notify_order_status_changed
+
+                def _send_status_notification():
+                    try:
+                        notify_order_status_changed(order)
+                    except Exception:
+                        import logging
+                        logging.getLogger(__name__).exception(
+                            "Error enviando notificación de cambio de estado para pedido %s",
+                            order.order_number,
+                        )
+
+                threading.Thread(target=_send_status_notification, daemon=True).start()
+                messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
+            else:
+                messages.success(request, 'Pedido actualizado.')
             return redirect('core:admin_panel:order_detail', pk=order.pk)
     else:
         form = OrderStatusForm(instance=order)
