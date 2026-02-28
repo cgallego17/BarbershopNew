@@ -1033,33 +1033,43 @@ def order_detail_view(request, pk):
             return redirect('core:admin_panel:order_detail', pk=order.pk)
         form = OrderStatusForm(request.POST, instance=order)
         if form.is_valid():
+            import logging
+            from apps.core.emails import notify_order_status_changed
+
+            log = logging.getLogger(__name__)
             old_status = order.status
             old_payment_status = order.payment_status
             new_status = form.cleaned_data["status"]
             new_payment_status = form.cleaned_data["payment_status"]
             form.save()
             status_changed = old_status != new_status or old_payment_status != new_payment_status
-            if status_changed and order.billing_email:
-                import logging
-                from apps.core.emails import notify_order_status_changed
 
-                log = logging.getLogger(__name__)
-                try:
-                    # Envío síncrono para asegurar que el correo se envía (en hilo el objeto order
-                    # puede dar problemas de conexión a BD al renderizar el template).
-                    notify_order_status_changed(order)
-                    messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
-                except Exception:
-                    log.exception(
-                        "Error enviando notificación de cambio de estado para pedido %s",
+            if status_changed:
+                if order.billing_email:
+                    log.info(
+                        "Enviando notificación de cambio de estado pedido %s a %s",
                         order.order_number,
+                        order.billing_email,
                     )
+                    try:
+                        notify_order_status_changed(order)
+                        messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
+                    except Exception:
+                        log.exception(
+                            "Error enviando notificación de cambio de estado para pedido %s",
+                            order.order_number,
+                        )
+                        messages.warning(
+                            request,
+                            'Pedido actualizado, pero no se pudo enviar el correo al cliente. Revisa los logs.',
+                        )
+                else:
                     messages.warning(
                         request,
-                        'Pedido actualizado, pero no se pudo enviar el correo al cliente. Revisa los logs.',
+                        'Pedido actualizado. No se envió correo: el pedido no tiene email de facturación.',
                     )
             else:
-                messages.success(request, 'Pedido actualizado.')
+                messages.success(request, 'Pedido actualizado. No hubo cambio de estado o pago.')
             return redirect('core:admin_panel:order_detail', pk=order.pk)
     else:
         form = OrderStatusForm(instance=order)

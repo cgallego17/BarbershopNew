@@ -242,7 +242,16 @@ def notify_order_status_changed(order):
     Lanza si el envío falla para que la vista pueda informar al usuario.
     """
     if not order.billing_email:
+        logger.warning(
+            "notify_order_status_changed: pedido %s sin billing_email, no se envía correo",
+            order.order_number,
+        )
         return
+    logger.info(
+        "Enviando correo actualización de pedido #%s a %s",
+        order.order_number,
+        order.billing_email,
+    )
     sent = send_templated_email(
         subject=f"Actualización de tu pedido #{order.order_number}",
         to_emails=[order.billing_email],
@@ -250,6 +259,11 @@ def notify_order_status_changed(order):
         context={"order": order},
     )
     if not sent:
+        logger.error(
+            "send_templated_email devolvió 0 para customer_order_status_updated, pedido %s",
+            order.order_number,
+        )
         raise RuntimeError(
             "No se pudo enviar el correo de actualización de pedido al cliente"
         )
+    logger.info("Correo actualización pedido #%s enviado correctamente", order.order_number)
