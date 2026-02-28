@@ -265,14 +265,47 @@
                         <label class="form-label">Estado de pago</label>
                         {{ form.payment_status }}
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Notas internas</label>
-                        {{ form.notes }}
-                    </div>
                     <button type="submit" class="admin-btn admin-btn--primary w-100">Guardar cambios</button>
                 </form>
             </div>
         </div>
+
+        <div class="admin-card mt-4">
+            <div class="admin-card__header">
+                <h3 class="admin-card__title">Notas del pedido</h3>
+            </div>
+            <div class="admin-card__body">
+                {% for note in order.order_notes.all %}
+                <div class="order-note order-note--{{ note.note_type }} mb-3">
+                    <span class="order-note__badge order-note__badge--{{ note.note_type }}">
+                        {% if note.note_type == 'internal' %}Interna{% else %}Al cliente{% endif %}
+                    </span>
+                    <span class="order-note__meta text-muted small">
+                        {{ note.created_at|date:"d/m/Y H:i" }}{% if note.created_by %} · {{ note.created_by.get_full_name|default:note.created_by.email }}{% endif %}
+                    </span>
+                    <div class="order-note__content mt-1">{{ note.content|linebreaks }}</div>
+                </div>
+                {% empty %}
+                <p class="text-muted small mb-0">Aún no hay notas.</p>
+                {% endfor %}
+                <form method="post" class="admin-form mt-4">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Nueva nota</label>
+                        <textarea name="note_content" class="form-control" rows="3" placeholder="Escribe aquí la nota..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" name="add_internal_note" value="1" class="admin-btn admin-btn--secondary">
+                            <i class="fas fa-lock me-1"></i> Guardar nota interna
+                        </button>
+                        <button type="submit" name="add_client_note" value="1" class="admin-btn admin-btn--primary">
+                            <i class="fas fa-envelope me-1"></i> Enviar nota al cliente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <div class="mt-3">
             <a href="{% url 'core:admin_panel:order_list' %}" class="admin-btn admin-btn--secondary"><i class="fas fa-arrow-left"></i> Volver a pedidos</a>
         </div>
@@ -301,5 +334,29 @@
     font-size: .8rem;
     word-break: break-all;
 }
+.order-note {
+    padding: 12px 14px;
+    background: var(--admin-bg-secondary, #1e2330);
+    border-radius: 10px;
+    border-left: 4px solid #6b7280;
+}
+.order-note--client { border-left-color: var(--admin-accent, #c56533); }
+.order-note__badge {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+.order-note__badge--internal {
+    background: rgba(107, 114, 128, .25);
+    color: #9ca3af;
+}
+.order-note__badge--client {
+    background: rgba(197, 101, 51, .2);
+    color: #e07a40;
+}
+.order-note__content { font-size: .9rem; color: #d1d9eb; white-space: pre-wrap; }
 </style>
 {% endblock %}

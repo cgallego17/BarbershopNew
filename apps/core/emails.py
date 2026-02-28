@@ -190,3 +190,21 @@ def notify_low_stock(items):
         )
     except Exception:
         logger.exception("Error en notify_low_stock")
+
+
+def notify_order_note_to_customer(order, note_content):
+    """Envía por email al cliente una nota del equipo sobre su pedido."""
+    try:
+        if not order.billing_email or not (note_content or "").strip():
+            return 0
+        send_templated_email(
+            subject=f"Mensaje sobre tu pedido #{order.order_number}",
+            to_emails=[order.billing_email],
+            template_key="customer_order_note",
+            context={"order": order, "note_content": (note_content or "").strip()},
+        )
+    except Exception:
+        logger.exception(
+            "Error enviando nota al cliente para pedido %s", order.order_number
+        )
+        return 0

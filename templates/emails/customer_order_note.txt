@@ -1,0 +1,18 @@
+{% extends "emails/base.txt" %}
+{% load humanize %}
+{% block content %}
+Mensaje sobre tu pedido #{{ order.order_number }}
+
+Hola {{ order.billing_first_name }},
+
+Nuestro equipo te ha dejado el siguiente mensaje sobre tu pedido:
+
+───────────────────────────────────────────
+{{ note_content }}
+───────────────────────────────────────────
+
+Si tienes dudas, responde a este correo o contáctanos.
+
+Ver mi pedido:
+{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/pedido/{{ order.order_number }}/
+{% endblock %}

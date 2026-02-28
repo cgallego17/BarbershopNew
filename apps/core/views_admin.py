@@ -14,7 +14,7 @@ from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 
 from apps.products.models import Product, Category, Brand, ProductAttribute, ProductReview
-from apps.orders.models import Order, OrderItem
+from apps.orders.models import Order, OrderItem, OrderNote
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
 from .forms import (
@@ -930,10 +930,44 @@ def order_detail_view(request, pk):
         Order.objects.prefetch_related(
             Prefetch('items', queryset=OrderItem.objects.select_related('product').prefetch_related('product__images')),
             'wompi_transactions',
+            Prefetch('order_notes', queryset=OrderNote.objects.select_related('created_by').order_by('-created_at')),
         ),
         pk=pk,
     )
     if request.method == 'POST':
+        note_content = (request.POST.get('note_content') or '').strip()
+        if request.POST.get('add_internal_note'):
+            if note_content:
+                OrderNote.objects.create(
+                    order=order,
+                    note_type=OrderNote.NOTE_TYPE_INTERNAL,
+                    content=note_content,
+                    created_by=request.user if request.user.is_authenticated else None,
+                )
+                messages.success(request, 'Nota interna guardada.')
+            else:
+                messages.warning(request, 'Escribe el contenido de la nota.')
+            return redirect('core:admin_panel:order_detail', pk=order.pk)
+        if request.POST.get('add_client_note'):
+            if note_content:
+                from apps.core.emails import notify_order_note_to_customer
+                OrderNote.objects.create(
+                    order=order,
+                    note_type=OrderNote.NOTE_TYPE_CLIENT,
+                    content=note_content,
+                    created_by=request.user if request.user.is_authenticated else None,
+                )
+                try:
+                    notify_order_note_to_customer(order, note_content)
+                except Exception:
+                    import logging
+                    logging.getLogger(__name__).exception(
+                        "Error enviando nota al cliente para pedido %s", order.order_number
+                    )
+                messages.success(request, 'Nota guardada y enviada por email al cliente.')
+            else:
+                messages.warning(request, 'Escribe el contenido de la nota para el cliente.')
+            return redirect('core:admin_panel:order_detail', pk=order.pk)
         form = OrderStatusForm(request.POST, instance=order)
         if form.is_valid():
             form.save()

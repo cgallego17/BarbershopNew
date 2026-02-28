@@ -253,19 +253,15 @@ class CustomerCreateForm(forms.ModelForm):
 
 
 class OrderStatusForm(forms.ModelForm):
-    """Formulario para actualizar estado del pedido."""
+    """Formulario para actualizar estado del pedido. Las notas se gestionan con OrderNote."""
 
     class Meta:
         model = Order
-        fields = ['status', 'payment_status', 'notes']
-        widgets = {'notes': CKEDITOR_WIDGET}
+        fields = ['status', 'payment_status']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         _add_form_control(self)
-
-    def clean_notes(self):
-        return sanitize_html(self.cleaned_data.get('notes'))
 
 
 class CouponForm(forms.ModelForm):

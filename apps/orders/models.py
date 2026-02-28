@@ -119,3 +119,34 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.product_name} x {self.quantity}"
+
+
+class OrderNote(models.Model):
+    """Nota asociada a un pedido: interna (solo panel) o al cliente (se guarda y se envía por email)."""
+    NOTE_TYPE_INTERNAL = 'internal'
+    NOTE_TYPE_CLIENT = 'client'
+    NOTE_TYPE_CHOICES = [
+        (NOTE_TYPE_INTERNAL, 'Nota interna'),
+        (NOTE_TYPE_CLIENT, 'Nota al cliente'),
+    ]
+
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name='order_notes'
+    )
+    note_type = models.CharField(
+        max_length=20, choices=NOTE_TYPE_CHOICES, default=NOTE_TYPE_INTERNAL
+    )
+    content = models.TextField('Contenido')
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='order_notes_created'
+    )
+
+    class Meta:
+        verbose_name = 'Nota de pedido'
+        verbose_name_plural = 'Notas de pedido'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Nota {self.get_note_type_display()} - {self.order.order_number}"
