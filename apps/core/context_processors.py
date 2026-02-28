@@ -122,7 +122,7 @@ def site_settings(request):
 
         ctx['pending_reviews_count'] = pending_reviews
         ctx['unread_contacts_count'] = unread_contacts
-        orders_count = Order.objects.count()
+        orders_count = Order.objects.filter(status='pending').count()
         ctx['orders_count'] = orders_count
         ctx['admin_notifications'] = notifications
         ctx['admin_notifications_count'] = len(notifications)
