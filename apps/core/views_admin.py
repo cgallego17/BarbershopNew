@@ -1035,8 +1035,10 @@ def order_detail_view(request, pk):
         if form.is_valid():
             old_status = order.status
             old_payment_status = order.payment_status
+            new_status = form.cleaned_data["status"]
+            new_payment_status = form.cleaned_data["payment_status"]
             form.save()
-            status_changed = old_status != order.status or old_payment_status != order.payment_status
+            status_changed = old_status != new_status or old_payment_status != new_payment_status
             if status_changed and order.billing_email:
                 import logging
                 from apps.core.emails import notify_order_status_changed
