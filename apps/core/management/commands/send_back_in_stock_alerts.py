@@ -45,14 +45,23 @@ class Command(BaseCommand):
             return
 
         sent = 0
+        now = timezone.now()
         for alert in to_notify:
             try:
+                # Actualización atómica: solo el primer proceso que ejecute "gana"
+                # Evita duplicados si el cron corre varias veces o hay solapamiento
+                updated = ProductStockAlert.objects.filter(
+                    pk=alert.pk,
+                    notified_at__isnull=True,
+                ).update(notified_at=now)
+                if not updated:
+                    continue  # Ya fue notificado por otro proceso, saltar
                 notify_back_in_stock(alert.product, alert.email)
-                alert.notified_at = timezone.now()
-                alert.save(update_fields=['notified_at'])
                 sent += 1
                 self.stdout.write(self.style.SUCCESS(f'  Enviado a {alert.email} ({alert.product.name})'))
             except Exception as e:
+                # Si falla el envío, revertir notified_at para reintentar después
+                ProductStockAlert.objects.filter(pk=alert.pk).update(notified_at=None)
                 self.stderr.write(self.style.ERROR(f'  Error {alert.product.name} -> {alert.email}: {e}'))
 
         self.stdout.write(self.style.SUCCESS(f'Se enviaron {sent} notificación(es) de stock.'))
