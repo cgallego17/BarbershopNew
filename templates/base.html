@@ -810,13 +810,14 @@
       align-items: center;
     }
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-holder .mfp-content {
-      max-width: 380px;
-      width: 380px;
+      max-width: min(325px, 90vw);
+      width: 100%;
       display: block;
     }
+    /* 9:16 vertical (altura = 177.78% del ancho) */
     .mfp-wrap.mfp-video-popup.mfp-tiktok .mfp-iframe-scaler {
       width: 100%;
-      padding-top: 177.78%;
+      padding-top: 177.78% !important;
       overflow: hidden;
       position: relative;
     }
