@@ -238,18 +238,18 @@ def notify_order_note_to_customer(order, note_content):
 
 
 def notify_order_status_changed(order):
-    """Envía por email al cliente que el estado o pago de su pedido fue actualizado."""
-    try:
-        if not order.billing_email:
-            return
-        send_templated_email(
-            subject=f"Actualización de tu pedido #{order.order_number}",
-            to_emails=[order.billing_email],
-            template_key="customer_order_status_updated",
-            context={"order": order},
-        )
-    except Exception:
-        logger.exception(
-            "Error enviando notificación de cambio de estado para pedido %s",
-            order.order_number,
+    """Envía por email al cliente que el estado o pago de su pedido fue actualizado.
+    Lanza si el envío falla para que la vista pueda informar al usuario.
+    """
+    if not order.billing_email:
+        return
+    sent = send_templated_email(
+        subject=f"Actualización de tu pedido #{order.order_number}",
+        to_emails=[order.billing_email],
+        template_key="customer_order_status_updated",
+        context={"order": order},
+    )
+    if not sent:
+        raise RuntimeError(
+            "No se pudo enviar el correo de actualización de pedido al cliente"
         )

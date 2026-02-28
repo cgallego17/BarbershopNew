@@ -1038,21 +1038,24 @@ def order_detail_view(request, pk):
             form.save()
             status_changed = old_status != order.status or old_payment_status != order.payment_status
             if status_changed and order.billing_email:
-                import threading
+                import logging
                 from apps.core.emails import notify_order_status_changed
 
-                def _send_status_notification():
-                    try:
-                        notify_order_status_changed(order)
-                    except Exception:
-                        import logging
-                        logging.getLogger(__name__).exception(
-                            "Error enviando notificación de cambio de estado para pedido %s",
-                            order.order_number,
-                        )
-
-                threading.Thread(target=_send_status_notification, daemon=True).start()
-                messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
+                log = logging.getLogger(__name__)
+                try:
+                    # Envío síncrono para asegurar que el correo se envía (en hilo el objeto order
+                    # puede dar problemas de conexión a BD al renderizar el template).
+                    notify_order_status_changed(order)
+                    messages.success(request, 'Pedido actualizado. Se ha enviado notificación al cliente.')
+                except Exception:
+                    log.exception(
+                        "Error enviando notificación de cambio de estado para pedido %s",
+                        order.order_number,
+                    )
+                    messages.warning(
+                        request,
+                        'Pedido actualizado, pero no se pudo enviar el correo al cliente. Revisa los logs.',
+                    )
             else:
                 messages.success(request, 'Pedido actualizado.')
             return redirect('core:admin_panel:order_detail', pk=order.pk)
