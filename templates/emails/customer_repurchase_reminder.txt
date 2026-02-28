@@ -1,0 +1,14 @@
+¿Ya se te acabó?
+
+Hola {{ order.billing_first_name }},
+
+Hace un tiempo compraste estos productos en {{ site_name }}.
+Si ya los terminaste, aquí tienes enlaces directos para reponer.
+
+Tus productos:
+{% for item in product_items %}
+- {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+  Comprar: {{ item.product_url }}
+{% endfor %}
+
+Ver tienda: {{ site_settings.site_url|default:"http://localhost:8000" }}/tienda/

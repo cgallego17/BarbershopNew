@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.cache import cache
 from django.db.models import Prefetch
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -307,6 +308,62 @@ def checkout_view(request):
         'initial_state': checkout_prefill.get('state', ''),
         'initial_city': checkout_prefill.get('city', ''),
         'checkout_prefill': checkout_prefill,
+    })
+
+
+def order_lookup(request):
+    """Zona pública para consultar un pedido por email + número de pedido."""
+    initial_order = (request.GET.get('order') or request.GET.get('order_number') or '').strip().upper()
+    if request.method == 'POST':
+        # Rate limit: 5 consultas por IP cada 5 minutos
+        client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+        client_ip = client_ip or request.META.get('REMOTE_ADDR', '') or 'unknown'
+        throttle_key = f"order_lookup:ip:{client_ip}"
+        current_attempts = cache.get(throttle_key, 0)
+        if current_attempts >= 5:
+            from apps.core.security import log_security_event
+            log_security_event(
+                request,
+                event_type='rate_limit_block',
+                source='order_lookup',
+                details={'window_seconds': 300, 'limit': 5},
+            )
+            messages.error(
+                request,
+                'Demasiadas consultas. Por favor espera unos minutos antes de intentar de nuevo.',
+            )
+            return render(request, 'orders/order_lookup.html', {
+                'order_number': initial_order,
+                'email': '',
+            })
+        cache.set(throttle_key, current_attempts + 1, timeout=300)
+
+        order_number = (request.POST.get('order_number') or '').strip().upper()
+        email = (request.POST.get('email') or '').strip().lower()
+        if not order_number or not email:
+            messages.warning(request, 'Ingresa el número de pedido y el correo electrónico.')
+            return render(request, 'orders/order_lookup.html', {
+                'order_number': order_number or initial_order,
+                'email': email,
+            })
+        order = Order.objects.filter(
+            order_number__iexact=order_number,
+            billing_email__iexact=email,
+        ).first()
+        if not order:
+            messages.error(
+                request,
+                'No encontramos un pedido con ese número y correo. Verifica los datos e inténtalo de nuevo.',
+            )
+            return render(request, 'orders/order_lookup.html', {
+                'order_number': order_number,
+                'email': email,
+            })
+        _remember_guest_order(request, order.order_number)
+        return redirect('orders:detail', order_number=order.order_number)
+    return render(request, 'orders/order_lookup.html', {
+        'order_number': initial_order,
+        'email': '',
     })
 
 

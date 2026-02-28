@@ -1,0 +1,46 @@
+{% extends "emails/base.html" %}
+{% load humanize %}
+{% block title %}¿Necesitas reponer?{% endblock %}
+{% block header_label %}Recordatorio{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:22px;font-weight:800;color:#ffffff;">
+    ¿Ya se te acabó?
+</h2>
+<p style="margin:0 0 22px 0;font-size:14px;color:#8892a4;">
+    Hola <strong style="color:#d1d9eb;">{{ order.billing_first_name }}</strong>, hace un tiempo compraste estos productos en {{ site_name }}.
+    Si ya los terminaste, aquí tienes enlaces directos para reponer.
+</p>
+
+<p style="margin:0 0 16px 0;font-size:13px;font-weight:700;color:#e07a40;text-transform:uppercase;letter-spacing:.5px;">
+    Tus productos
+</p>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    {% for item in product_items %}
+    <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #272c38;">
+            <a href="{{ item.product_url }}"
+               style="font-size:14px;color:#e07a40;text-decoration:none;font-weight:600;">
+                {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+            </a>
+            <p style="margin:4px 0 0 0;font-size:12px;color:#8892a4;">
+                Comprar de nuevo →
+            </p>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:28px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ site_settings.site_url|default:'http://localhost:8000' }}/tienda/"
+               style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver tienda →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

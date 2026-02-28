@@ -13,7 +13,8 @@ from django.utils.text import Truncator
 from django.views.decorators.http import require_POST
 
 from .models import (
-    Product, Category, Brand, ProductReview, ProductView, ProductFavorite
+    Product, Category, Brand, ProductReview, ProductView, ProductFavorite,
+    ProductStockAlert,
 )
 
 
@@ -389,6 +390,29 @@ class ProductDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        if request.POST.get('action') == 'stock_alert':
+            email = (request.POST.get('stock_alert_email') or '').strip().lower()
+            if not email:
+                messages.warning(request, 'Ingresa tu correo para recibir el aviso.')
+            elif self.object.in_stock:
+                messages.info(request, 'Este producto ya está disponible. ¡Añádelo al carrito!')
+            else:
+                alert, created = ProductStockAlert.objects.get_or_create(
+                    product=self.object,
+                    email=email,
+                    defaults={},
+                )
+                if created:
+                    messages.success(
+                        request,
+                        'Te avisaremos por correo cuando vuelva a estar disponible.',
+                    )
+                else:
+                    messages.info(
+                        request,
+                        'Ya estás suscrito a las alertas de este producto.',
+                    )
+            return redirect(reverse('products:detail', kwargs={'slug': self.object.slug}))
         if request.POST.get('action') == 'review':
             name = (request.POST.get('author_name') or '').strip()
             email = (request.POST.get('author_email') or '').strip()

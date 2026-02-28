@@ -1,0 +1,14 @@
+¿Cómo fue tu experiencia?
+
+Hola {{ order.billing_first_name }},
+
+Esperamos que hayas disfrutado tu pedido #{{ order.order_number }}.
+Tu opinión nos ayuda a mejorar y a otros clientes a decidir.
+
+Productos que compraste:
+{% for item in product_items %}
+- {{ item.product_name }}{% if item.variant %} ({{ item.variant }}){% endif %}
+  Deja tu reseña: {{ item.product_url }}#product-reviews
+{% endfor %}
+
+¡Gracias por tu tiempo!

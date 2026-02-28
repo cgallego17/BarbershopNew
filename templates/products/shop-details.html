@@ -436,6 +436,19 @@
                                 </span>
                                 {% endif %}
                             </form>
+                            {% if not product.in_stock %}
+                            <form method="post" action="{% url 'products:detail' product.slug %}" class="pd-stock-alert-form" style="margin-top:14px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="stock_alert">
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                                    <input type="email" name="stock_alert_email" placeholder="Tu correo para avisarte" required
+                                           style="flex:1;min-width:180px;padding:10px 14px;border:1.5px solid #e4e4e8;border-radius:10px;font-size:.9rem;">
+                                    <button type="submit" class="pd-btn-add" style="padding:10px 20px;">
+                                        <i class="fas fa-bell"></i> Avisarme cuando haya stock
+                                    </button>
+                                </div>
+                            </form>
+                            {% endif %}
                             <form method="post" action="{% url 'products:toggle_favorite' product.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="next" value="{{ request.get_full_path }}">

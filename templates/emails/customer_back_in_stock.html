@@ -1,0 +1,39 @@
+{% extends "emails/base.html" %}
+{% block title %}¡Ya está disponible!{% endblock %}
+{% block header_label %}Stock disponible{% endblock %}
+{% block content %}
+
+<h2 style="margin:0 0 6px 0;font-size:22px;font-weight:800;color:#ffffff;">
+    ¡Buenas noticias!
+</h2>
+<p style="margin:0 0 22px 0;font-size:14px;color:#8892a4;">
+    El producto que esperabas ya está de nuevo en stock.
+</p>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"
+       style="background:#1e2330;border-radius:10px;border:1px solid #272c38;padding:20px;">
+    <tr>
+        <td>
+            <p style="margin:0 0 8px 0;font-size:17px;font-weight:700;color:#e07a40;">
+                {{ product.name }}
+            </p>
+            <p style="margin:0;font-size:13px;color:#8892a4;">
+                Ya puedes comprarlo de nuevo.
+            </p>
+        </td>
+    </tr>
+</table>
+
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-top:28px;">
+    <tr>
+        <td align="center">
+            <a class="btn-main"
+               href="{{ product_url }}"
+               style="display:inline-block;padding:14px 36px;background:linear-gradient(135deg,#c56533,#e07a40);color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;letter-spacing:.5px;">
+                Ver producto →
+            </a>
+        </td>
+    </tr>
+</table>
+
+{% endblock %}

@@ -85,6 +85,22 @@ class Order(models.Model):
         blank=True,
         help_text='Si está definido, ya se envió el correo de recordatorio para completar el pago.',
     )
+    completed_at = models.DateTimeField(
+        'Completado/entregado',
+        null=True,
+        blank=True,
+        help_text='Fecha en que el pedido pasó a estado completado (para reseñas y recordatorios).',
+    )
+    review_request_sent_at = models.DateTimeField(
+        'Solicitud de reseña enviada',
+        null=True,
+        blank=True,
+    )
+    repurchase_reminder_sent_at = models.DateTimeField(
+        'Recordatorio de recompra enviado',
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = 'Pedido'
@@ -95,10 +111,12 @@ class Order(models.Model):
         return f"Orden {self.order_number}"
 
     def save(self, *args, **kwargs):
+        from django.utils import timezone
         if not self.order_number:
-            from django.utils import timezone
             import uuid
             self.order_number = f"ORD-{timezone.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
+        if self.status == 'completed' and not self.completed_at:
+            self.completed_at = timezone.now()
         super().save(*args, **kwargs)
 
 

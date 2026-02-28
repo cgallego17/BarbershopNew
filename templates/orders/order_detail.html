@@ -179,7 +179,11 @@
     <h2 class="page-header__title">Detalle del pedido</h2>
     <ul class="boskery-breadcrumb list-unstyled">
       <li><a href="{% url 'core:home' %}">Inicio</a></li>
+      {% if request.user.is_authenticated %}
       <li><a href="{% url 'orders:list' %}">Mis pedidos</a></li>
+      {% else %}
+      <li><a href="{% url 'orders:lookup' %}">Consultar pedido</a></li>
+      {% endif %}
       <li><span>{{ order.order_number }}</span></li>
     </ul>
   </div>
@@ -377,9 +381,15 @@
 
         <!-- Actions -->
         <div class="d-flex flex-column gap-2">
+          {% if request.user.is_authenticated %}
           <a href="{% url 'orders:list' %}" class="od-btn-outline justify-content-center">
             <i class="fas fa-arrow-left"></i> Volver a mis pedidos
           </a>
+          {% else %}
+          <a href="{% url 'orders:lookup' %}" class="od-btn-outline justify-content-center">
+            <i class="fas fa-search"></i> Consultar otro pedido
+          </a>
+          {% endif %}
           <a href="{% url 'products:list' %}" class="od-btn-outline justify-content-center">
             <i class="fas fa-shopping-bag"></i> Seguir comprando
           </a>

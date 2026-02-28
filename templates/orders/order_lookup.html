@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Consultar pedido{% endblock %}
+{% block meta_description %}Consulta el estado de tu pedido ingresando tu correo y número de pedido en {{ site_settings.site_name }}.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_css %}
+<style>
+.ol-section { background: #f2f3f5; padding: 56px 0 80px; }
+.ol-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid #e8e8ec;
+    box-shadow: 0 2px 14px rgba(0,0,0,.06);
+    padding: 40px;
+    max-width: 480px;
+    margin: 0 auto;
+}
+.ol-card__title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+}
+.ol-card__subtitle {
+    font-size: .9rem;
+    color: #888;
+    margin-bottom: 28px;
+}
+.ol-form-group { margin-bottom: 20px; }
+.ol-form-group label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 8px;
+}
+.ol-form-group input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1.5px solid #e4e4e8;
+    border-radius: 10px;
+    font-size: .95rem;
+    transition: border-color .2s;
+}
+.ol-form-group input:focus {
+    outline: none;
+    border-color: var(--boskery-base, #C56533);
+}
+.ol-form-group input::placeholder { color: #bbb; }
+.ol-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 14px;
+    background: var(--boskery-base, #C56533);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: .95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(197,101,51,.3);
+    transition: background .2s, transform .15s;
+}
+.ol-btn:hover { background: #a34120; transform: translateY(-1px); color: #fff; }
+.ol-help {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #f0f0f4;
+    font-size: .82rem;
+    color: #888;
+    line-height: 1.6;
+}
+.ol-help a { color: var(--boskery-base, #C56533); text-decoration: none; }
+.ol-help a:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
+    <div class="container">
+        <h2 class="page-header__title">Consultar pedido</h2>
+        <ul class="boskery-breadcrumb list-unstyled">
+            <li><a href="{% url 'core:home' %}">Inicio</a></li>
+            <li><span>Consultar pedido</span></li>
+        </ul>
+    </div>
+</section>
+
+<section class="ol-section">
+    <div class="container">
+        <div class="ol-card">
+            <h3 class="ol-card__title">
+                <i class="fas fa-search me-2"></i>¿Dónde está mi pedido?
+            </h3>
+            <p class="ol-card__subtitle">
+                Ingresa el correo con el que compraste y el número de pedido (ej: ORD-20260225-XXXXXXXX).
+            </p>
+
+            <form method="post" action="{% url 'orders:lookup' %}">
+                {% csrf_token %}
+                <div class="ol-form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" value="{{ email }}" placeholder="tu@correo.com" required autocomplete="email">
+                </div>
+                <div class="ol-form-group">
+                    <label for="order_number">Número de pedido</label>
+                    <input type="text" id="order_number" name="order_number" value="{{ order_number }}" placeholder="ORD-20260225-XXXXXXXX" required autocomplete="off">
+                </div>
+                <button type="submit" class="ol-btn">
+                    <i class="fas fa-arrow-right"></i> Ver mi pedido
+                </button>
+            </form>
+
+            <div class="ol-help">
+                <p class="mb-1"><strong>¿Dónde encuentro mi número de pedido?</strong></p>
+                <p class="mb-0">
+                    Lo recibiste por correo al confirmar la compra. Tiene el formato <code>ORD-YYYYMMDD-XXXXXXXX</code>.
+                    Si no lo encuentras, <a href="{% url 'core:contact' %}">contáctanos</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

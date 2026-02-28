@@ -282,6 +282,117 @@ def notify_cart_abandoned(email, cart_items, cart_total):
         )
 
 
+def _build_product_items_for_email(order):
+    """Construye lista de items con URLs para emails (reseña, recompra)."""
+    from django.contrib.sites.models import Site
+    base = getattr(settings, "SITE_URL", "") or ""
+    if not base and hasattr(Site, "objects"):
+        try:
+            s = Site.objects.get_current()
+            domain = (s.domain or "").strip()
+            if domain:
+                base = ("https://" + domain).rstrip("/")
+        except Exception:
+            pass
+    if not base:
+        base = "http://localhost:8000"
+    items = []
+    for item in order.items.select_related("product").all():
+        product = item.product
+        path = product.get_absolute_url()
+        product_url = base.rstrip("/") + path
+        items.append({
+            "product_name": item.product_name,
+            "variant": str(item.variant) if item.variant else "",
+            "product_url": product_url,
+            "product_slug": product.slug,
+        })
+    return items
+
+
+def notify_request_review(order):
+    """Envía solicitud de reseña con enlaces a cada producto comprado."""
+    try:
+        if not order.billing_email:
+            return
+        product_items = _build_product_items_for_email(order)
+        if not product_items:
+            return
+        send_templated_email(
+            subject=f"¿Cómo fue tu experiencia con tu pedido #{order.order_number}?",
+            to_emails=[order.billing_email],
+            template_key="customer_request_review",
+            context={
+                "order": order,
+                "product_items": product_items,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Error en notify_request_review para order=%s",
+            getattr(order, "order_number", None),
+        )
+
+
+def notify_repurchase_reminder(order):
+    """Envía recordatorio de recompra con enlaces a cada producto."""
+    try:
+        if not order.billing_email:
+            return
+        product_items = _build_product_items_for_email(order)
+        if not product_items:
+            return
+        send_templated_email(
+            subject=f"¿Necesitas reponer? Tus productos de {SiteSettings.get().site_name}",
+            to_emails=[order.billing_email],
+            template_key="customer_repurchase_reminder",
+            context={
+                "order": order,
+                "product_items": product_items,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Error en notify_repurchase_reminder para order=%s",
+            getattr(order, "order_number", None),
+        )
+
+
+def notify_back_in_stock(product, email):
+    """Notifica que un producto volvió a tener stock."""
+    try:
+        if not email or not product:
+            return
+        from django.contrib.sites.models import Site
+        base = getattr(settings, "SITE_URL", "") or ""
+        if not base:
+            try:
+                s = Site.objects.get_current()
+                domain = (s.domain or "").strip()
+                if domain:
+                    base = ("https://" + domain).rstrip("/")
+            except Exception:
+                pass
+        if not base:
+            base = "http://localhost:8000"
+        product_url = base.rstrip("/") + product.get_absolute_url()
+        send_templated_email(
+            subject=f"¡{product.name} ya está disponible!",
+            to_emails=[email],
+            template_key="customer_back_in_stock",
+            context={
+                "product": product,
+                "product_url": product_url,
+            },
+        )
+    except Exception:
+        logger.exception(
+            "Error en notify_back_in_stock para product=%s email=%s",
+            getattr(product, "id", None),
+            email,
+        )
+
+
 def notify_order_status_changed(order):
     """Envía por email al cliente que el estado o pago de su pedido fue actualizado.
     Lanza si el envío falla para que la vista pueda informar al usuario.

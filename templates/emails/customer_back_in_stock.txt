@@ -1,0 +1,7 @@
+¡Buenas noticias!
+
+El producto que esperabas ya está de nuevo en stock.
+
+{{ product.name }}
+
+Ya puedes comprarlo: {{ product_url }}

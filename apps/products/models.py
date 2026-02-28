@@ -423,3 +423,27 @@ class ProductFavorite(models.Model):
 
     def __str__(self):
         return f"{self.user.email} ♥ {self.product.name}"
+
+
+class ProductStockAlert(models.Model):
+    """Suscripción para recibir aviso cuando un producto vuelva a tener stock."""
+    product = models.ForeignKey(
+        Product, on_delete=models.CASCADE, related_name='stock_alerts'
+    )
+    email = models.EmailField('Email')
+    created_at = models.DateTimeField(auto_now_add=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Alerta de stock'
+        verbose_name_plural = 'Alertas de stock'
+        ordering = ['-created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'email'],
+                name='products_unique_product_email_stock_alert',
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.email} - {self.product.name}"
