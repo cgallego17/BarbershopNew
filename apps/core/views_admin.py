@@ -735,26 +735,16 @@ class CustomerCreateView(StaffRequiredMixin, CreateView):
 
 @_dashboard_required
 def customer_detail_view(request, pk):
-    """Detalle de cliente con sus pedidos (incluye pedidos invitados con mismo correo)."""
+    """Detalle de cliente con sus pedidos."""
     from django.db.models import Sum
-    customer = get_object_or_404(User, pk=pk)
-    customer_email = (customer.email or '').strip().lower()
-    # Pedidos: vinculados al usuario O con billing_email igual (invitados)
-    if customer_email:
-        orders_qs = Order.objects.filter(
-            Q(user=customer) | Q(billing_email__iexact=customer_email)
-        ).select_related('user').order_by('-created_at')
-    else:
-        orders_qs = Order.objects.filter(user=customer).select_related('user').order_by('-created_at')
-    orders = orders_qs[:20]
-    total_spent = orders_qs.filter(
+    customer = get_object_or_404(User.objects.prefetch_related('orders'), pk=pk)
+    orders = customer.orders.all().order_by('-created_at')[:20]
+    total_spent = customer.orders.filter(
         status__in=['completed', 'processing', 'shipped']
     ).aggregate(Sum('total'))['total__sum'] or 0
-    orders_count = orders_qs.count()
     return render(request, 'dashboard/customer_detail.html', {
         'customer': customer,
         'orders': orders,
-        'orders_count': orders_count,
         'total_spent': total_spent,
     })
 

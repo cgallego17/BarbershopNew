@@ -33,7 +33,7 @@
     <div class="col-lg-8">
         <div class="admin-card">
             <div class="admin-card__header">
-                <h3 class="admin-card__title">Pedidos ({{ orders_count }})</h3>
+                <h3 class="admin-card__title">Pedidos ({{ customer.orders.count }})</h3>
                 <a href="{% url 'core:admin_panel:order_list' %}?q={{ customer.email }}" class="admin-card__action">Ver todos</a>
             </div>
             <div class="admin-card__body p-0">
@@ -51,7 +51,7 @@
                         <tbody>
                             {% for order in orders %}
                             <tr>
-                                <td><strong>{{ order.order_number }}</strong>{% if not order.user %}<span class="admin-badge admin-badge--on_hold ms-1" title="Pedido invitado (mismo correo)">Invitado</span>{% endif %}</td>
+                                <td><strong>{{ order.order_number }}</strong></td>
                                 <td>{{ order.created_at|date:"d/m/Y H:i" }}</td>
                                 <td>${{ order.total|floatformat:2|intcomma }}</td>
                                 <td><span class="admin-badge admin-badge--{{ order.status }}">{{ order.get_status_display }}</span></td>
