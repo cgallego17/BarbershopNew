@@ -39,7 +39,7 @@ class HomeView(TemplateView):
             base_product_qs = base_product_qs.filter(Product.q_in_stock())
         # Productos populares = más vendidos (por cantidad en pedidos completados/procesando)
         sold = (
-            OrderItem.objects.filter(order__status__in=['completed', 'processing'])
+            OrderItem.objects.filter(order__status__in=['completed', 'processing', 'shipped'])
             .values('product_id')
             .annotate(total_sold=Sum('quantity'))
             .order_by('-total_sold')[:8]
@@ -258,7 +258,7 @@ def dashboard_view(request):
     total_orders = Order.objects.count()
     total_products = Product.objects.filter(is_active=True).count()
     total_revenue = Order.objects.filter(
-        status__in=['completed', 'processing']
+        status__in=['completed', 'processing', 'shipped']
     ).aggregate(Sum('total'))['total__sum'] or 0
     pending_orders = Order.objects.filter(status='pending').count()
     recent_orders = Order.objects.select_related('user')[:10]

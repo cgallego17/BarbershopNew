@@ -157,6 +157,7 @@
                             <tr>
                                 <th style="width: 64px;"></th>
                                 <th>Producto</th>
+                                <th>Código</th>
                                 <th class="text-center">Cant.</th>
                                 <th class="text-end">Precio</th>
                                 <th class="text-end">Total</th>
@@ -175,6 +176,7 @@
                                     {% endwith %}
                                 </td>
                                 <td>{{ item.product_name }}</td>
+                                <td><code class="text-muted">{% if item.variant and item.variant.sku %}{{ item.variant.sku }}{% elif item.product.sku %}{{ item.product.sku }}{% else %}—{% endif %}</code></td>
                                 <td class="text-center">{{ item.quantity }}</td>
                                 <td class="text-end">${{ item.price|floatformat:2 }}</td>
                                 <td class="text-end">${{ item.total|floatformat:2 }}</td>

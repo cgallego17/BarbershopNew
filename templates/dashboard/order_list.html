@@ -62,6 +62,7 @@
                         <option value="">Todos</option>
                         <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pendiente</option>
                         <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>Procesando</option>
+                        <option value="shipped" {% if request.GET.status == 'shipped' %}selected{% endif %}>Enviado</option>
                         <option value="on_hold" {% if request.GET.status == 'on_hold' %}selected{% endif %}>En espera</option>
                         <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completado</option>
                         <option value="refunded" {% if request.GET.status == 'refunded' %}selected{% endif %}>Reembolsado</option>
