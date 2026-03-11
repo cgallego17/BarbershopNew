@@ -20,7 +20,7 @@ from apps.accounts.models import User
 from .forms import (
     CategoryForm, BrandForm, ProductForm, OrderStatusForm, CouponForm,
     ProductAttributeForm, ProductAttributeValueFormSet,
-    get_product_variant_formset, CustomerForm, CustomerCreateForm, SiteSettingsForm,
+    get_product_variant_formset, get_product_image_formset, CustomerForm, CustomerCreateForm, SiteSettingsForm,
     HomeSectionForm, HomeHeroSlideForm, HomeAboutBlockForm, HomeMeatCategoryBlockForm, HomeBrandBlockForm, HomeBrandForm, HomeTestimonialForm,
     HomePopupAnnouncementForm,
     ShippingPriceForm, ShippingFreeRuleForm,
@@ -406,8 +406,14 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         product = self.object
-        if product and product.product_type == 'variable':
-            ctx['variant_formset'] = get_product_variant_formset(
+        if product:
+            if product.product_type == 'variable':
+                ctx['variant_formset'] = get_product_variant_formset(
+                    product,
+                    data=self.request.POST if self.request.method == 'POST' else None,
+                    files=self.request.FILES if self.request.method == 'POST' else None
+                )
+            ctx['image_formset'] = get_product_image_formset(
                 product,
                 data=self.request.POST if self.request.method == 'POST' else None,
                 files=self.request.FILES if self.request.method == 'POST' else None
@@ -426,7 +432,13 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
                 messages.warning(self.request, 'Producto guardado pero hay errores en las variantes.')
         else:
             product.variants.all().delete()
-            messages.success(self.request, 'Producto actualizado correctamente.')
+        image_formset = get_product_image_formset(product, data=self.request.POST, files=self.request.FILES)
+        if image_formset.is_valid():
+            image_formset.save()
+            if product.product_type != 'variable':
+                messages.success(self.request, 'Producto actualizado correctamente.')
+        else:
+            messages.warning(self.request, 'Producto guardado pero hay errores en las imágenes.')
         return response
 
 

@@ -83,7 +83,10 @@ class ProductListView(ListView):
                 models.Q(sku__icontains=search) |
                 models.Q(codigo__icontains=search)
             )
-        sort = self.request.GET.get('sort', 'default')
+        from django.db.models import Sum, Q, Value, IntegerField
+        from django.db.models.functions import Coalesce
+
+        sort = self.request.GET.get('sort', 'bestsellers')
         order_fields = None
         if sort == 'price_asc':
             order_fields = ['sale_price', 'regular_price']
@@ -93,11 +96,28 @@ class ProductListView(ListView):
             order_fields = ['name']
         elif sort == 'newest':
             order_fields = ['-created_at']
-        if category_slug == 'kit':
-            # En categoría kit: destacados primero (especialmente en móvil)
-            order_fields = ['-is_featured'] + (order_fields or ['id'])
-        if order_fields is not None:
-            qs = qs.order_by(*order_fields)
+        elif sort == 'bestsellers' or sort == 'default':
+            # Más vendidos primero (pedidos completados/procesando/enviados)
+            qs = qs.annotate(
+                total_sold=Coalesce(
+                    Sum(
+                        'orderitem_set__quantity',
+                        filter=Q(orderitem_set__order__status__in=['completed', 'processing', 'shipped'])
+                    ),
+                    Value(0),
+                    output_field=IntegerField()
+                )
+            )
+            if category_slug == 'kit':
+                qs = qs.order_by('-is_featured', '-total_sold', '-created_at')
+            else:
+                qs = qs.order_by('-total_sold', '-created_at')
+        else:
+            if category_slug == 'kit':
+                # En categoría kit: destacados primero (especialmente en móvil)
+                order_fields = ['-is_featured'] + (order_fields or ['id'])
+            if order_fields:
+                qs = qs.order_by(*order_fields)
         return qs.distinct()
 
     def get_context_data(self, **kwargs):

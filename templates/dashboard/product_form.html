@@ -114,6 +114,56 @@
                 </div>
             </div>
 
+            {% if image_formset %}
+            <div class="mt-5 pt-4 border-top">
+                <h5 class="mb-4">Imágenes</h5>
+                {{ image_formset.management_form }}
+                <div class="image-forms">
+                    {% for iform in image_formset %}
+                    <div class="admin-card mb-3 image-form-row">
+                        <div class="admin-card__body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-4">
+                                    <label class="form-label small">Imagen</label>
+                                    {{ iform.image }}
+                                    {% if iform.instance.pk and iform.instance.image %}
+                                    <div class="mt-2">
+                                        <img src="{{ iform.instance.image.url }}" alt="" style="max-height:80px; max-width:120px; object-fit:contain;">
+                                    </div>
+                                    {% endif %}
+                                    {% if iform.image.errors %}<div class="text-danger small">{{ iform.image.errors.0 }}</div>{% endif %}
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Texto alt (SEO)</label>
+                                    {{ iform.alt_text }}
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small">Orden</label>
+                                    {{ iform.order }}
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="form-check mt-3">
+                                        {{ iform.is_primary }}
+                                        <label class="form-check-label small">Principal</label>
+                                    </div>
+                                </div>
+                                {% if iform.instance.pk %}
+                                <div class="col-md-1">
+                                    <label class="form-label small">Eliminar</label>
+                                    <div class="pt-2">{{ iform.DELETE }}</div>
+                                </div>
+                                {% endif %}
+                                {{ iform.id }}
+                            </div>
+                            {% if iform.non_field_errors %}<div class="text-danger small mt-2">{{ iform.non_field_errors }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-muted small mt-2">La primera imagen o la marcada como principal se mostrará en el listado. Sube varias imágenes para la página del producto.</p>
+            </div>
+            {% endif %}
+
             {% if variant_formset %}
             <div class="mt-5 pt-4 border-top">
                 <h5 class="mb-4">Variantes</h5>

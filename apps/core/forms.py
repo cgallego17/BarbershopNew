@@ -4,7 +4,7 @@ from django.forms import inlineformset_factory
 from django_ckeditor_5.widgets import CKEditor5Widget
 from apps.core.html_sanitizer import sanitize_html
 
-from apps.products.models import Product, Category, Brand, ProductAttribute, ProductAttributeValue, ProductVariant
+from apps.products.models import Product, Category, Brand, ProductAttribute, ProductAttributeValue, ProductVariant, ProductImage
 from apps.orders.models import Order
 from apps.coupons.models import Coupon
 from apps.accounts.models import User
@@ -180,6 +180,31 @@ def get_product_variant_formset(product, data=None, files=None):
         extra=1, can_delete=True, max_num=50
     )
     return FormSet(data or None, files or None, instance=product, form_kwargs={'product': product})
+
+
+class ProductImageForm(forms.ModelForm):
+    """Formulario para imagen de producto."""
+
+    class Meta:
+        model = ProductImage
+        fields = ['image', 'alt_text', 'order', 'is_primary']
+        widgets = {
+            'alt_text': forms.TextInput(attrs={'placeholder': 'Texto alternativo (SEO)'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        _add_form_control(self)
+
+
+def get_product_image_formset(product, data=None, files=None):
+    """Retorna el formset de imágenes para un producto."""
+    FormSet = inlineformset_factory(
+        Product, ProductImage,
+        form=ProductImageForm,
+        extra=1, can_delete=True, max_num=20
+    )
+    return FormSet(data or None, files or None, instance=product)
 
 
 class CustomerForm(forms.ModelForm):

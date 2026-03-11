@@ -788,7 +788,7 @@
                             <input type="hidden" name="min_price" value="{{ filter_min_price }}">
                             <input type="hidden" name="max_price" value="{{ filter_max_price }}">
                             <select name="sort" class="selectpicker" onchange="this.form.submit()" style="font-size:.85rem">
-                                <option value="default" {% if request.GET.sort == 'default' or not request.GET.sort %}selected{% endif %}>Por defecto</option>
+                                <option value="bestsellers" {% if request.GET.sort == 'bestsellers' or not request.GET.sort %}selected{% endif %}>Más vendidos</option>
                                 <option value="price_asc" {% if request.GET.sort == 'price_asc' %}selected{% endif %}>Precio: menor a mayor</option>
                                 <option value="price_desc" {% if request.GET.sort == 'price_desc' %}selected{% endif %}>Precio: mayor a menor</option>
                                 <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Nombre A–Z</option>
