@@ -1,5 +1,7 @@
 """Vistas CRUD del panel de administración (sin Django Admin)."""
 import io
+import logging
+
 from django.db import models
 from django.db.models import Q, Count, Prefetch
 from django.contrib.admin.views.decorators import staff_member_required
@@ -421,6 +423,7 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
         return ctx
 
     def form_valid(self, form):
+        logger = logging.getLogger(__name__)
         response = super().form_valid(form)
         product = self.object
         if product.product_type == 'variable':
@@ -432,13 +435,23 @@ class ProductUpdateView(StaffRequiredMixin, UpdateView):
                 messages.warning(self.request, 'Producto guardado pero hay errores en las variantes.')
         else:
             product.variants.all().delete()
-        image_formset = get_product_image_formset(product, data=self.request.POST, files=self.request.FILES)
-        if image_formset.is_valid():
-            image_formset.save()
-            if product.product_type != 'variable':
-                messages.success(self.request, 'Producto actualizado correctamente.')
-        else:
-            messages.warning(self.request, 'Producto guardado pero hay errores en las imágenes.')
+        try:
+            image_formset = get_product_image_formset(
+                product, data=self.request.POST, files=self.request.FILES
+            )
+            if image_formset.is_valid():
+                image_formset.save()
+                if product.product_type != 'variable':
+                    messages.success(self.request, 'Producto actualizado correctamente.')
+            else:
+                messages.warning(self.request, 'Producto guardado pero hay errores en las imágenes.')
+        except Exception as e:
+            logger.exception('Error al procesar imágenes de producto: %s', e)
+            messages.error(
+                self.request,
+                f'Error al guardar las imágenes: {str(e)[:200]}. '
+                'Verifica que el formato sea válido (PNG, JPG) y que la carpeta media tenga permisos de escritura.'
+            )
         return response
 
 
