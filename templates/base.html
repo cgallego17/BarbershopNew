@@ -1274,6 +1274,26 @@
             if (data.toast && window.showToast) {
                 window.showToast(data.toast.message, data.toast.type);
             }
+            if (data.fb_add_to_cart && typeof fbq === 'function') {
+                fbq('track', 'AddToCart', data.fb_add_to_cart);
+            }
+            if (data.fb_add_to_cart && typeof dataLayer !== 'undefined') {
+                var e = data.fb_add_to_cart;
+                dataLayer.push({ ecommerce: null });
+                dataLayer.push({
+                    event: 'add_to_cart',
+                    ecommerce: {
+                        currency: e.currency || 'COP',
+                        value: e.value,
+                        items: [{
+                            item_id: (e.content_ids && e.content_ids[0]) || '',
+                            item_name: e.content_name || '',
+                            price: e.value / (e.num_items || 1),
+                            quantity: e.num_items || 1
+                        }]
+                    }
+                });
+            }
         }
 
         function refreshSidebar(callback) {

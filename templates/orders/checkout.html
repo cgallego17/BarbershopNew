@@ -9,6 +9,30 @@
 {% block twitter_title %}Checkout seguro | {{ site_settings.site_name }}{% endblock %}
 {% block twitter_description %}Finaliza tu compra de forma rápida y segura.{% endblock %}
 
+{% block extra_head %}
+<script>
+if (typeof fbq === 'function') {
+    fbq('track', 'InitiateCheckout', {
+        value: {{ cart_total|unlocalize }},
+        currency: 'COP',
+        content_ids: [{% for item in cart %}'{{ item.product_id }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        num_items: {{ cart|length }}
+    });
+}
+if (typeof dataLayer !== 'undefined') {
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+        event: 'begin_checkout',
+        ecommerce: {
+            currency: 'COP',
+            value: {{ cart_total|unlocalize }},
+            items: [{% for item in cart %}{ item_id: '{{ item.product_id }}', item_name: '{{ item.product.name|escapejs }}', price: {{ item.price|unlocalize }}, quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
+        }
+    });
+}
+</script>
+{% endblock %}
+
 {% block extra_css %}
 <style>
 /* =====================================================================

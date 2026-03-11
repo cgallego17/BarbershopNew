@@ -326,10 +326,18 @@ class ProductDetailView(DetailView):
         if not images and product.get_main_image():
             img = product.get_main_image()
             images = [f"{base}{img.image.url}"]
+        if not images:
+            if site.logo:
+                images = [f"{base}{site.logo.url}"]
+            else:
+                from django.conf import settings
+                static_path = (settings.STATIC_URL or 'static/') + 'logo-768x317.png'
+                images = [f"{base.rstrip('/')}/{static_path.lstrip('/')}"]
         description = product.short_description or product.name
         if product.description:
             description = Truncator(strip_tags(product.description)).words(50)
-        currency = (site.currency or "COP").strip() or "COP"
+        raw_currency = (site.currency or "COP").strip() or "COP"
+        currency = raw_currency if len(raw_currency) == 3 and raw_currency.isalpha() else "COP"
         offer = {
             "@type": "Offer",
             "price": str(product.price),
@@ -410,12 +418,13 @@ class ProductDetailView(DetailView):
                 }
             )
             position += 1
+        product_url = f"{base}{self.request.path}"
         item_list.append(
             {
                 "@type": "ListItem",
                 "position": position,
                 "name": product.name,
-                "item": self.request.build_absolute_uri(self.request.path),
+                "item": product_url,
             }
         )
         schema = {

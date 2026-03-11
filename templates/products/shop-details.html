@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static humanize %}
+{% load static humanize l10n %}
 
 {% block title %}{{ product.name }}{% endblock %}
 
@@ -12,13 +12,42 @@
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ product.name }}{% endblock %}
 {% block og_description %}{% if product.short_description %}{{ product.short_description|striptags|truncatewords:30 }}{% else %}{{ product.name }}{% endif %}{% endblock %}
-{% block og_image %}{% with main_img=product.images.first %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
+{% block og_image %}{% with main_img=product.get_main_image %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
 
 {% block twitter_title %}{{ product.name }}{% endblock %}
 {% block twitter_description %}{% if product.short_description %}{{ product.short_description|striptags|truncatewords:30 }}{% else %}{{ product.name }}{% endif %}{% endblock %}
-{% block twitter_image %}{% with main_img=product.images.first %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
+{% block twitter_image %}{% with main_img=product.get_main_image %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
+{% block og_image_alt %}{{ product.name }}{% endblock %}
+{% block twitter_image_alt %}{{ product.name }}{% endblock %}
 
 {% block extra_head %}
+<script>
+if (typeof fbq === 'function') {
+    fbq('track', 'ViewContent', {
+        content_ids: ['{{ product.id }}'],
+        content_name: '{{ product.name|escapejs }}',
+        content_type: 'product',
+        value: {{ product.price|unlocalize }},
+        currency: 'COP'
+    });
+}
+if (typeof dataLayer !== 'undefined') {
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+        event: 'view_item',
+        ecommerce: {
+            currency: 'COP',
+            value: {{ product.price|unlocalize }},
+            items: [{
+                item_id: '{{ product.id }}',
+                item_name: '{{ product.name|escapejs }}',
+                price: {{ product.price|unlocalize }},
+                quantity: 1
+            }]
+        }
+    });
+}
+</script>
 <style>
 /* =====================================================================
    PRODUCT DETAIL — CUSTOM STYLES
@@ -292,7 +321,7 @@
 }
 </style>
 {% load l10n %}<meta property="product:price:amount" content="{{ product.price|unlocalize }}">
-<meta property="product:price:currency" content="{{ site_settings.currency|default:'COP' }}">
+<meta property="product:price:currency" content="COP">
 <script type="application/ld+json">{{ product_schema_json|safe }}</script>
 <script type="application/ld+json">{{ product_breadcrumb_schema_json|safe }}</script>
 {% endblock %}

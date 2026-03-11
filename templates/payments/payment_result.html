@@ -10,6 +10,38 @@
 {% block meta_robots %}noindex, nofollow{% endblock %}
 {% block meta_description %}{% if kind == 'success' %}Tu pago fue procesado correctamente.{% elif kind == 'warning' %}Tu pago está siendo procesado.{% else %}El pago no pudo completarse.{% endif %} {{ site_settings.site_name }}.{% endblock %}
 
+{% block extra_head %}
+{% if kind == 'success' and order %}
+{% load l10n %}
+{% with order_items=order.items.all %}
+<script>
+if (typeof fbq === 'function') {
+    fbq('track', 'Purchase', {
+        value: {{ order.total|unlocalize }},
+        currency: 'COP',
+        content_ids: [{% for item in order_items %}'{{ item.product_id }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+        content_type: 'product',
+        num_items: {{ order_items|length }},
+        order_id: '{{ order.order_number }}'
+    });
+}
+if (typeof dataLayer !== 'undefined') {
+    dataLayer.push({ ecommerce: null });
+    dataLayer.push({
+        event: 'purchase',
+        ecommerce: {
+            transaction_id: '{{ order.order_number }}',
+            value: {{ order.total|unlocalize }},
+            currency: 'COP',
+            items: [{% for item in order_items %}{ item_id: '{{ item.product_id }}', item_name: '{{ item.product_name|escapejs }}', price: {{ item.price|unlocalize }}, quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
+        }
+    });
+}
+</script>
+{% endwith %}
+{% endif %}
+{% endblock %}
+
 {% block extra_css %}
 <style>
 /* ==============================

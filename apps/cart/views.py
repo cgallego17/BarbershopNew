@@ -23,7 +23,7 @@ def _safe_next_url(request, next_url, fallback):
     return fallback
 
 
-def cart_sidebar_json(request, toast_msg=None, toast_type='success'):
+def cart_sidebar_json(request, toast_msg=None, toast_type='success', fb_add_to_cart=None):
     """Devuelve el HTML del sidebar + totales + toast para actualizaciones AJAX."""
     from apps.core.models import SiteSettings
     from django.contrib.humanize.templatetags.humanize import intcomma
@@ -53,6 +53,8 @@ def cart_sidebar_json(request, toast_msg=None, toast_type='success'):
     }
     if toast_msg:
         data['toast'] = {'message': toast_msg, 'type': toast_type}
+    if fb_add_to_cart:
+        data['fb_add_to_cart'] = fb_add_to_cart
     return JsonResponse(data)
 
 
@@ -79,7 +81,19 @@ def cart_add(request, product_id):
     msg = f'"{product.name}" añadido al carrito.'
     # Si es petición AJAX devolver JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return cart_sidebar_json(request, toast_msg=msg, toast_type='success')
+        price_val = price or product.price
+        fb_event = {
+            'content_ids': [str(product.id)],
+            'content_name': product.name,
+            'content_type': 'product',
+            'value': float(price_val * quantity),
+            'currency': 'COP',
+            'num_items': quantity,
+        }
+        return cart_sidebar_json(
+            request, toast_msg=msg, toast_type='success',
+            fb_add_to_cart=fb_event,
+        )
     messages.success(request, msg)
     # Redirect normal con flag para abrir sidebar
     next_url = _safe_next_url(
