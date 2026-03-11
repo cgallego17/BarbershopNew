@@ -10,29 +10,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameIndex(
-            model_name='securityevent',
-            new_name='core_securi_created_d67872_idx',
-            old_name='core_securi_created_8534a4_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='securityevent',
-            new_name='core_securi_event_t_c73910_idx',
-            old_name='core_securi_event_t_0d388e_idx',
-        ),
-        migrations.RenameIndex(
-            model_name='securityevent',
-            new_name='core_securi_source_5a0126_idx',
-            old_name='core_securi_source_58a5f2_idx',
-        ),
         migrations.AddField(
             model_name='sitesettings',
             name='custom_body_html',
             field=models.TextField(blank=True, help_text='Código HTML que se inserta al inicio del body. Útil para pixels (Facebook, TikTok, etc.), scripts de tracking y conversiones. Solo visible en el sitio público, no en el panel.', verbose_name='HTML personalizado en el body'),
-        ),
-        migrations.AlterField(
-            model_name='homeheroslide',
-            name='video_url',
-            field=models.URLField(blank=True, help_text='YouTube: https://www.youtube.com/watch?v=xxxxx. TikTok: https://www.tiktok.com/@usuario/video/xxxxx. Si lo completas, se mostrará el botón de play sobre la imagen del slide.', verbose_name='URL video (YouTube o TikTok)'),
         ),
     ]
