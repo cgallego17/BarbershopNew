@@ -14,5 +14,5 @@ Puedes intentar nuevamente con otro método de pago.
 Si el problema persiste, contáctanos y te ayudamos.
 
 Reintentar pago:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/mis-pedidos/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/pedidos/mis-pedidos/
 {% endblock %}

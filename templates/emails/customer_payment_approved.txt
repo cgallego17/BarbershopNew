@@ -15,5 +15,5 @@ Nuestro equipo comenzará a preparar tu pedido.
 Te notificaremos cuando esté en camino.
 
 Ver mi pedido:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/mis-pedidos/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/pedidos/mis-pedidos/
 {% endblock %}

@@ -11,4 +11,4 @@ Tus productos:
   Comprar: {{ item.product_url }}
 {% endfor %}
 
-Ver tienda: {{ site_settings.site_url|default:"http://localhost:8000" }}/tienda/
+Ver tienda: {{ site_settings.site_url|default:"https://barbershop.com.co" }}/tienda/

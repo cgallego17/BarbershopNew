@@ -11,5 +11,5 @@ Iniciaste tu compra pero aún no has completado el pago. Tu pedido está guardad
   Total:  ${{ order.total|floatformat:0|intcomma }}
 
 Completa tu pago aquí:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/pagos/pagar/{{ order.order_number }}/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/pagos/pagar/{{ order.order_number }}/
 {% endblock %}

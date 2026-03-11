@@ -285,7 +285,9 @@ def notify_cart_abandoned(email, cart_items, cart_total):
 def _build_product_items_for_email(order, include_image=False):
     """Construye lista de items con URLs para emails (reseña, recompra)."""
     from django.contrib.sites.models import Site
-    base = getattr(settings, "SITE_URL", "") or ""
+    base = (SiteSettings.get().site_url or "").strip().rstrip("/")
+    if not base:
+        base = getattr(settings, "SITE_URL", "") or ""
     if not base and hasattr(Site, "objects"):
         try:
             s = Site.objects.get_current()
@@ -295,7 +297,7 @@ def _build_product_items_for_email(order, include_image=False):
         except Exception:
             pass
     if not base:
-        base = "http://localhost:8000"
+        base = "https://barbershop.com.co"
     base = base.rstrip("/")
     items = []
     for item in order.items.select_related("product").prefetch_related(
@@ -373,7 +375,9 @@ def notify_back_in_stock(product, email):
         if not email or not product:
             return
         from django.contrib.sites.models import Site
-        base = getattr(settings, "SITE_URL", "") or ""
+        base = (SiteSettings.get().site_url or "").strip().rstrip("/")
+        if not base:
+            base = getattr(settings, "SITE_URL", "") or ""
         if not base:
             try:
                 s = Site.objects.get_current()
@@ -383,7 +387,7 @@ def notify_back_in_stock(product, email):
             except Exception:
                 pass
         if not base:
-            base = "http://localhost:8000"
+            base = "https://barbershop.com.co"
         product_url = base.rstrip("/") + product.get_absolute_url()
         send_templated_email(
             subject=f"¡{product.name} ya está disponible!",

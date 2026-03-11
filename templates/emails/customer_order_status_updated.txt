@@ -14,5 +14,5 @@ Te informamos que el estado de tu pedido ha sido actualizado.
 Si tienes dudas, contáctanos.
 
 Ver mi pedido:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/pedido/{{ order.order_number }}/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/pedidos/pedido/{{ order.order_number }}/
 {% endblock %}

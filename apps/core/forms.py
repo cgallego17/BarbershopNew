@@ -335,11 +335,13 @@ class SiteSettingsForm(forms.ModelForm):
             'about_text', 'currency',
             'terms_url', 'privacy_url',
             'meta_description',
+            'site_url',
             'custom_body_html',
         ]
         widgets = {
             'about_text': CKEDITOR_WIDGET,
             'meta_description': forms.Textarea(attrs={'rows': 2}),
+            'site_url': forms.URLInput(attrs={'placeholder': 'https://barbershop.com.co'}),
             'topbar_marquee_text': forms.Textarea(attrs={'rows': 2, 'placeholder': 'Ej: Envíos a todo el país • Ofertas esta semana • Contáctanos por WhatsApp'}),
             'show_out_of_stock_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'maintenance_mode': forms.CheckboxInput(attrs={'class': 'form-check-input'}),

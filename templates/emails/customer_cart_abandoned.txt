@@ -13,5 +13,5 @@ Dejaste productos en tu carrito. Te recordamos por si quieres completar tu compr
 Total: ${{ cart_total|floatformat:0|intcomma }}
 
 Ver tu carrito:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/carrito/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/carrito/
 {% endblock %}

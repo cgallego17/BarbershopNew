@@ -76,6 +76,11 @@ class SiteSettings(models.Model):
 
     # Meta
     meta_description = models.CharField('Meta descripción (SEO)', max_length=300, blank=True)
+    site_url = models.URLField(
+        'URL del sitio',
+        blank=True,
+        help_text='URL base del sitio (ej: https://barbershop.com.co). Se usa en emails y enlaces. Si está vacío se usa la URL de la petición cuando está disponible.'
+    )
     # Barra superior (marquee)
     topbar_marquee_text = models.TextField(
         'Texto barra superior (marquee)',

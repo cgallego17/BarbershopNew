@@ -14,5 +14,5 @@ Nuestro equipo te ha dejado el siguiente mensaje sobre tu pedido:
 Si tienes dudas, responde a este correo o contáctanos.
 
 Ver mi pedido:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/pedidos/pedido/{{ order.order_number }}/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/pedidos/pedido/{{ order.order_number }}/
 {% endblock %}

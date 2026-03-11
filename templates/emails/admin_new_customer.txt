@@ -9,5 +9,5 @@
 {% endif %}  Registro:  {{ user.date_joined|date:"d/m/Y H:i" }}
 
 Ver en el panel:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/clientes/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/panel/clientes/
 {% endblock %}

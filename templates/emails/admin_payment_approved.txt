@@ -12,5 +12,5 @@ El pedido #{{ order.order_number }} ha sido pagado.
   Total:    ${{ order.total|floatformat:0|intcomma }}
 
 Ver pedido en panel:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/pedidos/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/panel/pedidos/
 {% endblock %}

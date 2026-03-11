@@ -189,6 +189,12 @@
                         <label class="form-label">Meta descripción (SEO)</label>
                         {{ form.meta_description }}
                     </div>
+                    <div class="col-12">
+                        <label class="form-label">URL del sitio</label>
+                        {{ form.site_url }}
+                        <p class="form-text small text-muted mt-1">URL base del sitio (ej: https://barbershop.com.co). Se usa en los enlaces de los emails. Si está vacío, los emails pueden mostrar localhost.</p>
+                        {% if form.site_url.errors %}<div class="text-danger small">{{ form.site_url.errors.0 }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 

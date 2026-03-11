@@ -13,5 +13,5 @@ El pedido #{{ order.order_number }} presentó un fallo en el proceso de pago.
   Total:    ${{ order.total|floatformat:0|intcomma }}
 
 Ver pagos fallidos en panel:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/panel/pedidos/?payment_status=failed
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/panel/pedidos/?payment_status=failed
 {% endblock %}

@@ -11,5 +11,5 @@ Desde tu cuenta puedes:
   🔐 Cambiar tu contraseña
 
 Visita nuestra tienda:
-{{ site_settings.site_url|default:"http://localhost:8000" }}/tienda/
+{{ site_settings.site_url|default:"https://barbershop.com.co" }}/tienda/
 {% endblock %}
