@@ -101,8 +101,8 @@ class ProductListView(ListView):
             qs = qs.annotate(
                 total_sold=Coalesce(
                     Sum(
-                        'orderitem_set__quantity',
-                        filter=Q(orderitem_set__order__status__in=['completed', 'processing', 'shipped'])
+                        'orderitem__quantity',
+                        filter=Q(orderitem__order__status__in=['completed', 'processing', 'shipped'])
                     ),
                     Value(0),
                     output_field=IntegerField()
