@@ -127,7 +127,13 @@ def maintenance_view(request):
 
 
 def robots_txt(request):
-    return render(request, 'robots.txt', content_type='text/plain')
+    from .models import SiteSettings
+    site = SiteSettings.get()
+    base_url = (site.site_url or '').strip().rstrip('/')
+    if not base_url:
+        base_url = f"{request.scheme}://{request.get_host()}"
+    ctx = {'base_url': base_url}
+    return render(request, 'robots.txt', ctx, content_type='text/plain')
 
 
 @require_GET

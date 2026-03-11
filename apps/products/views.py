@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from urllib.parse import urlencode
 from django.db import models
 from django.db import IntegrityError
@@ -255,7 +256,10 @@ class ProductDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['approved_reviews'] = self.object.reviews.filter(is_approved=True).order_by('-created_at')
-        context['share_url'] = self.request.build_absolute_uri(self.request.path)
+        from apps.core.models import SiteSettings
+        site = SiteSettings.get()
+        base = (site.site_url or '').strip().rstrip('/') or self.request.build_absolute_uri('/').rstrip('/')
+        context['share_url'] = f"{base}{self.request.path}"
         stats = self.object.get_rating_stats()
         context['product_rating_stats'] = stats
         context['rating_stars'] = round(stats['average'])  # 0-5 para pintar estrellas
@@ -314,8 +318,10 @@ class ProductDetailView(DetailView):
     def _build_product_schema_json(self, product, approved_reviews, share_url, rating_stats):
         """Schema.org Product + AggregateRating + Review para SEO (JSON-LD)."""
         from apps.core.models import SiteSettings
+        from django.utils import timezone
         request = self.request
-        base = f"{request.scheme}://{request.get_host()}"
+        site = SiteSettings.get()
+        base = (site.site_url or '').strip().rstrip('/') or f"{request.scheme}://{request.get_host()}"
         images = [f"{base}{img.image.url}" for img in product.images.all()[:5]]
         if not images and product.get_main_image():
             img = product.get_main_image()
@@ -323,7 +329,19 @@ class ProductDetailView(DetailView):
         description = product.short_description or product.name
         if product.description:
             description = Truncator(strip_tags(product.description)).words(50)
-        currency = (SiteSettings.get().currency or "COP").strip() or "COP"
+        currency = (site.currency or "COP").strip() or "COP"
+        offer = {
+            "@type": "Offer",
+            "price": str(product.price),
+            "priceCurrency": currency,
+            "availability": "https://schema.org/InStock" if product.in_stock else "https://schema.org/OutOfStock",
+        }
+        if product.sale_price_end:
+            offer["priceValidUntil"] = product.sale_price_end.strftime("%Y-%m-%d")
+        else:
+            offer["priceValidUntil"] = (
+                timezone.now() + timedelta(days=30)
+            ).strftime("%Y-%m-%d")
         schema = {
             "@context": "https://schema.org",
             "@type": "Product",
@@ -331,13 +349,10 @@ class ProductDetailView(DetailView):
             "description": description,
             "url": share_url,
             "image": images,
-            "offers": {
-                "@type": "Offer",
-                "price": str(product.price),
-                "priceCurrency": currency,
-                "availability": "https://schema.org/InStock" if product.in_stock else "https://schema.org/OutOfStock",
-            },
+            "offers": offer,
         }
+        if product.sku:
+            schema["sku"] = product.sku
         if rating_stats["count"] > 0:
             schema["aggregateRating"] = {
                 "@type": "AggregateRating",
@@ -364,8 +379,10 @@ class ProductDetailView(DetailView):
         return json.dumps(schema, ensure_ascii=False)
 
     def _build_breadcrumb_schema_json(self, product):
+        from apps.core.models import SiteSettings
         request = self.request
-        base = f"{request.scheme}://{request.get_host()}"
+        site = SiteSettings.get()
+        base = (site.site_url or '').strip().rstrip('/') or f"{request.scheme}://{request.get_host()}"
         shop_url = f"{base}{reverse('products:list')}"
         category = product.categories.filter(is_active=True).first()
         item_list = [

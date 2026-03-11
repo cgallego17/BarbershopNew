@@ -7,6 +7,8 @@
     {% else %}Pago no completado
     {% endif %}
 {% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block meta_description %}{% if kind == 'success' %}Tu pago fue procesado correctamente.{% elif kind == 'warning' %}Tu pago está siendo procesado.{% else %}El pago no pudo completarse.{% endif %} {{ site_settings.site_name }}.{% endblock %}
 
 {% block extra_css %}
 <style>

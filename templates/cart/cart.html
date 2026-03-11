@@ -2,6 +2,8 @@
 {% load static humanize %}
 
 {% block title %}Carrito{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+{% block meta_description %}Tu carrito de compras en {{ site_settings.site_name }}. Revisa los productos antes de finalizar tu pedido.{% endblock %}
 
 {% block extra_css %}
 <style>

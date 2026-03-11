@@ -9,7 +9,14 @@ from .models import SiteSettings
 
 def site_settings(request):
     """Inyecta la configuración del sitio en el contexto."""
-    ctx = {'site_settings': SiteSettings.get()}
+    site = SiteSettings.get()
+    base_url = (site.site_url or '').strip().rstrip('/')
+    if not base_url:
+        base_url = request.build_absolute_uri('/').rstrip('/')
+    ctx = {
+        'site_settings': site,
+        'seo_base_url': base_url,
+    }
     if (
         getattr(request, 'user', None)
         and getattr(request.user, 'can_access_dashboard', False)

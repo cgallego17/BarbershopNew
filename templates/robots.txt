@@ -8,4 +8,4 @@ Disallow: /pagos/
 Disallow: /panel/
 Disallow: /__debug__/
 
-Sitemap: {{ request.scheme }}://{{ request.get_host }}/sitemap.xml
+Sitemap: {{ base_url }}/sitemap.xml

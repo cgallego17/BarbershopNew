@@ -12,11 +12,11 @@
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ product.name }}{% endblock %}
 {% block og_description %}{% if product.short_description %}{{ product.short_description|striptags|truncatewords:30 }}{% else %}{{ product.name }}{% endif %}{% endblock %}
-{% block og_image %}{% with main_img=product.images.first %}{% if main_img %}{{ request.scheme }}://{{ request.get_host }}{{ main_img.image.url }}{% endif %}{% endwith %}{% endblock %}
+{% block og_image %}{% with main_img=product.images.first %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
 
 {% block twitter_title %}{{ product.name }}{% endblock %}
 {% block twitter_description %}{% if product.short_description %}{{ product.short_description|striptags|truncatewords:30 }}{% else %}{{ product.name }}{% endif %}{% endblock %}
-{% block twitter_image %}{% with main_img=product.images.first %}{% if main_img %}{{ request.scheme }}://{{ request.get_host }}{{ main_img.image.url }}{% endif %}{% endwith %}{% endblock %}
+{% block twitter_image %}{% with main_img=product.images.first %}{% if main_img %}{{ seo_base_url }}{{ main_img.image.url }}{% else %}{% if site_settings.logo %}{{ seo_base_url }}{{ site_settings.logo.url }}{% else %}{{ seo_base_url }}{% static 'logo-768x317.png' %}{% endif %}{% endif %}{% endwith %}{% endblock %}
 
 {% block extra_head %}
 <style>
