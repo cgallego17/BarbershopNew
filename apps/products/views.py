@@ -250,7 +250,7 @@ class ProductDetailView(DetailView):
 
     def get_queryset(self):
         return Product.objects.filter(is_active=True).prefetch_related(
-            'images', 'variants', 'reviews'
+            'images', 'variants', 'reviews', 'categories'
         )
 
     def get_context_data(self, **kwargs):
@@ -269,6 +269,9 @@ class ProductDetailView(DetailView):
         context['product_breadcrumb_schema_json'] = self._build_breadcrumb_schema_json(
             self.object
         )
+        context['product_primary_category'] = self.object.categories.filter(
+            is_active=True
+        ).first()
         context['is_favorite'] = False
         if self.request.user.is_authenticated:
             context['is_favorite'] = ProductFavorite.objects.filter(

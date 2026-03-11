@@ -5,6 +5,8 @@
 
 {% block meta_description %}{% if product.short_description %}{{ product.short_description|striptags|truncatewords:30 }}{% else %}{{ product.name }} - Comprar en {{ site_settings.site_name }}{% endif %}{% endblock %}
 
+{% block meta_keywords %}{{ product.name }}{% if product.brand %}, {{ product.brand.name }}{% endif %}{% for cat in product.categories.all %}{% if cat.is_active %}, {{ cat.name }}{% endif %}{% endfor %}, comprar online, {{ site_settings.site_name }}{% endblock %}
+
 {% block canonical_url %}{{ share_url }}{% endblock %}
 {% block og_url %}{{ share_url }}{% endblock %}
 {% block twitter_url %}{{ share_url }}{% endblock %}
@@ -320,8 +322,11 @@ if (typeof dataLayer !== 'undefined') {
     .pd-price { font-size:1.6rem; }
 }
 </style>
-{% load l10n %}<meta property="product:price:amount" content="{{ product.price|unlocalize }}">
+{% load l10n %}
+<meta property="product:price:amount" content="{{ product.price|unlocalize }}">
 <meta property="product:price:currency" content="COP">
+<meta property="product:availability" content="{% if product.in_stock %}in stock{% else %}out of stock{% endif %}">
+<meta property="product:condition" content="new">
 <script type="application/ld+json">{{ product_schema_json|safe }}</script>
 <script type="application/ld+json">{{ product_breadcrumb_schema_json|safe }}</script>
 {% endblock %}
@@ -330,12 +335,36 @@ if (typeof dataLayer !== 'undefined') {
 <section class="page-header">
     <div class="page-header__bg" style="background-image: url({% static 'assets/images/backgrounds/page-header-bg.jpg' %});"></div>
     <div class="container">
-        <h2 class="page-header__title">{{ product.name }}</h2>
-        <ul class="boskery-breadcrumb list-unstyled">
-            <li><a href="{% url 'core:home' %}">Inicio</a></li>
-            <li><a href="{% url 'products:list' %}">Tienda</a></li>
-            <li><span>{{ product.name }}</span></li>
-        </ul>
+        <h1 class="page-header__title">{{ product.name }}</h1>
+        <nav aria-label="Miga de pan">
+            <ol class="boskery-breadcrumb list-unstyled" itemscope itemtype="https://schema.org/BreadcrumbList">
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a href="{% url 'core:home' %}" itemprop="item"><span itemprop="name">Inicio</span></a>
+                    <meta itemprop="position" content="1">
+                </li>
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a href="{% url 'products:list' %}" itemprop="item"><span itemprop="name">Tienda</span></a>
+                    <meta itemprop="position" content="2">
+                </li>
+                {% with primary_cat=product_primary_category %}
+                {% if primary_cat %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <a href="{% url 'products:list' %}?category={{ primary_cat.slug }}" itemprop="item"><span itemprop="name">{{ primary_cat.name }}</span></a>
+                    <meta itemprop="position" content="3">
+                </li>
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <span itemprop="name">{{ product.name }}</span>
+                    <meta itemprop="position" content="4">
+                </li>
+                {% else %}
+                <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+                    <span itemprop="name">{{ product.name }}</span>
+                    <meta itemprop="position" content="3">
+                </li>
+                {% endif %}
+                {% endwith %}
+            </ol>
+        </nav>
     </div>
 </section>
 
