@@ -335,6 +335,7 @@ class SiteSettingsForm(forms.ModelForm):
             'about_text', 'currency',
             'terms_url', 'privacy_url',
             'meta_description',
+            'custom_body_html',
         ]
         widgets = {
             'about_text': CKEDITOR_WIDGET,
@@ -343,6 +344,11 @@ class SiteSettingsForm(forms.ModelForm):
             'show_out_of_stock_products': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'maintenance_mode': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'maintenance_message': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Ej: Estamos mejorando el sitio. Volvemos muy pronto.'}),
+            'custom_body_html': forms.Textarea(attrs={
+                'rows': 8,
+                'placeholder': 'Ej: <!-- Facebook Pixel -->\n<script>...</script>\n<!-- TikTok Pixel -->\n<script>...</script>',
+                'class': 'font-monospace',
+            }),
         }
 
     def __init__(self, *args, **kwargs):

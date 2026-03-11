@@ -422,6 +422,10 @@
     <!-- End Google Tag Manager -->
 </head>
 <body class="custom-cursor">
+    {% if site_settings.custom_body_html %}
+    <!-- HTML personalizado (pixels, scripts) -->
+    {{ site_settings.custom_body_html|safe }}
+    {% endif %}
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K582BS48"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>

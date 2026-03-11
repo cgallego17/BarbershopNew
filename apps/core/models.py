@@ -90,6 +90,11 @@ class SiteSettings(models.Model):
         default=0,
         help_text='Si el subtotal del pedido es mayor o igual a este valor, el envío será gratis.'
     )
+    custom_body_html = models.TextField(
+        'HTML personalizado en el body',
+        blank=True,
+        help_text='Código HTML que se inserta al inicio del body. Útil para pixels (Facebook, TikTok, etc.), scripts de tracking y conversiones. Solo visible en el sitio público, no en el panel.'
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
