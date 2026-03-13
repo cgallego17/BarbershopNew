@@ -215,6 +215,10 @@ def checkout_view(request):
             subtotal=subtotal,
             shipping_total=shipping_total,
             total=subtotal + shipping_total,
+            meta_client_ip=(request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR', '') or '')[:45],
+            meta_client_user_agent=(request.META.get('HTTP_USER_AGENT') or '')[:256],
+            meta_fbp=(request.COOKIES.get('_fbp') or '')[:255],
+            meta_fbc=(request.COOKIES.get('_fbc') or '')[:255],
         )
         coupon_code = cleaned.get('coupon_code', '').strip()
         if coupon_code:
@@ -310,12 +314,28 @@ def checkout_view(request):
             for item in cart
         ]
         email = getattr(user, 'email', None) if user and user.is_authenticated else None
+        phone = getattr(user, 'phone', None) if user and user.is_authenticated else None
+        first_name = getattr(user, 'first_name', None) if user and user.is_authenticated else None
+        last_name = getattr(user, 'last_name', None) if user and user.is_authenticated else None
+        city = getattr(user, 'city', None) if user and user.is_authenticated else None
+        state = getattr(user, 'state', None) if user and user.is_authenticated else None
+        country = getattr(user, 'country', None) if user and user.is_authenticated else None
+        zip_code = getattr(user, 'postal_code', None) if user and user.is_authenticated else None
+        external_id = getattr(user, 'id', None) if user and user.is_authenticated else None
         fbp = request.COOKIES.get('_fbp')
         fbc = request.COOKIES.get('_fbc')
         send_initiate_checkout(
             cart_items=cart_items,
             cart_total=cart.get_total_price(),
             email=email,
+            phone=phone,
+            first_name=first_name,
+            last_name=last_name,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            country=country,
+            external_id=external_id,
             request=request,
             fbp=fbp,
             fbc=fbc,

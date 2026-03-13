@@ -394,6 +394,40 @@
     }
     </style>
     {% block extra_css %}{% endblock %}
+    <script>
+    (function() {
+        function setCookie(name, value, days) {
+            var maxAge = days * 24 * 60 * 60;
+            document.cookie = name + '=' + value + '; path=/; max-age=' + maxAge + '; SameSite=Lax';
+        }
+        function getCookie(name) {
+            var key = name + '=';
+            var parts = document.cookie ? document.cookie.split('; ') : [];
+            for (var i = 0; i < parts.length; i++) {
+                if (parts[i].indexOf(key) === 0) {
+                    return parts[i].substring(key.length);
+                }
+            }
+            return '';
+        }
+        function nowMs() {
+            return Date.now ? Date.now() : new Date().getTime();
+        }
+        var fbp = getCookie('_fbp');
+        if (!fbp) {
+            var randomPart = Math.floor(Math.random() * 10000000000);
+            fbp = 'fb.1.' + nowMs() + '.' + randomPart;
+            setCookie('_fbp', fbp, 90);
+        }
+        var url = new URL(window.location.href);
+        var fbclid = url.searchParams.get('fbclid');
+        var fbc = getCookie('_fbc');
+        if (fbclid && !fbc) {
+            fbc = 'fb.1.' + nowMs() + '.' + fbclid;
+            setCookie('_fbc', fbc, 90);
+        }
+    })();
+    </script>
     {% custom_head_html %}
     {% block extra_head %}{% endblock %}
 </head>

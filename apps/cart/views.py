@@ -98,7 +98,16 @@ def cart_add(request, product_id):
     }
     try:
         from apps.core.meta_conversions import send_add_to_cart
-        email = getattr(request.user, 'email', None) if request.user.is_authenticated else None
+        user = request.user if request.user.is_authenticated else None
+        email = getattr(user, 'email', None) if user else None
+        phone = getattr(user, 'phone', None) if user else None
+        first_name = getattr(user, 'first_name', None) if user else None
+        last_name = getattr(user, 'last_name', None) if user else None
+        city = getattr(user, 'city', None) if user else None
+        state = getattr(user, 'state', None) if user else None
+        country = getattr(user, 'country', None) if user else None
+        zip_code = getattr(user, 'postal_code', None) if user else None
+        external_id = getattr(user, 'id', None) if user else None
         fbp = request.COOKIES.get('_fbp')
         fbc = request.COOKIES.get('_fbc')
         send_add_to_cart(
@@ -107,6 +116,14 @@ def cart_add(request, product_id):
             value=float(price_val * quantity),
             quantity=quantity,
             email=email,
+            phone=phone,
+            first_name=first_name,
+            last_name=last_name,
+            city=city,
+            state=state,
+            zip_code=zip_code,
+            country=country,
+            external_id=external_id,
             event_id=event_id,
             request=request,
             fbp=fbp,

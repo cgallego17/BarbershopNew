@@ -5,7 +5,6 @@ from decimal import Decimal
 
 from django.db import models
 from django.conf import settings
-from django.core.validators import MinValueValidator
 
 
 class Order(models.Model):
@@ -114,6 +113,18 @@ class Order(models.Model):
         max_length=256,
         blank=True,
         help_text='User-Agent del navegador al momento de ir a pagar. Se usa en el evento Purchase.',
+    )
+    meta_fbp = models.CharField(
+        'fbp del cliente (Meta CAPI)',
+        max_length=255,
+        blank=True,
+        help_text='Valor de cookie _fbp capturado temprano para mejorar match quality en Purchase.',
+    )
+    meta_fbc = models.CharField(
+        'fbc del cliente (Meta CAPI)',
+        max_length=255,
+        blank=True,
+        help_text='Valor de cookie _fbc capturado temprano para mejorar match quality en Purchase.',
     )
 
     class Meta:

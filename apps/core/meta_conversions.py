@@ -6,6 +6,7 @@ Documentación: https://developers.facebook.com/docs/marketing-api/conversions-a
 import hashlib
 import logging
 import time
+from datetime import date, datetime
 
 import requests
 
@@ -36,11 +37,48 @@ def _hash_phone(value):
     return hashlib.sha256(digits.encode('utf-8')).hexdigest()
 
 
+def _normalize_dob(value):
+    """
+    Convierte fecha de nacimiento a formato YYYYMMDD (antes de hash).
+    Acepta date/datetime o string.
+    """
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value.strftime('%Y%m%d')
+    if isinstance(value, date):
+        return value.strftime('%Y%m%d')
+    if isinstance(value, str):
+        digits = ''.join(c for c in value if c.isdigit())
+        if len(digits) == 8:
+            return digits
+    return None
+
+
+def _normalize_gender(value):
+    """Normaliza género a 'm' o 'f' cuando es posible."""
+    if not value:
+        return None
+    val = str(value).strip().lower()
+    if val in ('m', 'male', 'masculino', 'hombre'):
+        return 'm'
+    if val in ('f', 'female', 'femenino', 'mujer'):
+        return 'f'
+    return None
+
+
 def _build_user_data(
     email=None,
     phone=None,
     first_name=None,
     last_name=None,
+    date_of_birth=None,
+    gender=None,
+    city=None,
+    state=None,
+    zip_code=None,
+    country=None,
+    external_id=None,
     fbp=None,
     fbc=None,
     client_ip_address=None,
@@ -67,6 +105,36 @@ def _build_user_data(
         h = _hash_sha256(last_name)
         if h:
             data['ln'] = [h]
+    if date_of_birth:
+        dob = _normalize_dob(date_of_birth)
+        h = _hash_sha256(dob) if dob else None
+        if h:
+            data['db'] = [h]
+    if gender:
+        ge = _normalize_gender(gender)
+        h = _hash_sha256(ge) if ge else None
+        if h:
+            data['ge'] = [h]
+    if city:
+        h = _hash_sha256(city)
+        if h:
+            data['ct'] = [h]
+    if state:
+        h = _hash_sha256(state)
+        if h:
+            data['st'] = [h]
+    if zip_code:
+        h = _hash_sha256(str(zip_code))
+        if h:
+            data['zp'] = [h]
+    if country:
+        h = _hash_sha256(country)
+        if h:
+            data['country'] = [h]
+    if external_id:
+        h = _hash_sha256(str(external_id))
+        if h:
+            data['external_id'] = [h]
     if fbp:
         data['fbp'] = fbp
     if fbc:
@@ -170,12 +238,22 @@ def send_purchase(order, request=None):
 
     client_ip = _get_client_ip(request) if request else (getattr(order, 'meta_client_ip', None) or '').strip() or None
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256] if request else (getattr(order, 'meta_client_user_agent', None) or '').strip()[:256] or None
+    fbp = request.COOKIES.get('_fbp') if request else None
+    fbc = request.COOKIES.get('_fbc') if request else None
 
     user_data = _build_user_data(
         email=order.billing_email,
         phone=order.billing_phone,
         first_name=order.billing_first_name,
         last_name=order.billing_last_name,
+        date_of_birth=order.billing_date_of_birth,
+        city=order.billing_city,
+        state=order.billing_state,
+        zip_code=order.billing_postal_code,
+        country=order.billing_country,
+        external_id=order.user_id,
+        fbp=fbp or (getattr(order, 'meta_fbp', None) or None),
+        fbc=fbc or (getattr(order, 'meta_fbc', None) or None),
         client_ip_address=client_ip,
         client_user_agent=client_ua,
     )
@@ -205,7 +283,12 @@ def send_purchase(order, request=None):
     )
 
 
-def send_add_to_cart(product_id, product_name, value, quantity, email=None, phone=None, event_id=None, request=None, fbp=None, fbc=None):
+def send_add_to_cart(
+    product_id, product_name, value, quantity, email=None, phone=None,
+    first_name=None, last_name=None, city=None, state=None,
+    zip_code=None, country=None, external_id=None,
+    event_id=None, request=None, fbp=None, fbc=None,
+):
     """Envía evento AddToCart."""
     from apps.core.models import SiteSettings
     settings = SiteSettings.get()
@@ -218,6 +301,9 @@ def send_add_to_cart(product_id, product_name, value, quantity, email=None, phon
 
     user_data = _build_user_data(
         email=email, phone=phone,
+        first_name=first_name, last_name=last_name,
+        city=city, state=state, zip_code=zip_code, country=country,
+        external_id=external_id,
         client_ip_address=client_ip, client_user_agent=client_ua,
         fbp=fbp, fbc=fbc,
     )
@@ -244,7 +330,12 @@ def send_add_to_cart(product_id, product_name, value, quantity, email=None, phon
     )
 
 
-def send_view_content(product_id, product_name, value, email=None, phone=None, event_id=None, request=None, fbp=None, fbc=None):
+def send_view_content(
+    product_id, product_name, value, email=None, phone=None,
+    first_name=None, last_name=None, city=None, state=None,
+    zip_code=None, country=None, external_id=None,
+    event_id=None, request=None, fbp=None, fbc=None,
+):
     """Envía evento ViewContent (vista de detalle de producto)."""
     from apps.core.models import SiteSettings
     settings = SiteSettings.get()
@@ -257,6 +348,9 @@ def send_view_content(product_id, product_name, value, email=None, phone=None, e
 
     user_data = _build_user_data(
         email=email, phone=phone,
+        first_name=first_name, last_name=last_name,
+        city=city, state=state, zip_code=zip_code, country=country,
+        external_id=external_id,
         client_ip_address=client_ip, client_user_agent=client_ua,
         fbp=fbp, fbc=fbc,
     )
@@ -282,7 +376,12 @@ def send_view_content(product_id, product_name, value, email=None, phone=None, e
     )
 
 
-def send_initiate_checkout(cart_items, cart_total, email=None, phone=None, event_id=None, request=None, fbp=None, fbc=None):
+def send_initiate_checkout(
+    cart_items, cart_total, email=None, phone=None,
+    first_name=None, last_name=None, city=None, state=None,
+    zip_code=None, country=None, external_id=None,
+    event_id=None, request=None, fbp=None, fbc=None,
+):
     """
     Envía evento InitiateCheckout.
     cart_items: lista de dicts con product_id, product_name, price, quantity
@@ -298,6 +397,9 @@ def send_initiate_checkout(cart_items, cart_total, email=None, phone=None, event
 
     user_data = _build_user_data(
         email=email, phone=phone,
+        first_name=first_name, last_name=last_name,
+        city=city, state=state, zip_code=zip_code, country=country,
+        external_id=external_id,
         client_ip_address=client_ip, client_user_agent=client_ua,
         fbp=fbp, fbc=fbc,
     )

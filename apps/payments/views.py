@@ -297,13 +297,19 @@ def payment_page(request, order_number):
     # Capturar IP y User-Agent para Meta Conversions API (Purchase)
     client_ip = _get_client_ip(request)
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256]
-    if client_ip or client_ua:
+    client_fbp = (request.COOKIES.get('_fbp') or '')[:255]
+    client_fbc = (request.COOKIES.get('_fbc') or '')[:255]
+    if client_ip or client_ua or client_fbp or client_fbc:
         Order.objects.filter(pk=order.pk).update(
             meta_client_ip=client_ip or order.meta_client_ip,
             meta_client_user_agent=client_ua or order.meta_client_user_agent,
+            meta_fbp=client_fbp or order.meta_fbp,
+            meta_fbc=client_fbc or order.meta_fbc,
         )
         order.meta_client_ip = client_ip or order.meta_client_ip
         order.meta_client_user_agent = client_ua or order.meta_client_user_agent
+        order.meta_fbp = client_fbp or order.meta_fbp
+        order.meta_fbc = client_fbc or order.meta_fbc
 
     currency       = 'COP'
     amount_cents   = int(order.total * 100)

@@ -277,7 +277,16 @@ class ProductDetailView(DetailView):
         ).first()
         try:
             from apps.core.meta_conversions import send_view_content
-            email = getattr(self.request.user, 'email', None) if self.request.user.is_authenticated else None
+            user = self.request.user if self.request.user.is_authenticated else None
+            email = getattr(user, 'email', None) if user else None
+            phone = getattr(user, 'phone', None) if user else None
+            first_name = getattr(user, 'first_name', None) if user else None
+            last_name = getattr(user, 'last_name', None) if user else None
+            city = getattr(user, 'city', None) if user else None
+            state = getattr(user, 'state', None) if user else None
+            country = getattr(user, 'country', None) if user else None
+            zip_code = getattr(user, 'postal_code', None) if user else None
+            external_id = getattr(user, 'id', None) if user else None
             fbp = self.request.COOKIES.get('_fbp')
             fbc = self.request.COOKIES.get('_fbc')
             send_view_content(
@@ -285,6 +294,14 @@ class ProductDetailView(DetailView):
                 product_name=self.object.name,
                 value=float(self.object.price),
                 email=email,
+                phone=phone,
+                first_name=first_name,
+                last_name=last_name,
+                city=city,
+                state=state,
+                zip_code=zip_code,
+                country=country,
+                external_id=external_id,
                 request=self.request,
                 fbp=fbp,
                 fbc=fbc,
