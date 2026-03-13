@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 from datetime import timedelta
 from urllib.parse import urlencode
 from django.db import models
@@ -258,6 +259,8 @@ class ProductDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        view_content_event_id = str(uuid.uuid4())
+        context['view_content_event_id'] = view_content_event_id
         context['approved_reviews'] = self.object.reviews.filter(is_approved=True).order_by('-created_at')
         from apps.core.models import SiteSettings
         site = SiteSettings.get()
@@ -293,6 +296,7 @@ class ProductDetailView(DetailView):
                 product_id=self.object.id,
                 product_name=self.object.name,
                 value=float(self.object.price),
+                event_id=view_content_event_id,
                 email=email,
                 phone=phone,
                 first_name=first_name,

@@ -32,7 +32,7 @@ if (typeof fbq === 'function') {
         value: {{ product.price|unlocalize }},
         currency: 'COP',
         contents: [{ id: '{{ product.id }}', quantity: 1 }]
-    });
+    }, {eventID: '{{ view_content_event_id }}'});
 }
 if (typeof dataLayer !== 'undefined') {
     dataLayer.push({ ecommerce: null });

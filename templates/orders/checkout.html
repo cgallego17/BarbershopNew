@@ -18,7 +18,7 @@ if (typeof fbq === 'function') {
         content_ids: [{% for item in cart %}'{{ item.product_id }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         num_items: {{ cart|length }},
         contents: [{% for item in cart %}{ id: '{{ item.product_id }}', quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
-    });
+    }, {eventID: '{{ checkout_event_id }}'});
 }
 if (typeof dataLayer !== 'undefined') {
     dataLayer.push({ ecommerce: null });
@@ -477,6 +477,7 @@ if (typeof dataLayer !== 'undefined') {
 
         <form method="post" id="checkout-form">
             {% csrf_token %}
+            <input type="hidden" name="initiate_checkout_event_id" value="{{ checkout_event_id }}">
             <div class="row gutter-y-20">
 
                 <!-- ============ FORMULARIO ============ -->

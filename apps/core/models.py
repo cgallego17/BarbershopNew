@@ -119,6 +119,33 @@ class SiteSettings(models.Model):
         blank=True,
         help_text='Ej: TEST12345. Si se configura, los eventos se enviarán como test y aparecerán en Test Events Tool. Dejar vacío en producción.'
     )
+    meta_partner_agent = models.CharField(
+        'Partner Agent (opcional)',
+        max_length=120,
+        blank=True,
+        help_text='Identificador de integración/agencia/plataforma para Meta (opcional).'
+    )
+    meta_opt_out_default = models.BooleanField(
+        'Opt out por defecto (Meta CAPI)',
+        default=False,
+        help_text='Si está activo, eventos CAPI se envían con opt_out=true.'
+    )
+    meta_data_processing_options = models.CharField(
+        'Data Processing Options (opcional)',
+        max_length=120,
+        blank=True,
+        help_text='Opciones separadas por coma. Ej: LDU'
+    )
+    meta_data_processing_country = models.PositiveIntegerField(
+        'Data Processing Country',
+        default=0,
+        help_text='Código de país para data processing options. 0 si no aplica.'
+    )
+    meta_data_processing_state = models.PositiveIntegerField(
+        'Data Processing State',
+        default=0,
+        help_text='Código de estado para data processing options. 0 si no aplica.'
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

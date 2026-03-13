@@ -186,6 +186,38 @@
                         <p class="form-text small text-muted mt-1">Ej: TEST12345. Para pruebas: los eventos aparecen en Test Events Tool. Dejar vacío en producción.</p>
                         {% if form.meta_test_event_code.errors %}<div class="text-danger small">{{ form.meta_test_event_code.errors.0 }}</div>{% endif %}
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Partner Agent (opcional)</label>
+                        {{ form.meta_partner_agent }}
+                        <p class="form-text small text-muted mt-1">Identificador de integración/agencia/plataforma para Meta.</p>
+                        {% if form.meta_partner_agent.errors %}<div class="text-danger small">{{ form.meta_partner_agent.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label d-block">Opt out por defecto</label>
+                        <div class="form-check form-switch">
+                            {{ form.meta_opt_out_default }}
+                            <label class="form-check-label" for="{{ form.meta_opt_out_default.id_for_label }}">
+                                Enviar eventos con opt_out=true
+                            </label>
+                        </div>
+                        {% if form.meta_opt_out_default.errors %}<div class="text-danger small">{{ form.meta_opt_out_default.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Data Processing Options</label>
+                        {{ form.meta_data_processing_options }}
+                        <p class="form-text small text-muted mt-1">Ej: LDU (opcional)</p>
+                        {% if form.meta_data_processing_options.errors %}<div class="text-danger small">{{ form.meta_data_processing_options.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Data Processing Country</label>
+                        {{ form.meta_data_processing_country }}
+                        {% if form.meta_data_processing_country.errors %}<div class="text-danger small">{{ form.meta_data_processing_country.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Data Processing State</label>
+                        {{ form.meta_data_processing_state }}
+                        {% if form.meta_data_processing_state.errors %}<div class="text-danger small">{{ form.meta_data_processing_state.errors.0 }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 

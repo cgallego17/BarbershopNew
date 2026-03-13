@@ -1,5 +1,6 @@
 from decimal import Decimal
 import logging
+import uuid
 
 from django.core.cache import cache
 from django.db.models import Prefetch
@@ -53,6 +54,11 @@ def checkout_view(request):
     if not cart:
         messages.warning(request, 'Tu carrito está vacío.')
         return redirect('products:list')
+    checkout_event_id = (
+        request.POST.get('initiate_checkout_event_id')
+        if request.method == 'POST'
+        else ''
+    ) or str(uuid.uuid4())
 
     def build_checkout_prefill(user):
         prefill = {
@@ -100,6 +106,7 @@ def checkout_view(request):
                 'initial_state': checkout_prefill.get('state', ''),
                 'initial_city': checkout_prefill.get('city', ''),
                 'checkout_prefill': checkout_prefill,
+                'checkout_event_id': checkout_event_id,
             })
         cleaned = checkout_form.cleaned_data
         billing_type = cleaned.get('billing_customer_type', 'person')
@@ -219,6 +226,7 @@ def checkout_view(request):
             meta_client_user_agent=(request.META.get('HTTP_USER_AGENT') or '')[:256],
             meta_fbp=(request.COOKIES.get('_fbp') or '')[:255],
             meta_fbc=(request.COOKIES.get('_fbc') or '')[:255],
+            meta_referrer_url=(request.META.get('HTTP_REFERER') or '')[:512],
         )
         coupon_code = cleaned.get('coupon_code', '').strip()
         if coupon_code:
@@ -233,6 +241,40 @@ def checkout_view(request):
         order.save()
         if order.user_id is None:
             _remember_guest_order(request, order.order_number)
+
+        # Meta CAPI InitiateCheckout: enviar cuando ya tenemos datos reales de checkout.
+        try:
+            from apps.core.meta_conversions import send_initiate_checkout
+            cart_items = [
+                {
+                    'product_id': item['product_id'],
+                    'product_name': item['product'].name if item.get('product') else '',
+                    'price': float(item['price']),
+                    'quantity': item['quantity'],
+                }
+                for item in cart
+            ]
+            fbp = request.COOKIES.get('_fbp')
+            fbc = request.COOKIES.get('_fbc')
+            send_initiate_checkout(
+                cart_items=cart_items,
+                cart_total=cart.get_total_price(),
+                event_id=checkout_event_id,
+                email=billing_email,
+                phone=cleaned.get('billing_phone', ''),
+                first_name=cleaned.get('billing_first_name', ''),
+                last_name=billing_last,
+                city=billing_city_name,
+                state=billing_state_name,
+                zip_code=cleaned.get('billing_postal_code', ''),
+                country=billing_country_name,
+                external_id=getattr(account_user, 'id', None),
+                request=request,
+                fbp=fbp,
+                fbc=fbc,
+            )
+        except Exception as e:
+            logger.warning('Meta CAPI InitiateCheckout no enviado en checkout POST: %s', e)
 
         # Crear líneas
         for item in cart:
@@ -302,46 +344,6 @@ def checkout_view(request):
     countries = Country.objects.all().order_by('name')
     from apps.core.models import SiteSettings
     free_shipping_min_amount = SiteSettings.get().free_shipping_min_amount
-    try:
-        from apps.core.meta_conversions import send_initiate_checkout
-        cart_items = [
-            {
-                'product_id': item['product_id'],
-                'product_name': item['product'].name if item.get('product') else '',
-                'price': float(item['price']),
-                'quantity': item['quantity'],
-            }
-            for item in cart
-        ]
-        email = getattr(user, 'email', None) if user and user.is_authenticated else None
-        phone = getattr(user, 'phone', None) if user and user.is_authenticated else None
-        first_name = getattr(user, 'first_name', None) if user and user.is_authenticated else None
-        last_name = getattr(user, 'last_name', None) if user and user.is_authenticated else None
-        city = getattr(user, 'city', None) if user and user.is_authenticated else None
-        state = getattr(user, 'state', None) if user and user.is_authenticated else None
-        country = getattr(user, 'country', None) if user and user.is_authenticated else None
-        zip_code = getattr(user, 'postal_code', None) if user and user.is_authenticated else None
-        external_id = getattr(user, 'id', None) if user and user.is_authenticated else None
-        fbp = request.COOKIES.get('_fbp')
-        fbc = request.COOKIES.get('_fbc')
-        send_initiate_checkout(
-            cart_items=cart_items,
-            cart_total=cart.get_total_price(),
-            email=email,
-            phone=phone,
-            first_name=first_name,
-            last_name=last_name,
-            city=city,
-            state=state,
-            zip_code=zip_code,
-            country=country,
-            external_id=external_id,
-            request=request,
-            fbp=fbp,
-            fbc=fbc,
-        )
-    except Exception as e:
-        logger.warning('Meta CAPI InitiateCheckout no enviado: %s', e)
     return render(request, 'orders/checkout.html', {
         'cart': cart,
         'cart_total': cart.get_total_price(),
@@ -353,6 +355,7 @@ def checkout_view(request):
         'initial_state': checkout_prefill.get('state', ''),
         'initial_city': checkout_prefill.get('city', ''),
         'checkout_prefill': checkout_prefill,
+        'checkout_event_id': checkout_event_id,
     })
 
 

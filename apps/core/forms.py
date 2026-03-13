@@ -340,6 +340,11 @@ class SiteSettingsForm(forms.ModelForm):
             'meta_pixel_id',
             'meta_conversions_api_token',
             'meta_test_event_code',
+            'meta_partner_agent',
+            'meta_opt_out_default',
+            'meta_data_processing_options',
+            'meta_data_processing_country',
+            'meta_data_processing_state',
         ]
         widgets = {
             'about_text': CKEDITOR_WIDGET,
@@ -363,6 +368,17 @@ class SiteSettingsForm(forms.ModelForm):
                 'placeholder': 'Ej: TEST12345 (opcional, solo para pruebas)',
                 'autocomplete': 'off',
             }),
+            'meta_partner_agent': forms.TextInput(attrs={
+                'placeholder': 'Opcional (ej: partner_name_app)',
+                'autocomplete': 'off',
+            }),
+            'meta_opt_out_default': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'meta_data_processing_options': forms.TextInput(attrs={
+                'placeholder': 'Ej: LDU (separado por coma si son varias)',
+                'autocomplete': 'off',
+            }),
+            'meta_data_processing_country': forms.NumberInput(attrs={'min': 0, 'step': 1}),
+            'meta_data_processing_state': forms.NumberInput(attrs={'min': 0, 'step': 1}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -400,6 +416,13 @@ class SiteSettingsForm(forms.ModelForm):
         if not val and self.instance and self.instance.pk:
             return getattr(self.instance, 'meta_conversions_api_token', '') or ''
         return val
+
+    def clean_meta_data_processing_options(self):
+        val = (self.cleaned_data.get('meta_data_processing_options') or '').strip()
+        if not val:
+            return ''
+        parts = [p.strip().upper() for p in val.split(',') if p.strip()]
+        return ','.join(parts)
 
 
 # --- Formularios Secciones del Home ---

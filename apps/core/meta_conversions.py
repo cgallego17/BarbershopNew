@@ -5,6 +5,8 @@ Documentación: https://developers.facebook.com/docs/marketing-api/conversions-a
 """
 import hashlib
 import logging
+import re
+import threading
 import time
 from datetime import date, datetime
 
@@ -15,6 +17,10 @@ logger = logging.getLogger(__name__)
 GRAPH_API_VERSION = 'v21.0'
 # Dataset Quality API: usar v22.0+ según doc de Meta
 DATASET_QUALITY_API_VERSION = 'v22.0'
+MAX_ASYNC_RETRIES = 3
+ASYNC_RETRY_DELAYS_SECONDS = (1, 2, 4)
+FBP_RE = re.compile(r'^fb\.\d+\.\d+\.\d+.*$')
+FBC_RE = re.compile(r'^fb\.\d+\.\d+\.[A-Za-z0-9._-]+.*$')
 
 
 def _hash_sha256(value):
@@ -65,6 +71,28 @@ def _normalize_gender(value):
     if val in ('f', 'female', 'femenino', 'mujer'):
         return 'f'
     return None
+
+
+def _normalize_data_processing_options(value):
+    """Convierte string CSV o lista en lista de opciones válidas."""
+    if not value:
+        return []
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(',') if v.strip()]
+    if isinstance(value, (list, tuple)):
+        return [str(v).strip() for v in value if str(v).strip()]
+    return []
+
+
+def _clean_fbp_fbc(fbp=None, fbc=None):
+    """Valida formato de _fbp/_fbc; no transforma valor."""
+    valid_fbp = fbp if (fbp and FBP_RE.match(str(fbp))) else None
+    valid_fbc = fbc if (fbc and FBC_RE.match(str(fbc))) else None
+    if fbp and not valid_fbp:
+        logger.warning('Meta CAPI: _fbp inválido, se omite. value=%s', str(fbp)[:80])
+    if fbc and not valid_fbc:
+        logger.warning('Meta CAPI: _fbc inválido, se omite. value=%s', str(fbc)[:80])
+    return valid_fbp, valid_fbc
 
 
 def _build_user_data(
@@ -135,10 +163,11 @@ def _build_user_data(
         h = _hash_sha256(str(external_id))
         if h:
             data['external_id'] = [h]
-    if fbp:
-        data['fbp'] = fbp
-    if fbc:
-        data['fbc'] = fbc
+    valid_fbp, valid_fbc = _clean_fbp_fbc(fbp, fbc)
+    if valid_fbp:
+        data['fbp'] = valid_fbp
+    if valid_fbc:
+        data['fbc'] = valid_fbc
     if client_ip_address:
         data['client_ip_address'] = str(client_ip_address)[:45]
     if client_user_agent:
@@ -156,6 +185,87 @@ def _get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
+def _build_event_payload(
+    event_name, user_data, custom_data, event_id=None,
+    event_source_url=None, action_source='website', test_event_code=None,
+    referrer_url=None, opt_out=None, partner_agent=None,
+    data_processing_options=None, data_processing_options_country=None,
+    data_processing_options_state=None,
+):
+    """Construye payload final para /events."""
+    event_time = int(time.time())
+    event = {
+        'event_name': event_name,
+        'event_time': event_time,
+        'action_source': action_source,
+        'user_data': user_data,
+        'custom_data': custom_data,
+    }
+    if event_id:
+        event['event_id'] = event_id
+    if event_source_url:
+        event['event_source_url'] = str(event_source_url)[:256]
+    if referrer_url:
+        event['referrer_url'] = str(referrer_url)[:512]
+    if opt_out is not None:
+        event['opt_out'] = bool(opt_out)
+    if partner_agent:
+        event['partner_agent'] = str(partner_agent)[:120]
+    if data_processing_options:
+        event['data_processing_options'] = _normalize_data_processing_options(data_processing_options)
+        event['data_processing_options_country'] = int(data_processing_options_country or 0)
+        event['data_processing_options_state'] = int(data_processing_options_state or 0)
+    payload = {'data': [event]}
+    if test_event_code:
+        payload['test_event_code'] = str(test_event_code)[:20]
+    return payload
+
+
+def _post_event_payload(url, params, payload, event_name):
+    """Post único de payload a Meta CAPI."""
+    try:
+        resp = requests.post(url, params=params, json=payload, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        fbtrace_id = data.get('fbtrace_id') or resp.headers.get('x-fb-trace-id')
+        if data.get('events_received', 0) < 1:
+            logger.warning(
+                'Meta CAPI: evento %s no recibido. trace=%s, messages=%s, response=%s',
+                event_name,
+                fbtrace_id,
+                data.get('messages'),
+                data,
+            )
+            return False
+        logger.info(
+            'Meta CAPI: evento %s recibido. events_received=%s trace=%s',
+            event_name,
+            data.get('events_received', 0),
+            fbtrace_id,
+        )
+        return True
+    except requests.RequestException as e:
+        details = ''
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                details = e.response.text[:800]
+            except Exception:
+                details = ''
+        logger.warning('Meta CAPI: intento fallido para %s: %s %s', event_name, e, details)
+        return False
+
+
+def _post_event_payload_with_retries(url, params, payload, event_name):
+    """Reintentos con backoff para envío asíncrono."""
+    for attempt in range(MAX_ASYNC_RETRIES):
+        if _post_event_payload(url, params, payload, event_name):
+            return True
+        if attempt < len(ASYNC_RETRY_DELAYS_SECONDS):
+            time.sleep(ASYNC_RETRY_DELAYS_SECONDS[attempt])
+    logger.error('Meta CAPI: agotados reintentos para %s', event_name)
+    return False
+
+
 def send_event(
     pixel_id,
     access_token,
@@ -166,6 +276,13 @@ def send_event(
     event_source_url=None,
     action_source='website',
     test_event_code=None,
+    referrer_url=None,
+    opt_out=None,
+    partner_agent=None,
+    data_processing_options=None,
+    data_processing_options_country=None,
+    data_processing_options_state=None,
+    async_send=False,
 ):
     """
     Envía un evento a la Conversions API de Meta.
@@ -187,38 +304,37 @@ def send_event(
     if not pixel_id or not access_token:
         return False
 
-    event_time = int(time.time())
-    event = {
-        'event_name': event_name,
-        'event_time': event_time,
-        'action_source': action_source,
-        'user_data': user_data,
-        'custom_data': custom_data,
-    }
-    if event_id:
-        event['event_id'] = event_id
-    if event_source_url:
-        event['event_source_url'] = str(event_source_url)[:256]
-    payload = {'data': [event]}
-    if test_event_code:
-        payload['test_event_code'] = str(test_event_code)[:20]
+    payload = _build_event_payload(
+        event_name=event_name,
+        user_data=user_data,
+        custom_data=custom_data,
+        event_id=event_id,
+        event_source_url=event_source_url,
+        action_source=action_source,
+        test_event_code=test_event_code,
+        referrer_url=referrer_url,
+        opt_out=opt_out,
+        partner_agent=partner_agent,
+        data_processing_options=data_processing_options,
+        data_processing_options_country=data_processing_options_country,
+        data_processing_options_state=data_processing_options_state,
+    )
     url = f'https://graph.facebook.com/{GRAPH_API_VERSION}/{pixel_id}/events'
     params = {'access_token': access_token}
 
-    try:
-        resp = requests.post(url, params=params, json=payload, timeout=10)
-        resp.raise_for_status()
-        data = resp.json()
-        if data.get('events_received', 0) < 1:
-            logger.warning(
-                'Meta CAPI: evento %s no recibido. Respuesta: %s',
-                event_name, data
-            )
-            return False
+    if async_send:
+        thread = threading.Thread(
+            target=_post_event_payload_with_retries,
+            args=(url, params, payload, event_name),
+            daemon=True,
+        )
+        thread.start()
         return True
-    except requests.RequestException as e:
-        logger.exception('Meta CAPI: error enviando evento %s: %s', event_name, e)
-        return False
+
+    if _post_event_payload(url, params, payload, event_name):
+        return True
+    logger.error('Meta CAPI: fallo envío sincrónico para %s', event_name)
+    return False
 
 
 def send_purchase(order, request=None):
@@ -240,6 +356,7 @@ def send_purchase(order, request=None):
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256] if request else (getattr(order, 'meta_client_user_agent', None) or '').strip()[:256] or None
     fbp = request.COOKIES.get('_fbp') if request else None
     fbc = request.COOKIES.get('_fbc') if request else None
+    referrer_url = request.META.get('HTTP_REFERER') if request else (getattr(order, 'meta_referrer_url', None) or None)
 
     user_data = _build_user_data(
         email=order.billing_email,
@@ -280,6 +397,13 @@ def send_purchase(order, request=None):
         event_id=f"purchase_{order.order_number}",
         event_source_url=event_source_url,
         test_event_code=getattr(settings, 'meta_test_event_code', None) or None,
+        referrer_url=referrer_url,
+        opt_out=getattr(settings, 'meta_opt_out_default', False),
+        partner_agent=getattr(settings, 'meta_partner_agent', None) or None,
+        data_processing_options=getattr(settings, 'meta_data_processing_options', ''),
+        data_processing_options_country=getattr(settings, 'meta_data_processing_country', 0),
+        data_processing_options_state=getattr(settings, 'meta_data_processing_state', 0),
+        async_send=True,
     )
 
 
@@ -298,6 +422,7 @@ def send_add_to_cart(
     client_ip = _get_client_ip(request) if request else None
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256] if request else None
     event_source_url = request.build_absolute_uri() if request else None
+    referrer_url = request.META.get('HTTP_REFERER') if request else None
 
     user_data = _build_user_data(
         email=email, phone=phone,
@@ -327,6 +452,13 @@ def send_add_to_cart(
         event_id=event_id,
         event_source_url=event_source_url,
         test_event_code=getattr(settings, 'meta_test_event_code', None) or None,
+        referrer_url=referrer_url,
+        opt_out=getattr(settings, 'meta_opt_out_default', False),
+        partner_agent=getattr(settings, 'meta_partner_agent', None) or None,
+        data_processing_options=getattr(settings, 'meta_data_processing_options', ''),
+        data_processing_options_country=getattr(settings, 'meta_data_processing_country', 0),
+        data_processing_options_state=getattr(settings, 'meta_data_processing_state', 0),
+        async_send=True,
     )
 
 
@@ -345,6 +477,7 @@ def send_view_content(
     client_ip = _get_client_ip(request) if request else None
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256] if request else None
     event_source_url = request.build_absolute_uri() if request else None
+    referrer_url = request.META.get('HTTP_REFERER') if request else None
 
     user_data = _build_user_data(
         email=email, phone=phone,
@@ -373,6 +506,13 @@ def send_view_content(
         event_id=event_id,
         event_source_url=event_source_url,
         test_event_code=getattr(settings, 'meta_test_event_code', None) or None,
+        referrer_url=referrer_url,
+        opt_out=getattr(settings, 'meta_opt_out_default', False),
+        partner_agent=getattr(settings, 'meta_partner_agent', None) or None,
+        data_processing_options=getattr(settings, 'meta_data_processing_options', ''),
+        data_processing_options_country=getattr(settings, 'meta_data_processing_country', 0),
+        data_processing_options_state=getattr(settings, 'meta_data_processing_state', 0),
+        async_send=True,
     )
 
 
@@ -394,6 +534,7 @@ def send_initiate_checkout(
     client_ip = _get_client_ip(request) if request else None
     client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256] if request else None
     event_source_url = request.build_absolute_uri() if request else None
+    referrer_url = request.META.get('HTTP_REFERER') if request else None
 
     user_data = _build_user_data(
         email=email, phone=phone,
@@ -425,7 +566,34 @@ def send_initiate_checkout(
         event_id=event_id,
         event_source_url=event_source_url,
         test_event_code=getattr(settings, 'meta_test_event_code', None) or None,
+        referrer_url=referrer_url,
+        opt_out=getattr(settings, 'meta_opt_out_default', False),
+        partner_agent=getattr(settings, 'meta_partner_agent', None) or None,
+        data_processing_options=getattr(settings, 'meta_data_processing_options', ''),
+        data_processing_options_country=getattr(settings, 'meta_data_processing_country', 0),
+        data_processing_options_state=getattr(settings, 'meta_data_processing_state', 0),
+        async_send=True,
     )
+
+
+def send_events_batch(
+    pixel_id,
+    access_token,
+    events,
+    test_event_code=None,
+):
+    """
+    Envío batch a /events.
+    events: lista de dict con payload de evento ya construido (sin envolver en data[]).
+    """
+    if not pixel_id or not access_token or not events:
+        return False
+    url = f'https://graph.facebook.com/{GRAPH_API_VERSION}/{pixel_id}/events'
+    params = {'access_token': access_token}
+    payload = {'data': events}
+    if test_event_code:
+        payload['test_event_code'] = str(test_event_code)[:20]
+    return _post_event_payload(url, params, payload, event_name='BATCH')
 
 
 # ---------------------------------------------------------------------------

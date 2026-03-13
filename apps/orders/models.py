@@ -126,6 +126,12 @@ class Order(models.Model):
         blank=True,
         help_text='Valor de cookie _fbc capturado temprano para mejorar match quality en Purchase.',
     )
+    meta_referrer_url = models.URLField(
+        'Referrer URL (Meta CAPI)',
+        max_length=512,
+        blank=True,
+        help_text='HTTP_REFERER capturado en el journey de compra para enviarlo en eventos web.',
+    )
 
     class Meta:
         verbose_name = 'Pedido'
