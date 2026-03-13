@@ -22,7 +22,8 @@ if (typeof fbq === 'function') {
         content_ids: [{% for item in order_items %}'{{ item.product_id }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
         content_type: 'product',
         num_items: {{ order_items|length }},
-        order_id: '{{ order.order_number }}'
+        order_id: '{{ order.order_number }}',
+        contents: [{% for item in order_items %}{ id: '{{ item.product_id }}', quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
     });
 }
 if (typeof dataLayer !== 'undefined') {

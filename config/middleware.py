@@ -54,12 +54,12 @@ class ContentSecurityPolicyMiddleware:
 
         directives = {
             "default-src": ["'self'", "https:", "data:", "blob:"],
-            "script-src": script_src,
+            "script-src": script_src + ["https://connect.facebook.net"],
             "style-src": ["'self'", "'unsafe-inline'", "https:"],
-            "img-src": ["'self'", "data:", "blob:", "https:"],
+            "img-src": ["'self'", "data:", "blob:", "https:", "https://www.facebook.com"],
             "font-src": ["'self'", "data:", "https:"],
-            "connect-src": ["'self'", "https:", "ws:", "wss:"],
-            "frame-src": ["'self'", "https:"],
+            "connect-src": ["'self'", "https:", "ws:", "wss:", "https://www.facebook.com", "https://connect.facebook.net"],
+            "frame-src": ["'self'", "https:", "https://www.facebook.com"],
             "form-action": ["'self'", "https:"],
             "base-uri": ["'self'"],
             "object-src": ["'none'"],

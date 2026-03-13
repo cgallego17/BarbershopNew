@@ -16,7 +16,8 @@ if (typeof fbq === 'function') {
         value: {{ cart_total|unlocalize }},
         currency: 'COP',
         content_ids: [{% for item in cart %}'{{ item.product_id }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
-        num_items: {{ cart|length }}
+        num_items: {{ cart|length }},
+        contents: [{% for item in cart %}{ id: '{{ item.product_id }}', quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
     });
 }
 if (typeof dataLayer !== 'undefined') {

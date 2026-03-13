@@ -89,6 +89,7 @@ def cart_add(request, product_id):
             'value': float(price_val * quantity),
             'currency': 'COP',
             'num_items': quantity,
+            'contents': [{'id': str(product.id), 'quantity': quantity}],
         }
         return cart_sidebar_json(
             request, toast_msg=msg, toast_type='success',

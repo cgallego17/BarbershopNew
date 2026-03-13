@@ -158,7 +158,8 @@
                         <label class="form-label">HTML personalizado en el head</label>
                         {{ form.custom_body_html }}
                         <p class="form-text small text-muted mt-1">
-                            Código HTML/scripts que se insertan en el &lt;head&gt; de cada página. Útil para Facebook Pixel, TikTok Pixel, Google Tag Manager, Google Ads, etc. Solo se muestra en el sitio público (tienda, home, etc.), no en el panel de administración.
+                            Código HTML/scripts que se insertan en el &lt;head&gt; de cada página. Útil para Facebook Pixel, TikTok Pixel, Google Tag Manager, etc. Solo se muestra en el sitio público, no en el panel.<br>
+                            <strong>Meta Pixel:</strong> Pega el código <em>completo</em> de Meta (incluyendo el bloque &lt;noscript&gt; con la imagen). Si Meta dice "no se detectó un píxel", usa la URL pública real (no localhost) y la extensión "Meta Pixel Helper" en Chrome.
                         </p>
                         {% if form.custom_body_html.errors %}<div class="text-danger small">{{ form.custom_body_html.errors.0 }}</div>{% endif %}
                     </div>
