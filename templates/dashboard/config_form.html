@@ -152,13 +152,13 @@
             </div>
 
             <div class="mb-4">
-                <h5 class="text-muted mb-3">Pixels y scripts (body)</h5>
+                <h5 class="text-muted mb-3">Pixels y scripts (head)</h5>
                 <div class="row g-3">
                     <div class="col-12">
-                        <label class="form-label">HTML personalizado en el body</label>
+                        <label class="form-label">HTML personalizado en el head</label>
                         {{ form.custom_body_html }}
                         <p class="form-text small text-muted mt-1">
-                            Código HTML que se inserta al inicio del body. Útil para Facebook Pixel, TikTok Pixel, Google Ads, scripts de conversión, etc. Solo se muestra en el sitio público (tienda, home, etc.), no en el panel de administración.
+                            Código HTML/scripts que se insertan en el &lt;head&gt; de cada página. Útil para Facebook Pixel, TikTok Pixel, Google Tag Manager, Google Ads, etc. Solo se muestra en el sitio público (tienda, home, etc.), no en el panel de administración.
                         </p>
                         {% if form.custom_body_html.errors %}<div class="text-danger small">{{ form.custom_body_html.errors.0 }}</div>{% endif %}
                     </div>
