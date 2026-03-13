@@ -1,4 +1,4 @@
-{% load static %}
+{% load static core_extras %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -395,9 +395,7 @@
     </style>
     {% block extra_css %}{% endblock %}
     {% block extra_head %}{% endblock %}
-    {% if site_settings.custom_body_html %}
-    {{ site_settings.custom_body_html|safe }}
-    {% endif %}
+    {% custom_head_html %}
 </head>
 <body class="custom-cursor">
     <div class="custom-cursor__cursor"></div>
