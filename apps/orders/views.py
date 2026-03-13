@@ -1,4 +1,5 @@
 from decimal import Decimal
+import logging
 
 from django.core.cache import cache
 from django.db.models import Prefetch
@@ -21,6 +22,8 @@ from .forms import CheckoutForm
 from apps.accounts.models import UserAddress
 from apps.products.models import ProductFavorite
 from apps.core.emails import notify_order_created, notify_new_customer
+
+logger = logging.getLogger(__name__)
 
 GUEST_ORDER_SESSION_KEY = 'guest_order_numbers'
 
@@ -245,8 +248,7 @@ def checkout_view(request):
             try:
                 notify_order_created(order)
             except Exception:
-                import logging
-                logging.getLogger(__name__).exception(
+                logger.exception(
                     "Error enviando email de confirmación para pedido %s", order.order_number
                 )
         threading.Thread(target=_send_email, daemon=True).start()
@@ -274,8 +276,7 @@ def checkout_view(request):
                     try:
                         notify_new_customer(new_user)
                     except Exception:
-                        import logging
-                        logging.getLogger(__name__).exception(
+                        logger.exception(
                             "Error enviando email bienvenida para user=%s", new_user.email
                         )
                 threading.Thread(target=_send_welcome, daemon=True).start()
@@ -319,8 +320,8 @@ def checkout_view(request):
             fbp=fbp,
             fbc=fbc,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning('Meta CAPI InitiateCheckout no enviado: %s', e)
     return render(request, 'orders/checkout.html', {
         'cart': cart,
         'cart_total': cart.get_total_price(),

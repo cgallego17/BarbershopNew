@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import timedelta
 from urllib.parse import urlencode
 from django.db import models
@@ -17,6 +18,8 @@ from .models import (
     Product, Category, Brand, ProductReview, ProductView, ProductFavorite,
     ProductStockAlert,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_next_url(request, candidate, fallback):
@@ -286,8 +289,8 @@ class ProductDetailView(DetailView):
                 fbp=fbp,
                 fbc=fbc,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning('Meta CAPI ViewContent no enviado para product_id=%s: %s', self.object.id, e)
         context['is_favorite'] = False
         if self.request.user.is_authenticated:
             context['is_favorite'] = ProductFavorite.objects.filter(

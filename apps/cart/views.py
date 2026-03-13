@@ -1,3 +1,6 @@
+import logging
+import uuid
+
 from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib import messages
@@ -9,6 +12,8 @@ from django.urls import reverse
 from apps.products.models import Product
 from .cart import Cart
 from .models import AbandonedCartLead
+
+logger = logging.getLogger(__name__)
 
 
 def _safe_next_url(request, next_url, fallback):
@@ -79,39 +84,39 @@ def cart_add(request, product_id):
             price = product.get_price(request.user)
     cart.add(product, quantity=quantity, variant_id=variant_id, price=price)
     msg = f'"{product.name}" añadido al carrito.'
+    price_val = price or product.price
+    event_id = str(uuid.uuid4())
+    fb_event = {
+        'content_ids': [str(product.id)],
+        'content_name': product.name,
+        'content_type': 'product',
+        'value': float(price_val * quantity),
+        'currency': 'COP',
+        'num_items': quantity,
+        'contents': [{'id': str(product.id), 'quantity': quantity}],
+        'event_id': event_id,
+    }
+    try:
+        from apps.core.meta_conversions import send_add_to_cart
+        email = getattr(request.user, 'email', None) if request.user.is_authenticated else None
+        fbp = request.COOKIES.get('_fbp')
+        fbc = request.COOKIES.get('_fbc')
+        send_add_to_cart(
+            product_id=product.id,
+            product_name=product.name,
+            value=float(price_val * quantity),
+            quantity=quantity,
+            email=email,
+            event_id=event_id,
+            request=request,
+            fbp=fbp,
+            fbc=fbc,
+        )
+    except Exception as e:
+        logger.warning('Meta CAPI AddToCart no enviado para product_id=%s: %s', product.id, e)
+
     # Si es petición AJAX devolver JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        import uuid
-        price_val = price or product.price
-        event_id = str(uuid.uuid4())
-        fb_event = {
-            'content_ids': [str(product.id)],
-            'content_name': product.name,
-            'content_type': 'product',
-            'value': float(price_val * quantity),
-            'currency': 'COP',
-            'num_items': quantity,
-            'contents': [{'id': str(product.id), 'quantity': quantity}],
-            'event_id': event_id,
-        }
-        try:
-            from apps.core.meta_conversions import send_add_to_cart
-            email = getattr(request.user, 'email', None) if request.user.is_authenticated else None
-            fbp = request.COOKIES.get('_fbp')
-            fbc = request.COOKIES.get('_fbc')
-            send_add_to_cart(
-                product_id=product.id,
-                product_name=product.name,
-                value=float(price_val * quantity),
-                quantity=quantity,
-                email=email,
-                event_id=event_id,
-                request=request,
-                fbp=fbp,
-                fbc=fbc,
-            )
-        except Exception:
-            pass
         return cart_sidebar_json(
             request, toast_msg=msg, toast_type='success',
             fb_add_to_cart=fb_event,
