@@ -272,6 +272,22 @@ class ProductDetailView(DetailView):
         context['product_primary_category'] = self.object.categories.filter(
             is_active=True
         ).first()
+        try:
+            from apps.core.meta_conversions import send_view_content
+            email = getattr(self.request.user, 'email', None) if self.request.user.is_authenticated else None
+            fbp = self.request.COOKIES.get('_fbp')
+            fbc = self.request.COOKIES.get('_fbc')
+            send_view_content(
+                product_id=self.object.id,
+                product_name=self.object.name,
+                value=float(self.object.price),
+                email=email,
+                request=self.request,
+                fbp=fbp,
+                fbc=fbc,
+            )
+        except Exception:
+            pass
         context['is_favorite'] = False
         if self.request.user.is_authenticated:
             context['is_favorite'] = ProductFavorite.objects.filter(

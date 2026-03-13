@@ -297,6 +297,30 @@ def checkout_view(request):
     countries = Country.objects.all().order_by('name')
     from apps.core.models import SiteSettings
     free_shipping_min_amount = SiteSettings.get().free_shipping_min_amount
+    try:
+        from apps.core.meta_conversions import send_initiate_checkout
+        cart_items = [
+            {
+                'product_id': item['product_id'],
+                'product_name': item['product'].name if item.get('product') else '',
+                'price': float(item['price']),
+                'quantity': item['quantity'],
+            }
+            for item in cart
+        ]
+        email = getattr(user, 'email', None) if user and user.is_authenticated else None
+        fbp = request.COOKIES.get('_fbp')
+        fbc = request.COOKIES.get('_fbc')
+        send_initiate_checkout(
+            cart_items=cart_items,
+            cart_total=cart.get_total_price(),
+            email=email,
+            request=request,
+            fbp=fbp,
+            fbc=fbc,
+        )
+    except Exception:
+        pass
     return render(request, 'orders/checkout.html', {
         'cart': cart,
         'cart_total': cart.get_total_price(),

@@ -100,6 +100,25 @@ class SiteSettings(models.Model):
         blank=True,
         help_text='Código HTML/scripts que se insertan en el <head>. Útil para pixels (Facebook, TikTok, GTM, etc.) y scripts de tracking. Solo visible en el sitio público, no en el panel.'
     )
+    # Meta Conversions API (server-side)
+    meta_pixel_id = models.CharField(
+        'Meta Pixel ID',
+        max_length=30,
+        blank=True,
+        help_text='ID del pixel de Meta (ej: 1190679916479399). Necesario para enviar eventos por Conversions API desde el servidor.'
+    )
+    meta_conversions_api_token = models.CharField(
+        'Meta Conversions API - Token de acceso',
+        max_length=500,
+        blank=True,
+        help_text='Token generado en Events Manager → Dataset → Configuración → Conversions API. Mantener confidencial.'
+    )
+    meta_test_event_code = models.CharField(
+        'Test Event Code (opcional)',
+        max_length=20,
+        blank=True,
+        help_text='Ej: TEST12345. Si se configura, los eventos se enviarán como test y aparecerán en Test Events Tool. Dejar vacío en producción.'
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

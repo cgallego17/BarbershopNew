@@ -81,7 +81,9 @@ def cart_add(request, product_id):
     msg = f'"{product.name}" añadido al carrito.'
     # Si es petición AJAX devolver JSON
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        import uuid
         price_val = price or product.price
+        event_id = str(uuid.uuid4())
         fb_event = {
             'content_ids': [str(product.id)],
             'content_name': product.name,
@@ -90,7 +92,26 @@ def cart_add(request, product_id):
             'currency': 'COP',
             'num_items': quantity,
             'contents': [{'id': str(product.id), 'quantity': quantity}],
+            'event_id': event_id,
         }
+        try:
+            from apps.core.meta_conversions import send_add_to_cart
+            email = getattr(request.user, 'email', None) if request.user.is_authenticated else None
+            fbp = request.COOKIES.get('_fbp')
+            fbc = request.COOKIES.get('_fbc')
+            send_add_to_cart(
+                product_id=product.id,
+                product_name=product.name,
+                value=float(price_val * quantity),
+                quantity=quantity,
+                email=email,
+                event_id=event_id,
+                request=request,
+                fbp=fbp,
+                fbc=fbc,
+            )
+        except Exception:
+            pass
         return cart_sidebar_json(
             request, toast_msg=msg, toast_type='success',
             fb_add_to_cart=fb_event,

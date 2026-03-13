@@ -1,0 +1,107 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+{% block title %}Calidad del dataset Meta{% endblock %}
+{% block topbar_title %}Calidad del dataset Meta (Conversions API){% endblock %}
+{% block extra_css %}{% include 'dashboard/_admin_styles.html' %}{% endblock %}
+
+{% block content %}
+<div class="admin-card">
+    <div class="admin-card__body">
+        <p class="text-muted mb-4">
+            Métricas del <a href="https://developers.facebook.com/docs/marketing-api/conversions-api/dataset-quality-api/" target="_blank" rel="noopener">Dataset Quality API</a> de Meta:
+            Event Match Quality (EMQ), cobertura de eventos, deduplicación, frescura de datos y conversiones adicionales reportadas.
+        </p>
+        <p class="mb-4">
+            <a href="{% url 'core:admin_panel:config' %}" class="admin-btn admin-btn--secondary">
+                <i class="fas fa-cogs"></i> Configuración (Pixel ID y token)
+            </a>
+        </p>
+
+        {% if quality_data.error %}
+        <div class="alert alert-danger" role="alert">
+            <strong>Error:</strong> {{ quality_data.error }}
+            <p class="mb-0 mt-2 small">Asegúrate de tener configurados <strong>Meta Pixel ID</strong> y <strong>Token Conversions API</strong> en Configuración. El token debe tener permisos para acceder al Dataset Quality API.</p>
+        </div>
+        {% elif quality_data.web %}
+        <div class="table-responsive">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Evento</th>
+                        <th>EMQ</th>
+                        <th>Cobertura</th>
+                        <th>ACR</th>
+                        <th>Frescura</th>
+                        <th>Diagnósticos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in quality_data.web %}
+                    <tr>
+                        <td><code>{{ item.event_name|default:"—" }}</code></td>
+                        <td>
+                            {% if item.event_match_quality and item.event_match_quality.composite_score %}
+                            <span class="badge {% if item.event_match_quality.composite_score >= 7 %}bg-success{% elif item.event_match_quality.composite_score >= 4 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                {{ item.event_match_quality.composite_score }}/10
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if item.event_coverage %}
+                            {{ item.event_coverage.percentage|default:"—" }}%
+                            {% if item.event_coverage.goal_percentage %}
+                            <small class="text-muted">(meta: {{ item.event_coverage.goal_percentage }}%)</small>
+                            {% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if item.acr and item.acr.percentage %}
+                            {{ item.acr.percentage }}%
+                            {% if item.acr.description %}<br><small class="text-muted">{{ item.acr.description|truncatewords:15 }}</small>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if item.data_freshness and item.data_freshness.upload_frequency %}
+                            <span class="badge {% if item.data_freshness.upload_frequency == 'real_time' %}bg-success{% else %}bg-secondary{% endif %}">
+                                {{ item.data_freshness.upload_frequency }}
+                            </span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if item.event_match_quality and item.event_match_quality.diagnostics %}
+                            <ul class="list-unstyled mb-0 small">
+                                {% for d in item.event_match_quality.diagnostics %}
+                                <li class="mb-1">
+                                    <strong>{{ d.name|default:d.description|truncatewords:5 }}</strong>
+                                    {% if d.percentage %}({{ d.percentage }}%){% endif %}
+                                    {% if d.solution %}<br><span class="text-muted">{{ d.solution|truncatewords:20 }}</span>{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% if item.dedupe_key_feedback %}
+                    <tr>
+                        <td colspan="6" class="bg-light py-2">
+                            <strong>Deduplicación:</strong>
+                            {% for dk in item.dedupe_key_feedback %}
+                            <span class="badge bg-light text-dark me-1">
+                                {{ dk.dedupe_key }}: browser {{ dk.browser_events_with_dedupe_key.percentage|default:0 }}% / server {{ dk.server_events_with_dedupe_key.percentage|default:0 }}%
+                            </span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info" role="alert">
+            No hay datos de calidad disponibles. Puede que el pixel aún no tenga suficientes eventos o que el token no tenga los permisos necesarios.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

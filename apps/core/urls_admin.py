@@ -71,6 +71,7 @@ urlpatterns = [
     path('envios/<int:pk>/eliminar/', views_admin.ShippingPriceDeleteView.as_view(), name='shipping_price_delete'),
     # Configuración
     path('configuracion/', views_admin.SiteSettingsUpdateView.as_view(), name='config'),
+    path('configuracion/meta-calidad/', views_admin.MetaDatasetQualityView.as_view(), name='meta_dataset_quality'),
     # Secciones del Home
     path('secciones/', views_admin.HomeSectionsConfigView.as_view(), name='home_sections'),
     path('secciones/hero/', views_admin.HomeHeroSlideListView.as_view(), name='home_hero_list'),

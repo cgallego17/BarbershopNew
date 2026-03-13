@@ -102,6 +102,19 @@ class Order(models.Model):
         null=True,
         blank=True,
     )
+    # Meta Conversions API: capturados al visitar la página de pago (antes de ir a Wompi)
+    meta_client_ip = models.CharField(
+        'IP del cliente (Meta CAPI)',
+        max_length=45,
+        blank=True,
+        help_text='IP del navegador al momento de ir a pagar. Se usa en el evento Purchase para mejorar EMQ.',
+    )
+    meta_client_user_agent = models.CharField(
+        'User-Agent del cliente (Meta CAPI)',
+        max_length=256,
+        blank=True,
+        help_text='User-Agent del navegador al momento de ir a pagar. Se usa en el evento Purchase.',
+    )
 
     class Meta:
         verbose_name = 'Pedido'

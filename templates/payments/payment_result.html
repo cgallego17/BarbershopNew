@@ -24,7 +24,7 @@ if (typeof fbq === 'function') {
         num_items: {{ order_items|length }},
         order_id: '{{ order.order_number }}',
         contents: [{% for item in order_items %}{ id: '{{ item.product_id }}', quantity: {{ item.quantity }} }{% if not forloop.last %}, {% endif %}{% endfor %}]
-    });
+    }, {eventID: 'purchase_{{ order.order_number }}'});
 }
 if (typeof dataLayer !== 'undefined') {
     dataLayer.push({ ecommerce: null });

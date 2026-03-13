@@ -163,6 +163,29 @@
                         </p>
                         {% if form.custom_body_html.errors %}<div class="text-danger small">{{ form.custom_body_html.errors.0 }}</div>{% endif %}
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Meta Pixel ID (Conversions API)</label>
+                        {{ form.meta_pixel_id }}
+                        <p class="form-text small text-muted mt-1">Mismo ID que en el código del pixel. Necesario para enviar eventos desde el servidor.</p>
+                        {% if form.meta_pixel_id.errors %}<div class="text-danger small">{{ form.meta_pixel_id.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Token Conversions API</label>
+                        {{ form.meta_conversions_api_token }}
+                        <p class="form-text small text-muted mt-1">Events Manager → Dataset → Configuración → Conversions API → Generar token. Dejar vacío para no actualizar.</p>
+                        {% if form.meta_conversions_api_token.errors %}<div class="text-danger small">{{ form.meta_conversions_api_token.errors.0 }}</div>{% endif %}
+                        <p class="mt-2 mb-0">
+                            <a href="{% url 'core:admin_panel:meta_dataset_quality' %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-chart-line"></i> Ver calidad del dataset (Dataset Quality API)
+                            </a>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Test Event Code (opcional)</label>
+                        {{ form.meta_test_event_code }}
+                        <p class="form-text small text-muted mt-1">Ej: TEST12345. Para pruebas: los eventos aparecen en Test Events Tool. Dejar vacío en producción.</p>
+                        {% if form.meta_test_event_code.errors %}<div class="text-danger small">{{ form.meta_test_event_code.errors.0 }}</div>{% endif %}
+                    </div>
                 </div>
             </div>
 

@@ -262,12 +262,25 @@ def _fulfill_order(order: Order, tx_data: dict):
         tx_data.get('id', ''),
     )
     notify_payment_approved(order)
+    try:
+        from apps.core.meta_conversions import send_purchase
+        send_purchase(order)
+    except Exception as e:
+        logger.warning("Meta CAPI Purchase no enviado: %s", e)
     notify_low_stock(low_stock_alerts)
 
 
 # ---------------------------------------------------------------------------
 # Vistas
 # ---------------------------------------------------------------------------
+
+def _get_client_ip(request):
+    """Obtiene la IP del cliente, considerando X-Forwarded-For."""
+    xff = request.META.get('HTTP_X_FORWARDED_FOR')
+    if xff:
+        return xff.split(',')[0].strip()[:45]
+    return (request.META.get('REMOTE_ADDR') or '')[:45]
+
 
 def payment_page(request, order_number):
     """Página de pago: muestra el formulario con redirect a Wompi."""
@@ -280,6 +293,17 @@ def payment_page(request, order_number):
     # Si ya fue pagado, ir directo al detalle
     if order.payment_status == 'paid':
         return redirect('orders:detail', order_number=order_number)
+
+    # Capturar IP y User-Agent para Meta Conversions API (Purchase)
+    client_ip = _get_client_ip(request)
+    client_ua = (request.META.get('HTTP_USER_AGENT') or '')[:256]
+    if client_ip or client_ua:
+        Order.objects.filter(pk=order.pk).update(
+            meta_client_ip=client_ip or order.meta_client_ip,
+            meta_client_user_agent=client_ua or order.meta_client_user_agent,
+        )
+        order.meta_client_ip = client_ip or order.meta_client_ip
+        order.meta_client_user_agent = client_ua or order.meta_client_user_agent
 
     currency       = 'COP'
     amount_cents   = int(order.total * 100)

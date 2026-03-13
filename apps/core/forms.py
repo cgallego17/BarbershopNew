@@ -337,6 +337,9 @@ class SiteSettingsForm(forms.ModelForm):
             'meta_description',
             'site_url',
             'custom_body_html',
+            'meta_pixel_id',
+            'meta_conversions_api_token',
+            'meta_test_event_code',
         ]
         widgets = {
             'about_text': CKEDITOR_WIDGET,
@@ -350,6 +353,15 @@ class SiteSettingsForm(forms.ModelForm):
                 'rows': 8,
                 'placeholder': 'Ej: <!-- Facebook Pixel -->\n<script>...</script>\n<!-- TikTok Pixel -->\n<script>...</script>',
                 'class': 'font-monospace',
+            }),
+            'meta_pixel_id': forms.TextInput(attrs={'placeholder': 'Ej: 1190679916479399', 'autocomplete': 'off'}),
+            'meta_conversions_api_token': forms.PasswordInput(attrs={
+                'placeholder': 'Token de Events Manager → Dataset → Conversions API',
+                'autocomplete': 'new-password',
+            }),
+            'meta_test_event_code': forms.TextInput(attrs={
+                'placeholder': 'Ej: TEST12345 (opcional, solo para pruebas)',
+                'autocomplete': 'off',
             }),
         }
 
@@ -381,6 +393,13 @@ class SiteSettingsForm(forms.ModelForm):
 
     def clean_about_text(self):
         return sanitize_html(self.cleaned_data.get('about_text'))
+
+    def clean_meta_conversions_api_token(self):
+        """Si está vacío (usuario no lo modificó), conservar el valor actual."""
+        val = self.cleaned_data.get('meta_conversions_api_token', '')
+        if not val and self.instance and self.instance.pk:
+            return getattr(self.instance, 'meta_conversions_api_token', '') or ''
+        return val
 
 
 # --- Formularios Secciones del Home ---

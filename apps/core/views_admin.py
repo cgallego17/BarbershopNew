@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView, TemplateView
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
@@ -1575,6 +1575,17 @@ class SiteSettingsUpdateView(StaffRequiredMixin, UpdateView):
     def form_valid(self, form):
         messages.success(self.request, 'Configuración guardada correctamente.')
         return super().form_valid(form)
+
+
+class MetaDatasetQualityView(StaffRequiredMixin, TemplateView):
+    """Muestra métricas del Dataset Quality API de Meta (EMQ, cobertura, deduplicación, etc.)."""
+    template_name = 'dashboard/meta_dataset_quality.html'
+
+    def get_context_data(self, **kwargs):
+        from apps.core.meta_conversions import fetch_dataset_quality
+        ctx = super().get_context_data(**kwargs)
+        ctx['quality_data'] = fetch_dataset_quality()
+        return ctx
 
 
 # --- Secciones del Home ---

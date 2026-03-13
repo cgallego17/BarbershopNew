@@ -1243,7 +1243,18 @@
                 window.showToast(data.toast.message, data.toast.type);
             }
             if (data.fb_add_to_cart && typeof fbq === 'function') {
-                fbq('track', 'AddToCart', data.fb_add_to_cart);
+                var e = data.fb_add_to_cart;
+                var eventId = e.event_id;
+                var params = {
+                    content_ids: e.content_ids,
+                    content_name: e.content_name,
+                    content_type: e.content_type || 'product',
+                    value: e.value,
+                    currency: e.currency || 'COP',
+                    num_items: e.num_items,
+                    contents: e.contents
+                };
+                fbq('track', 'AddToCart', params, eventId ? {eventID: eventId} : {});
             }
             if (data.fb_add_to_cart && typeof dataLayer !== 'undefined') {
                 var e = data.fb_add_to_cart;

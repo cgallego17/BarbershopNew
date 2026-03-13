@@ -366,6 +366,10 @@
                     <i class="fas fa-cogs"></i>
                     <span>Configuración</span>
                 </a>
+                <a href="{% url 'core:admin_panel:meta_dataset_quality' %}" class="admin-sidebar__item {% if request.resolver_match.url_name == 'meta_dataset_quality' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Meta Dataset Quality</span>
+                </a>
                 <div class="admin-sidebar__footer">
                     <a href="{% url 'core:home' %}">
                         <i class="fas fa-external-link-alt"></i>
