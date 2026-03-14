@@ -2,6 +2,7 @@
 Meta Conversions API - Envío de eventos desde el servidor.
 
 Documentación: https://developers.facebook.com/docs/marketing-api/conversions-api
+Payload Helper (estructura esperada): https://developers.facebook.com/docs/marketing-api/conversions-api/payload-helper/
 """
 import hashlib
 import logging
@@ -185,6 +186,35 @@ def _get_client_ip(request):
     return request.META.get('REMOTE_ADDR')
 
 
+def _validate_payload_helper_requirements(
+    event_name, user_data, event_source_url, action_source
+):
+    """
+    Valida requisitos del Payload Helper para eventos website.
+    https://developers.facebook.com/docs/marketing-api/conversions-api/payload-helper/
+
+    Returns:
+        tuple: (is_valid, list of warning messages)
+    """
+    warnings = []
+    if action_source != 'website':
+        return True, warnings
+
+    if not event_source_url or not str(event_source_url).strip():
+        warnings.append('event_source_url es requerido para action_source=website')
+    if not user_data or not isinstance(user_data, dict):
+        warnings.append('user_data es requerido y debe ser un objeto no vacío')
+    elif len(user_data) == 0:
+        warnings.append('user_data debe incluir al menos un parámetro de identificación')
+    if not user_data.get('client_user_agent') and not user_data.get('client_ip_address'):
+        if user_data and len(user_data) > 0:
+            warnings.append(
+                'Para website se recomienda client_user_agent y client_ip_address en user_data (mejora EMQ)'
+            )
+
+    return len(warnings) == 0, warnings
+
+
 def _build_event_payload(
     event_name, user_data, custom_data, event_id=None,
     event_source_url=None, action_source='website', test_event_code=None,
@@ -192,8 +222,13 @@ def _build_event_payload(
     data_processing_options=None, data_processing_options_country=None,
     data_processing_options_state=None,
 ):
-    """Construye payload final para /events."""
+    """
+    Construye payload final para /events siguiendo la estructura del Payload Helper.
+    https://developers.facebook.com/docs/marketing-api/conversions-api/payload-helper/
+    """
     event_time = int(time.time())
+    user_data = user_data if isinstance(user_data, dict) else {}
+    custom_data = custom_data if isinstance(custom_data, dict) else {}
     event = {
         'event_name': event_name,
         'event_time': event_time,
@@ -302,6 +337,20 @@ def send_event(
         bool: True si el envío fue exitoso
     """
     if not pixel_id or not access_token:
+        return False
+
+    # Validar requisitos Payload Helper (website)
+    is_valid, validation_warnings = _validate_payload_helper_requirements(
+        event_name, user_data, event_source_url, action_source
+    )
+    for msg in validation_warnings:
+        logger.warning('Meta CAPI Payload Helper: %s (event=%s)', msg, event_name)
+    ud = user_data if isinstance(user_data, dict) else {}
+    if action_source == 'website' and (len(ud) == 0 or not (event_source_url or '').strip()):
+        logger.error(
+            'Meta CAPI: evento %s omitido: user_data vacío o event_source_url faltante (requerido para website)',
+            event_name,
+        )
         return False
 
     payload = _build_event_payload(
